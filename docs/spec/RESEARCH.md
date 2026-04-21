@@ -30,3 +30,7 @@ A JEPA-style encoder can learn a lesion representation where stable lesions rema
 - substituting visual polish for empirical clarity
 - comparing only against weak baselines
 - letting the demo narrative outrun the measured result
+
+## Research spikes
+
+- `docs/research-spikes/2026-04-21-ml-intern-and-medical-sam.md` — evaluation of Hugging Face `ml-intern` and whether a SAM-style medical segmentation workflow should be used as a DermaJEPA sidecar
