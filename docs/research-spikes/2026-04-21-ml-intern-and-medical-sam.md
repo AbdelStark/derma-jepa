@@ -1,36 +1,45 @@
-# Research spike — can Hugging Face `ml-intern` and a medical SAM workflow help DermaJEPA?
+# Research spike — can Hugging Face `ml-intern` help DermaJEPA as an ML engineering and research assistant?
 
 ## Trigger
 
 Source lead:
 - X post: https://x.com/mayank_022/status/2046646301555900828?s=46
 
-The post claims Hugging Face `ml-intern` autonomously:
-- researched a medical segmentation task
-- found a dataset
-- wrote a fine-tuning script for SAM
-- trained it on Hugging Face compute
-- pushed weights and wrote a tutorial/article
+The post shows `ml-intern` being used for a medical SAM task.
+That task itself is **not** the recommendation for DermaJEPA.
 
-This spike checks what `ml-intern` actually is and whether that workflow is useful for **DermaJEPA**.
+For this repo, the real question is narrower:
+
+> Can `ml-intern` help us stay fully JEPA-focused while accelerating ML engineering work, research, experiment setup, evaluation, and tuning?
+
+This spike answers that question.
 
 ---
 
 ## Short answer
 
-**Yes, but only as a sidecar workflow. Not as the core of DermaJEPA.**
+**Yes.**
 
-Best fit:
-1. use `ml-intern` to accelerate **dataset audit / literature crawl / baseline implementation**
-2. optionally use it to run a **segmentation-assisted preprocessing spike** for lesion ROI extraction
-3. do **not** let SAM or agent automation redefine the project thesis
+Use `ml-intern` as a **JEPA-focused ML engineering assistant** for:
+- literature crawl
+- dataset audit
+- training/eval script scaffolding
+- ablation plumbing
+- experiment execution support
+- tuning workflow support
+- notebook/report generation
 
-DermaJEPA should still be centered on:
+Do **not** use it to pivot DermaJEPA toward:
+- segmentation
+- SAM
+- mask-centric preprocessing work
+- side quests that dilute the JEPA thesis
+
+DermaJEPA should remain centered on:
 - latent trajectory modeling
 - nuisance robustness
 - drift scoring over time
-
-not on segmentation for its own sake.
+- JEPA-first representation learning
 
 ---
 
@@ -65,270 +74,235 @@ From `agent/prompts/system_prompt_v3.yaml` and related tools:
 - it supports GPU job hardware selection including `t4`, `a10g`, `a100`, `l40s`
 - it is designed to push final artifacts back to Hugging Face Hub
 
-So the X post is directionally credible: this is not just a chat wrapper. It is an agent scaffold meant to actually research, code, run, and ship ML jobs.
+So the underlying point of the X post is real:
+`ml-intern` is not just a chat wrapper. It is an agent scaffold built to research, code, run, and ship ML jobs.
 
 ---
 
-## What the X post demonstrates
+## What the X post actually proves for DermaJEPA
 
-The Mayank post is a **proof of workflow shape**, not proof that SAM is the right model for DermaJEPA.
+The post is useful as **workflow evidence**, not as model-direction evidence.
 
 What it usefully demonstrates:
-- an agent can be given a fairly concrete ML task
-- it can discover a medical dataset
-- it can build a training script
-- it can run a job on hosted compute
+- an agent can take a concrete ML task
+- it can do literature and dataset lookup
+- it can scaffold code
+- it can test and launch jobs on hosted compute
 - it can package outputs as weights + notebook/article
 
-That matters for DermaJEPA because the project needs a lot of mechanical but non-trivial work:
+For DermaJEPA, that matters because the project will need a lot of non-trivial but still mechanizable work:
 - dataset inspection
 - baseline implementation
-- experiment scripts
-- training/eval boilerplate
-- notebook/report generation
+- training script setup
+- evaluation harness construction
+- experiment logging/reporting
+- notebook and artifact generation
 
-So the real value here is not "SAM magic".
-The real value is **agentic acceleration of bounded ML research tasks**.
+So the value here is **agentic acceleration of JEPA-relevant ML work**.
 
 ---
 
-## Where this fits DermaJEPA
+## Where `ml-intern` fits DermaJEPA well
 
-## 1. Strong fit: research acceleration
+## 1. Research acceleration
 
-This is the cleanest fit.
+This is the strongest immediate fit.
 
-DermaJEPA needs upfront work that `ml-intern` is structurally good at:
-- crawl literature around dermatology imaging, lesion monitoring, invariance, and segmentation-assisted representation learning
+DermaJEPA needs upfront work that `ml-intern` is structurally well suited for:
+- crawl literature around JEPA, predictive representation learning, nuisance robustness, temporal consistency, and medical imaging representation learning
 - inspect candidate datasets and schema
-- find current Hugging Face / GitHub examples for image training pipelines
-- scaffold small baseline experiments and notebooks
+- find current Hugging Face / GitHub examples for image-model training pipelines
+- collect recent implementation patterns for training, evaluation, and experiment tracking
 
-This is aligned with DermaJEPA's current repo state, which is still spec-first and pre-implementation.
-
-### Good candidate tasks for `ml-intern`
-- audit public derm datasets available on Hugging Face / linked sources
-- produce a table of which datasets have masks, repeated lesions, metadata, or patient-level grouping
-- scaffold a baseline frozen-encoder evaluation notebook
-- scaffold augmentation-heavy nuisance robustness experiments
-- generate a compact report artifact for each experiment
+### Good candidate tasks
+- survey JEPA-adjacent image representation papers relevant to lesion monitoring
+- produce a table of candidate datasets and what each one actually contains
+- identify whether any datasets support patient-level grouping, same-lesion grouping, or useful metadata for pseudo-longitudinal construction
+- gather modern training-script examples for image encoders and evaluation loops
+- produce compact research memos from the paper and code search
 
 ---
 
-## 2. Medium fit: segmentation-assisted preprocessing spike
+## 2. ML engineering assistance
 
-This is the specific angle suggested by the post.
+This is probably the most practically useful lane.
 
-A SAM-style workflow could help DermaJEPA if we want to test whether **lesion-focused cropping or masking** improves latent drift robustness.
+DermaJEPA will eventually need:
+- training scripts
+- config files
+- data loading code
+- augmentation pipelines
+- embedding export pipelines
+- evaluation scripts
+- experiment reports
 
-### Why this could matter
+`ml-intern` is well positioned to help with:
+- scaffolding these pieces quickly
+- checking current Hugging Face APIs before code is written
+- finding working examples instead of hallucinating old APIs
+- drafting notebooks and markdown reports around experiments
 
-DermaJEPA's thesis is that nuisance variation corrupts naive image comparison:
-- framing
-- illumination
-- zoom
-- surrounding skin context
-- hair / ruler / marker / background clutter
+### Good candidate tasks
+- scaffold a compact training pipeline for a JEPA-style or JEPA-adjacent encoder experiment
+- scaffold an embedding extraction script for downstream drift scoring
+- scaffold a nuisance-robustness evaluation script
+- scaffold a notebook for qualitative embedding inspection and trajectory plots
+- scaffold a sweep script for bounded hyperparameter searches
 
-A lesion mask could provide:
-- tighter lesion-centered crops
-- reduced background nuisance
-- more stable spatial support across time
-- a cleaner basis for comparing latent trajectories
-
-### Why this is plausible in dermatology
-
-Public challenge data exists for lesion segmentation.
-
-From the ISIC challenge data page:
-- ISIC 2018 Task 1 includes training images plus segmentation ground truth
-- the linked training ground-truth archive is publicly downloadable
-- the page indicates **2,594 images and 12,970 corresponding ground-truth response masks (5 per image)** for that task
-
-This gives a viable source for a segmentation side-task, at least for dermoscopic images.
-
-### Best way to use it
-
-Not as the main model.
-
-Use segmentation as a **preprocessing / ablation layer**:
-1. full-frame image baseline
-2. bounding-box crop baseline from lesion mask
-3. masked-lesion baseline
-4. maybe soft-attention / mask-channel conditioning later
-
-Then compare whether latent drift metrics become more stable under nuisance perturbation.
-
-If the mask-aware setup materially improves invariance without destroying signal, it earns its place.
-If not, it gets cut.
+Important rule:
+- the repo should store ordinary scripts, configs, notebooks, and markdown
+- `ml-intern` can help generate them, but it should not become a hidden runtime dependency of the project itself
 
 ---
 
-## 3. Weak fit: using SAM as the main project backbone
+## 3. Tuning and evaluation support
 
-This is the wrong move for v1.
+This also fits well if kept bounded.
 
-Why:
-- DermaJEPA is about **representation learning for longitudinal change**, not segmentation quality
-- segmentation can easily become its own project
-- a good lesion mask does not automatically solve temporal drift scoring
-- the best available segmentation datasets are often dermoscopy-heavy, while the broader monitoring story may need more phone-like nuisance variation
-- many candidate datasets for DermaJEPA do not obviously provide mask supervision in the same form
+DermaJEPA will likely benefit from help on:
+- hyperparameter search setup
+- ablation tracking
+- experiment comparison tables
+- result packaging
+- failure diagnosis from logs
 
-So SAM is not the thesis. At best it is a useful helper.
+### Good candidate tasks
+- create a minimal sweep script over learning rate / augmentation strength / batch size
+- compare baseline encoders with a common evaluation harness
+- generate markdown summaries of experiment results
+- help identify failure modes when a run collapses or produces weak invariance
+
+This is useful because it reduces mechanical overhead without changing the project thesis.
 
 ---
 
-## Constraints and risks
+## Where `ml-intern` does **not** fit
 
-## 1. Scope drift risk
+## 1. It should not define the project direction
 
-Biggest risk by far.
+The risk is not that `ml-intern` is bad.
+The risk is that an agent with broad ML tooling can pull the project toward whatever tasks are easiest to operationalize.
 
-A segmentation branch can consume weeks and leave the core JEPA question unanswered.
+For DermaJEPA, that would be a mistake.
 
-Failure mode:
-- build a nice SAM fine-tune
-- get decent masks
-- spend time on visualizations
-- still not know whether latent trajectory modeling works better than simpler baselines
+The repo thesis is still:
+- learn useful latent representations
+- make them stable under nuisance variation
+- make meaningful lesion evolution appear as structured latent drift
 
-That would be a fake win relative to this repo's stated goal.
+So any use of `ml-intern` should be judged by one question:
 
-## 2. Dataset mismatch risk
+> Does this help us prove the JEPA thesis faster and more honestly?
 
-The cleanest segmentation labels are in dermoscopy benchmarks.
-That does **not** automatically match the eventual nuisance profile of real lesion monitoring.
+If not, cut it.
 
-Possible mismatch axes:
-- dermoscopic vs smartphone imagery
-- controlled capture vs casual repeated capture
-- centered lesion crops vs noisy user framing
-
-A segmentation model trained on neat dermoscopy may help preprocessing for dermoscopy experiments but transfer poorly to real-world photo monitoring.
-
-## 3. Over-cleaning risk
-
-If masking removes too much context, the model may lose useful information:
-- surrounding skin texture
-- lesion border relation to adjacent skin
-- scale cues
-- neighboring artifacts that might matter for longitudinal consistency
-
-So if we test segmentation, we should compare:
-- full-frame
-- crop
-- mask
-
-not assume the most aggressive cleanup is best.
-
-## 4. Tool-dependence risk
+## 2. It should not create a reproducibility trap
 
 `ml-intern` is strongest inside the Hugging Face ecosystem.
-That is useful, but DermaJEPA should not become dependent on a specific external agent runtime for core reproducibility.
+That is useful, but the project itself should remain understandable and runnable without requiring that agent.
 
 Meaning:
-- use it to bootstrap experiments
-- check in the outputs as ordinary scripts/docs
-- keep the repo runnable without requiring `ml-intern`
+- use `ml-intern` to bootstrap experiments
+- check the outputs into the repo as plain artifacts
+- do not leave important logic trapped inside external agent sessions
+
+## 3. It should not become a scope-growth engine
+
+A tool that can research, code, and launch jobs can also make it too easy to broaden scope.
+
+Likely failure modes:
+- too many side experiments before the first honest baseline exists
+- premature tuning before the task framing is locked
+- building fancy notebooks/reports before the core metrics matter
+- drifting into adjacent tasks that are easy to automate but weakly tied to the thesis
+
+So the right use is narrow and intentional.
 
 ---
 
 ## Recommended use inside DermaJEPA
 
-## Recommendation A — use `ml-intern` now for research and baseline scaffolding
+## Recommendation A — use it now for research and implementation prep
 
 This makes sense immediately.
 
 Good immediate tasks:
 - dataset audit for ISIC / HAM10000 / PAD-UFES-20 / repeated-lesion subsets
-- literature review on lesion monitoring and representation robustness
+- literature review on JEPA-adjacent representation learning and medical-image invariance
 - baseline notebook scaffolding
-- segmentation-dataset availability survey
+- evaluation harness scaffolding
+- experiment-report template generation
 
-This is low-risk and high leverage.
+This is high leverage and thesis-aligned.
 
-## Recommendation B — run one tightly bounded segmentation spike later
+## Recommendation B — use it later for bounded tuning support
 
-Only after a first non-segmentation baseline exists.
+Only after a first honest baseline exists.
 
 ### Gate condition
 
-Do this only if at least one of the following is true:
-- full-frame embeddings are too sensitive to nuisance perturbations
-- qualitative examples show background/framing dominates drift scores
-- lesion ROI isolation looks necessary to make the thesis honest
+Use `ml-intern` for tuning only after:
+- the task framing is fixed
+- the first baseline runs end-to-end
+- the evaluation harness is stable enough that sweep results are meaningful
 
-### Bounded spike design
+Then it can help with:
+- small parameter sweeps
+- ablation comparisons
+- result summarization
+- log inspection
 
-Time-box: **1-2 days max**
+## Recommendation C — do not use it to redirect the repo into non-JEPA work
 
-Question:
-> Does lesion-focused preprocessing improve nuisance robustness enough to justify pipeline complexity?
+For this project, `ml-intern` should act like:
+- a research assistant
+- an ML engineering assistant
+- an evaluation/tuning assistant
 
-Minimal experiment:
-1. train or adapt a lesion segmenter on an ISIC segmentation source
-2. generate bbox crops + masked crops
-3. run the same baseline embedding pipeline on:
-   - original image
-   - bbox crop
-   - masked crop
-4. compare:
-   - stable-vs-changing separation
-   - robustness to augmentations
-   - artifact legibility in the demo
-
-Decision rule:
-- keep segmentation only if it clearly improves the monitoring story
-- otherwise revert to full-frame or simple crop baselines
+It should **not** act like a reason to change the problem.
 
 ---
 
-## Concrete experiment ideas
+## Concrete JEPA-aligned ways to use it
 
-## Experiment 1 — segmentation as nuisance suppressor
+## Experiment support idea 1 — dataset audit dossier
 
-**Goal:** test whether lesion masks improve embedding stability under nuisance transforms.
+**Goal:** reduce ambiguity in data selection before implementation grows.
 
-Setup:
-- choose one baseline encoder
-- create augmentations for lighting, crop shift, blur, zoom, occlusion
-- compare embedding drift under:
-  - full-frame
-  - lesion bbox crop
-  - masked lesion image
+Ask it to:
+- inspect candidate dermatology datasets
+- verify schema, labels, splits, and metadata
+- summarize which datasets are useful for pseudo-longitudinal construction
+- produce a markdown matrix for the repo
 
-Readout:
-- intra-lesion stability under nuisance
-- inter-lesion separability
-- change-vs-stable ranking quality in pseudo-trajectories
+## Experiment support idea 2 — baseline pipeline scaffolding
 
-## Experiment 2 — segmentation as trajectory canonicalizer
+**Goal:** get to the first honest baseline faster.
 
-**Goal:** reduce framing variance when constructing pseudo-longitudinal windows.
+Ask it to:
+- research current image-training examples using Hugging Face tooling
+- scaffold a compact training script for a baseline encoder experiment
+- scaffold embedding export + evaluation scripts
+- generate a notebook for qualitative inspection
 
-Setup:
-- use masks to normalize crop center and scale
-- build pseudo-trajectories with more consistent lesion support
-- compare downstream drift metrics with and without canonicalization
+## Experiment support idea 3 — nuisance robustness eval harness
 
-Readout:
-- whether latent drift becomes less noisy for stable lesions
-- whether changing lesions still show meaningful departure
+**Goal:** make the invariance question concrete.
 
-## Experiment 3 — `ml-intern` as experiment operator
+Ask it to:
+- scaffold an augmentation-heavy evaluation pipeline
+- measure embedding stability under lighting / crop / blur / framing perturbations
+- export summary tables and plots
+- package a markdown report comparing runs
 
-**Goal:** use the agent as a bounded worker, not as the source of truth.
+## Experiment support idea 4 — bounded tuning assistant
 
-Candidate prompt:
-- inspect a chosen derm dataset
-- verify schema and label availability
-- scaffold a segmentation training script or preprocessing notebook
-- test in sandbox
-- output a plain Python script + notebook + short markdown report
+**Goal:** reduce manual tuning overhead without broadening scope.
 
-Rule:
-- every useful artifact gets checked into this repo in a normal human-readable form
+Ask it to:
+- generate a small sweep script over a few critical parameters
+- run and summarize the sweep
+- identify which settings improve nuisance robustness without hurting separation
 
 ---
 
@@ -336,21 +310,22 @@ Rule:
 
 ### What to do
 
-**Use `ml-intern` for DermaJEPA, but use it tactically.**
+**Use `ml-intern` for DermaJEPA only in the ML engineering assistance lane.**
 
 Priority order:
 1. **Yes** to research + dataset audit + baseline scaffolding
-2. **Maybe** to one segmentation-assisted preprocessing spike
-3. **No** to turning DermaJEPA into a SAM project
+2. **Yes** to evaluation harness and bounded tuning support
+3. **No** to using it as a reason to branch into segmentation, SAM, or other non-JEPA detours
 
-### Best current framing
+### Best framing
 
 For this repo, `ml-intern` is best understood as:
 - an **experiment acceleration tool**
 - a **research automation worker**
-- optionally a **segmentation-sidecar builder**
+- an **ML engineering assistant**
+- a **tuning/evaluation helper**
 
-not as the model thesis.
+not as the source of the project thesis.
 
 ### My recommendation for v1
 
@@ -358,22 +333,22 @@ Ship DermaJEPA v1 around:
 - a compact JEPA or JEPA-adjacent embedding path
 - pseudo-longitudinal evaluation
 - latent drift scoring
-- full-frame and maybe crop-based baselines
+- nuisance-robustness checks
+- honest baselines
 
-Then, only if needed, add:
-- segmentation-assisted preprocessing as an ablation
-
-That sequencing preserves honesty and avoids the easiest scope trap.
+Use `ml-intern` only to make those pieces faster to build and easier to iterate on.
 
 ---
 
 ## Proposed next actions for this repo
 
-1. add a formal decision note in the RFC stack that segmentation is **optional preprocessing, not core thesis**
-2. add a dataset matrix showing which candidate corpora provide masks, repeated lesions, patient metadata, and likely nuisance profile
-3. when implementation starts, run one bounded spike:
-   - full-frame vs bbox-crop vs masked-image
-4. if `ml-intern` is actually used, commit the generated scripts/notebooks into repo-native paths rather than leaving them as external agent artifacts
+1. add a dataset matrix showing which candidate corpora provide repeated lesions, patient metadata, lesion-type labels, and likely nuisance profile
+2. define the first baseline training/eval pipeline more concretely
+3. create one bounded `ml-intern` task spec for:
+   - dataset audit
+   - baseline script scaffolding
+   - evaluation harness scaffolding
+4. keep all generated outputs as normal repo-native files rather than external agent artifacts
 
 ---
 
@@ -381,8 +356,8 @@ That sequencing preserves honesty and avoids the easiest scope trap.
 
 The X post is useful because it points to a **credible agentic ML workflow**.
 
-For DermaJEPA, the smart use is:
+For DermaJEPA, the right use is simple:
 - borrow the workflow discipline
-- optionally use the tool to accelerate bounded experiments
-- treat SAM segmentation as a possible helper for nuisance suppression
-- keep the project centered on **latent longitudinal monitoring**, not segmentation performance
+- use the tool for research, engineering assistance, evaluation, and tuning
+- stay fully JEPA-focused
+- reject side paths that do not help prove the latent monitoring thesis
