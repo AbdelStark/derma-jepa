@@ -49,6 +49,9 @@ Repeated lesion photographs vary heavily because of illumination, angle, skin te
 
 ## Repository structure
 
+- `src/derma_jepa/` — package, CLI, manifest contracts, fixture pipeline, baselines, and demo export
+- `configs/manifest/fixture.yaml` — deterministic fixture-tier pipeline config
+- `tests/` — contract, metric, and end-to-end fixture pipeline tests
 - `docs/prd/PRD.md` — product requirements
 - `docs/spec/SYSTEM-SPEC.md` — system architecture and design contracts
 - `docs/spec/RESEARCH.md` — research notes and open questions
@@ -56,7 +59,69 @@ Repeated lesion photographs vary heavily because of illumination, angle, skin te
 - `docs/spec/MVP-STATUS.md` — current implementation state
 - `docs/rfcs/` — decision records that lock the design before code expands
 
+## Fixture pipeline
+
+The first implementation milestone is a contract-first fixture pipeline. It uses
+deterministic synthetic images to prove the repository mechanics before public
+data, DINOv2 embeddings, or JEPA-style predictor training.
+
+Install the development environment:
+
+```bash
+uv sync --extra dev
+```
+
+Run the full fixture contract:
+
+```bash
+uv run derma-jepa fixture pipeline --config configs/manifest/fixture.yaml
+```
+
+This command builds and validates the synthetic pair manifest, exports
+deterministic fixture embeddings, evaluates pixel L2 and SSIM baselines, writes a
+self-contained run directory, validates the fixture acceptance gate, and exports
+a local demo bundle.
+
+Generated outputs:
+
+- `runs/fixture-contract-v1/` — manifests, metrics, baseline report, model card,
+  logs, embeddings, plot, benchmark report, and demo case JSON
+- `artifacts/demo/fixture-contract-v1/` — portable fixture demo bundle with
+  `demo_case.json`, copied synthetic images, and `index.html`
+
+Open the exported demo entrypoint:
+
+```bash
+uv run derma-jepa demo --artifact artifacts/demo/fixture-contract-v1
+```
+
+Validate the codebase:
+
+```bash
+uv run ruff check .
+uv run mypy
+uv run pytest
+```
+
+## Command surface
+
+The MVP command surface is locked even though later model/data commands remain
+gated by milestone:
+
+```bash
+derma-jepa data audit --config configs/manifest/fixture.yaml
+derma-jepa manifest build --config configs/manifest/fixture.yaml
+derma-jepa embed --config configs/manifest/fixture.yaml
+derma-jepa baseline eval --config configs/manifest/fixture.yaml
+derma-jepa eval --config configs/manifest/fixture.yaml
+derma-jepa benchmark --run runs/fixture-contract-v1
+derma-jepa demo export --run runs/fixture-contract-v1 --out artifacts/demo/fixture-contract-v1
+derma-jepa demo --artifact artifacts/demo/fixture-contract-v1
+derma-jepa train --config configs/manifest/fixture.yaml --dry-run
+```
+
 ## Build principle
 
-The repository is spec-first by design.
-Implementation should follow only after the PRD, system spec, and RFC stack are coherent enough to make the first build phase mechanical.
+The repository remains spec-led, but implementation has started. The fixture
+pipeline is the first runnable proof that the manifest, preprocessing, baseline,
+metric, artifact, and demo contracts can work end to end.

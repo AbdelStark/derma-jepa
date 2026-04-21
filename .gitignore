@@ -1,9 +1,16 @@
 *.pyc
 __pycache__/
 .venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
 .env
 .DS_Store
 node_modules/
 dist/
 .artifacts/
 .runs/
+runs/
+artifacts/demo/
+data/raw/
+data/interim/

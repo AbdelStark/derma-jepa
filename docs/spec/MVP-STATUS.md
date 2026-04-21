@@ -1,6 +1,6 @@
 # DermaJEPA MVP status
 
-Current state: MVP specification locked; implementation not started.
+Current state: Milestone 1 complete; fixture-tier implementation is runnable.
 
 ## Completed
 
@@ -12,40 +12,64 @@ Current state: MVP specification locked; implementation not started.
 - [x] accepted RFC stack
 - [x] implementation plan
 - [x] MVP schedule
+- [x] Milestone 1: contract-first fixture pipeline
+
+## Completed implementation milestone
+
+- [x] Milestone 1: contract-first fixture pipeline
+
+Milestone 1 produced:
+
+- [x] package scaffold and `pyproject.toml`
+- [x] Typer CLI with the locked MVP command surface
+- [x] manifest schema and validation
+- [x] deterministic synthetic fixture dataset generator
+- [x] preprocessing profile implementation
+- [x] pixel L2 and SSIM baselines on fixtures
+- [x] AUROC, AUPRC, threshold, and bootstrap CI metric wrapper
+- [x] run directory writer with fixture-tier artifact validation
+- [x] demo export JSON plus static HTML for one fixture run
+- [x] CI fixture pipeline
+
+Local acceptance command:
+
+```bash
+uv run derma-jepa fixture pipeline --config configs/manifest/fixture.yaml
+```
 
 ## Active next milestone
 
-- [ ] Milestone 1: contract-first fixture pipeline
+- [ ] Milestone 2: public data audit and baseline path
 
-Milestone 1 must produce:
+Milestone 2 must produce:
 
-- [ ] package scaffold and `pyproject.toml`
-- [ ] CLI skeleton
-- [ ] manifest schema and validation
-- [ ] synthetic/tiny fixture dataset
-- [ ] preprocessing profile implementation
-- [ ] pixel/SSIM baseline on fixtures
-- [ ] AUROC and bootstrap CI metric wrapper
-- [ ] run directory writer
-- [ ] demo export JSON for one fixture case
-- [ ] CI fixture pipeline
+- [ ] `data/README.md` with source, license/access, expected files, checksums
+      where possible, and citations
+- [ ] HAM10000/ISIC indexing or download instructions
+- [ ] normalized metadata tables
+- [ ] leakage audit with patient/lesion/source/duplicate checks
+- [ ] stable/changing proxy manifest
+- [ ] gold audit subset
+- [ ] pixel/SSIM baseline report on the public-data proxy
+- [ ] DINOv2 ViT-S/14 and ViT-B/14 embedding export
+- [ ] DINOv2 baseline report
+- [ ] initial failure-case templates
 
 ## Not started
 
-- [ ] data audit
+- [ ] public data audit
 - [ ] public dataset indexing/download workflow
 - [ ] leakage-controlled primary manifest
 - [ ] DINOv2 baseline implementation
 - [ ] dermatology-supervised baseline investigation
 - [ ] JEPA-style predictor training scaffold
-- [ ] embedding export contract
-- [ ] downstream drift scoring path
+- [ ] primary-tier embedding export contract
+- [ ] JEPA-style downstream drift scoring path
 - [ ] nuisance robustness benchmark
 - [ ] representation health checks
 - [ ] local dashboard/demo surface
-- [ ] evaluation reports
-- [ ] model card
-- [ ] README reproduction update
+- [ ] primary-tier evaluation reports
+- [ ] primary-tier model card
 
 ## Rule
 

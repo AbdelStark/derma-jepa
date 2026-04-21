@@ -1,0 +1,54 @@
+[project]
+name = "derma-jepa"
+version = "0.1.0"
+description = "JEPA-style latent trajectory research tooling for lesion-monitoring proxy tasks."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "numpy>=1.26",
+  "pillow>=10.0",
+  "pyarrow>=15.0",
+  "pyyaml>=6.0",
+  "scikit-image>=0.22",
+  "scikit-learn>=1.4",
+  "typer>=0.12",
+]
+
+[project.optional-dependencies]
+model = [
+  "timm>=1.0",
+  "torch>=2.3",
+  "torchvision>=0.18",
+  "transformers>=4.41",
+]
+dev = [
+  "mypy>=1.10",
+  "pytest>=8.2",
+  "ruff>=0.5",
+  "types-PyYAML>=6.0",
+]
+
+[project.scripts]
+derma-jepa = "derma_jepa.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C4", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+packages = ["derma_jepa"]
+strict = true
+warn_unreachable = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

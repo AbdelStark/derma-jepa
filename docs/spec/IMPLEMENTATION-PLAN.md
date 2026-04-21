@@ -29,6 +29,8 @@ training compute.
 
 ## Milestone 1 - contract-first fixture pipeline
 
+Status: Complete in the fixture tier.
+
 Purpose: prove the repository mechanics before real data/model complexity.
 
 Deliverables:
@@ -59,6 +61,12 @@ Acceptance:
 - one command or script runs fixture manifest build through eval artifact export
 - generated run directory satisfies the fixture-tier artifact contract
 - tests pass locally and in CI
+
+Implemented command:
+
+```bash
+uv run derma-jepa fixture pipeline --config configs/manifest/fixture.yaml
+```
 
 ## Milestone 2 - public data audit and baseline path
 
