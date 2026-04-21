@@ -1,33 +1,58 @@
-# RFC-0001 — problem statement and product thesis
+# RFC-0001 - problem statement and product thesis
 
 ## Status
-Draft
 
-## Problem
+Accepted
 
-Define the monitoring-first thesis, target user, and exact MVP claim.
+## Canonical spec
 
-## Why this matters
+See `docs/spec/MVP-SPEC.md`, sections 1, 2, 17, 19, and 20.
 
-If this decision stays fuzzy, the project will either optimize for the wrong target or bloat before the thesis is actually tested.
+## Decision
 
-## Decisions to lock
+DermaJEPA is a monitoring-first research project, not a diagnosis product. The
+MVP evaluates whether a JEPA-style latent trajectory model can separate
+nuisance-induced visual drift from meaningful lesion-change proxies better than
+simple pixel/SSIM baselines and generic frozen vision embeddings on public
+dermatology data.
 
-- Monitoring rather than diagnosis
-- User stories for evaluator/demo workflow
-- Strongest one-line thesis
-- Explicit non-goals and forbidden claims
+The MVP may describe itself as a restricted latent world-model prototype only in
+the narrow sense that it learns a predictive model over image-derived lesion
+representations. It must not claim to model disease progression, melanoma
+evolution, cancer risk, or patient state.
 
-## Preferred v1 bias
+## Non-claims
 
-Choose the smallest credible option that preserves demo speed and empirical honesty.
+The MVP must not claim:
 
-## Deferred items
+- diagnostic accuracy
+- clinical validity
+- melanoma detection
+- treatment recommendation
+- real patient monitoring
+- medical-device readiness
+- full JEPA pretraining from scratch
+- a general dermatology foundation model
 
-- any move that broadens the project into a general platform
-- any optimization that matters only after the first convincing demo exists
-- any expansion in data/model size that does not materially change the first evaluation story
+## Target audience
+
+Primary:
+
+- academic ML scientists
+- ML researchers
+- world-model researchers
+
+Secondary:
+
+- future contributors who need a reproducible research engineering surface
+
+## Consequences
+
+Implementation must optimize for empirical honesty before demo polish. A
+negative or inconclusive result is still valid if the task, baselines, leakage
+policy, and artifacts are complete.
 
 ## Acceptance condition
 
-This RFC is complete only when a builder could implement the next phase without guessing what the project is actually trying to prove.
+This RFC is satisfied when the README, demo, reports, and model cards all use
+monitoring/proxy-task language and avoid diagnostic or clinical-product claims.

@@ -1,33 +1,55 @@
-# RFC-0004 — trajectory scoring and alerting
+# RFC-0004 - trajectory scoring and alerting
 
 ## Status
-Draft
 
-## Problem
+Accepted
 
-Define how latent drift is measured, normalized, smoothed, and turned into an operator-visible signal.
+## Canonical spec
 
-## Why this matters
+See `docs/spec/MVP-SPEC.md`, sections 5, 10, 11, 14, and 15.
 
-If this decision stays fuzzy, the project will either optimize for the wrong target or bloat before the thesis is actually tested.
+## Decision
 
-## Decisions to lock
+The MVP exposes latent drift scores, not clinical alerts.
 
-- Primary latent drift metrics
-- Per-lesion baseline definition
-- Temporal smoothing
-- Alert threshold semantics
+The scoring path is:
 
-## Preferred v1 bias
+1. export embeddings for each image or generated pair/window
+2. compute latent drift for pair/window comparisons
+3. compare drift distributions for stable and changing proxy labels
+4. report threshold behavior only as a research metric
+5. display thresholds in the demo as references, not medical advice
 
-Choose the smallest credible option that preserves demo speed and empirical honesty.
+Primary score:
 
-## Deferred items
+- latent drift score per pair/window
 
-- any move that broadens the project into a general platform
-- any optimization that matters only after the first convincing demo exists
-- any expansion in data/model size that does not materially change the first evaluation story
+Primary metric:
+
+- held-out pairwise proxy change-detection AUROC with bootstrap confidence
+  interval
+
+Secondary threshold metrics:
+
+- AUPRC
+- equal-error-rate threshold
+- FPR at fixed TPR
+- calibration/error curves
+
+## No clinical alert semantics
+
+The system must not say "high risk", "consult a doctor", "melanoma likely", or
+any equivalent clinical alert. Demo language may say "higher latent drift than
+baseline/reference examples" and must keep the proxy-task context visible.
+
+## Consequences
+
+Trajectory scoring remains interpretable for researchers without making a
+medical-device claim. Any threshold selected for visualization must be tied to
+evaluation artifacts.
 
 ## Acceptance condition
 
-This RFC is complete only when a builder could implement the next phase without guessing what the project is actually trying to prove.
+This RFC is satisfied when drift scores, baseline scores, thresholds, and plots
+are generated from run artifacts and the demo presents them as proxy-task
+evidence only.

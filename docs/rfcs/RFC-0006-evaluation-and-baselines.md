@@ -1,33 +1,66 @@
-# RFC-0006 — evaluation and baselines
+# RFC-0006 - evaluation and baselines
 
 ## Status
-Draft
 
-## Problem
+Accepted
 
-Define baselines, metrics, nuisance tests, and artifact export for empirical validation.
+## Canonical spec
 
-## Why this matters
+See `docs/spec/MVP-SPEC.md`, sections 9, 11, 14, 19, and 20.
 
-If this decision stays fuzzy, the project will either optimize for the wrong target or bloat before the thesis is actually tested.
+## Decision
 
-## Decisions to lock
+No JEPA-style result is credible until mandatory baselines and leakage probes are
+complete.
 
-- Pixel-difference baseline
-- Frozen-image-encoder baseline
-- Primary metric and report format
-- Qualitative case-study template
+Mandatory baselines:
 
-## Preferred v1 bias
+- resized/cropped pixel L2
+- SSIM
+- LPIPS if dependency cost is acceptable
+- frozen DINOv2 ViT-S/14 cosine distance on class token and average patch token
+- frozen DINOv2 ViT-B/14 cosine distance on class token and average patch token
+- dermatology-supervised embedding baseline if labels are clean enough
+- trivial metadata/leakage probes where metadata exists
 
-Choose the smallest credible option that preserves demo speed and empirical honesty.
+Primary metric:
 
-## Deferred items
+- pairwise proxy change-detection AUROC on held-out lesion/patient-aware splits
 
-- any move that broadens the project into a general platform
-- any optimization that matters only after the first convincing demo exists
-- any expansion in data/model size that does not materially change the first evaluation story
+Minimum positive target:
+
+- at least `+0.05 AUROC` over the strongest cheap baseline on the primary
+  held-out split, with bootstrap confidence interval
+
+Secondary metrics:
+
+- AUPRC
+- equal-error-rate threshold
+- FPR at fixed TPR
+- calibration/error curves
+
+Benchmark suite:
+
+- nuisance robustness by augmentation family and severity
+- representation health checks
+- ablations
+- runtime benchmarks
+- qualitative case studies
+
+## Failure policy
+
+If the JEPA-style model does not beat the strongest baseline, the MVP still
+ships as a negative or inconclusive research artifact. Baseline removal,
+threshold tuning, or cherry-picked cases are not allowed to rescue the story.
+
+## Consequences
+
+The report must separate metric results, robustness results, runtime results,
+and qualitative cases. A polished demo without benchmark artifacts is not an
+MVP.
 
 ## Acceptance condition
 
-This RFC is complete only when a builder could implement the next phase without guessing what the project is actually trying to prove.
+This RFC is satisfied when a full run directory contains complete JEPA metrics,
+baseline metrics, confidence intervals, plots, failure cases, and model-card
+limitations.

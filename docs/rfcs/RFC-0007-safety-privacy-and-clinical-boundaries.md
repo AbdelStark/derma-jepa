@@ -1,33 +1,52 @@
-# RFC-0007 — safety privacy and clinical boundaries
+# RFC-0007 - safety, privacy, and clinical boundaries
 
 ## Status
-Draft
 
-## Problem
+Accepted
 
-Define privacy boundaries, clinical non-claims, dataset handling assumptions, and demo language.
+## Canonical spec
 
-## Why this matters
+See `docs/spec/MVP-SPEC.md`, sections 1, 4, 15, 17, and 19.
 
-If this decision stays fuzzy, the project will either optimize for the wrong target or bloat before the thesis is actually tested.
+## Decision
 
-## Decisions to lock
+DermaJEPA MVP is a research demo over public/research-allowed dermatology data.
+It is not diagnostic, not patient-facing, and not validated for medical use.
 
-- Allowed and disallowed product language
-- Local-first privacy constraints
-- Data governance assumptions
-- Medical-device non-claim rules
+Required language:
 
-## Preferred v1 bias
+- research demo
+- longitudinal-proxy task
+- latent drift
+- not diagnostic
+- not medical advice
+- not validated for patient use
 
-Choose the smallest credible option that preserves demo speed and empirical honesty.
+Forbidden language:
 
-## Deferred items
+- detects melanoma
+- predicts cancer
+- clinical decision support
+- diagnosis
+- treatment recommendation
+- safe for patient monitoring
+- medical-device ready
 
-- any move that broadens the project into a general platform
-- any optimization that matters only after the first convincing demo exists
-- any expansion in data/model size that does not materially change the first evaluation story
+## Data policy
+
+- Do not vendor raw public datasets into the repo.
+- Keep raw data under gitignored local paths.
+- Commit only synthetic/license-safe fixtures.
+- Respect source dataset license and citation terms.
+- Do not use personal photos or patient data in MVP artifacts.
+- Demo cases must carry source attribution in provenance.
+
+## Consequences
+
+Safety and privacy boundaries are part of the definition of done. A demo or
+report with clinical overclaiming is incomplete even if the metrics pass.
 
 ## Acceptance condition
 
-This RFC is complete only when a builder could implement the next phase without guessing what the project is actually trying to prove.
+This RFC is satisfied when README, reports, model cards, run artifacts, and demo
+copy pass a safety-language audit and use only public/research-allowed data.

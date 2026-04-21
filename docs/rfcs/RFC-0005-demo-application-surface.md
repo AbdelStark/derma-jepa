@@ -1,33 +1,53 @@
-# RFC-0005 — demo application surface
+# RFC-0005 - demo application surface
 
 ## Status
-Draft
 
-## Problem
+Accepted
 
-Define the local demo flow, stored artifacts, visualizations, and operator interactions.
+## Canonical spec
 
-## Why this matters
+See `docs/spec/MVP-SPEC.md`, sections 12, 13, 14, 15, and 17.
 
-If this decision stays fuzzy, the project will either optimize for the wrong target or bloat before the thesis is actually tested.
+## Decision
 
-## Decisions to lock
+The MVP demo is a local MacBook Pro dashboard over deterministic exported cases.
+It is not a phone app and not an open-ended medical app.
 
-- Capture/review workflow
-- Trajectory chart contract
-- Example-case packaging
-- What runs locally vs what runs on workstation
+Required views:
 
-## Preferred v1 bias
+- case timeline with source metadata
+- latent drift chart with baseline comparison
+- embedding-space view or nearest-neighbor panel
+- nuisance stress view
+- failure-case view
+- run provenance panel
 
-Choose the smallest credible option that preserves demo speed and empirical honesty.
+The demo must run from exported artifacts and must not require live training or
+hidden raw-data cleanup. Optional on-demand inference for one uploaded pair can
+be added only after the deterministic path works.
 
-## Deferred items
+## Runtime contract
 
-- any move that broadens the project into a general platform
-- any optimization that matters only after the first convincing demo exists
-- any expansion in data/model size that does not materially change the first evaluation story
+MacBook Pro tier:
+
+- local dashboard
+- precomputed artifact viewing
+- small eval/report slices
+- optional lightweight inference
+
+GB10 tier:
+
+- full embedding export
+- JEPA-style predictor/projection training
+- full benchmark and eval jobs
+- demo artifact generation for transfer back to the MacBook Pro
+
+## Consequences
+
+Demo quality depends on provenance, baseline comparison, and visible failure
+cases. UI polish cannot substitute for benchmark artifacts.
 
 ## Acceptance condition
 
-This RFC is complete only when a builder could implement the next phase without guessing what the project is actually trying to prove.
+This RFC is satisfied when `derma-jepa demo --artifact artifacts/demo/<run_id>`
+opens the local dashboard from exported artifacts and shows the required views.
