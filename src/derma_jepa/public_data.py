@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import time
 from collections import Counter
 from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
@@ -23,6 +24,7 @@ from derma_jepa.contracts import (
     validate_manifest,
     write_manifest,
 )
+from derma_jepa.observability import log_event, progress_iter, stage
 from derma_jepa.run import append_log, prepare_run_dir, run_lock, write_json
 
 NORMALIZED_METADATA_SCHEMA = pa.schema(
@@ -73,35 +75,74 @@ def audit_public_dataset(config: PipelineConfig) -> Path:
     dataset = require_public_dataset_config(config)
     with run_lock(config.run_dir):
         run_dir = prepare_run_dir(config)
-        records, issues = _load_public_records(config, require_images=False)
-        _write_normalized_metadata(run_dir / "metadata_normalized.parquet", records)
-        payload = _audit_payload(
-            config=config,
-            records=records,
-            issues=issues,
-            rows=None,
-            split_groups=None,
-        )
-        write_json(run_dir / "data_audit.json", payload)
-        append_log(
-            run_dir,
-            "data_audit.log",
-            (
-                f"audited {issues.metadata_row_count} {dataset.name} metadata rows; "
-                f"{len(issues.missing_image_ids)} images missing"
-            ),
-        )
+        with stage(
+            "public_data.audit",
+            run_dir=run_dir,
+            dataset=dataset.name,
+            metadata_csv=str(dataset.metadata_csv),
+        ) as audit_stage:
+            records, issues = _load_public_records(
+                config, require_images=False, run_dir=run_dir
+            )
+            audit_stage.set(
+                metadata_rows=issues.metadata_row_count,
+                missing_images=len(issues.missing_image_ids),
+            )
+            _write_normalized_metadata(
+                run_dir / "metadata_normalized.parquet", records
+            )
+            payload = _audit_payload(
+                config=config,
+                records=records,
+                issues=issues,
+                rows=None,
+                split_groups=None,
+            )
+            write_json(run_dir / "data_audit.json", payload)
+            append_log(
+                run_dir,
+                "data_audit.log",
+                (
+                    f"audited {issues.metadata_row_count} {dataset.name} metadata "
+                    f"rows; {len(issues.missing_image_ids)} images missing"
+                ),
+            )
         return run_dir / "data_audit.json"
 
 
 def build_public_manifest(config: PipelineConfig) -> Path:
     with run_lock(config.run_dir):
         run_dir = prepare_run_dir(config)
-        records, issues = _load_public_records(config, require_images=True)
+        manifest_start = time.perf_counter()
+        log_event("public_data.manifest_build.start", run_dir=run_dir)
+        records, issues = _load_public_records(
+            config, require_images=True, run_dir=run_dir
+        )
         _validate_manifest_inputs(records, issues)
         split_records, split_groups = _split_records(config, records)
         rng = np.random.default_rng(config.seed + 1009)
+        stable_per_split = (
+            config.dataset.stable_pairs_per_split
+            if config.dataset is not None
+            else None
+        )
+        changing_per_split = (
+            config.dataset.changing_pairs_per_split
+            if config.dataset is not None
+            else None
+        )
+        log_event(
+            "public_data.pair_generation.start",
+            run_dir=run_dir,
+            stable_per_split=stable_per_split,
+            changing_per_split=changing_per_split,
+        )
         rows = _create_proxy_pairs(config, run_dir, split_records, rng)
+        log_event(
+            "public_data.pair_generation.end",
+            run_dir=run_dir,
+            pairs=len(rows),
+        )
         validate_manifest(rows)
         gold_audit_path = _write_gold_audit_subset(
             run_dir / "artifacts" / "reports" / "gold_audit_subset.csv",
@@ -129,11 +170,21 @@ def build_public_manifest(config: PipelineConfig) -> Path:
             "manifest.log",
             f"built public proxy manifest with {len(rows)} pairs",
         )
+        log_event(
+            "public_data.manifest_build.end",
+            run_dir=run_dir,
+            pairs=len(rows),
+            splits={split: len(split_records[split]) for split in SPLITS},
+            duration_seconds=round(time.perf_counter() - manifest_start, 3),
+        )
         return run_dir / "manifest_all.parquet"
 
 
 def _load_public_records(
-    config: PipelineConfig, *, require_images: bool
+    config: PipelineConfig,
+    *,
+    require_images: bool,
+    run_dir: Path | None = None,
 ) -> tuple[list[PublicImageRecord], MetadataIssues]:
     dataset = require_public_dataset_config(config)
     if not dataset.metadata_csv.exists():
@@ -152,7 +203,15 @@ def _load_public_records(
     records: list[PublicImageRecord] = []
     missing_image_ids: list[str] = []
     unreadable_image_ids: list[str] = []
-    for row in raw_rows:
+    total = len(raw_rows)
+    iterator = progress_iter(
+        raw_rows,
+        name="public_data.records",
+        total=total,
+        run_dir=run_dir,
+        every=max(1, total // 20),
+    )
+    for row in iterator:
         image_id = _image_id(row)
         lesion_id_raw = _optional_field(row, ("lesion_id", "lesion", "lesionid"))
         patient_id_raw = _optional_field(

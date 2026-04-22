@@ -152,6 +152,34 @@ Job phases to expect:
    ViT-B/14), cheap baselines, JEPA predictor fit.
 4. Upload — run directory pushes to `hf://datasets/$HF_OUTPUT_REPO_ID/<run-id>/`.
 
+### Structured progress events
+
+Every long-running stage emits a JSON line to stdout (captured by
+`hf jobs logs`) and mirrors the same line into
+`<run_dir>/logs/progress.jsonl` for later forensic review. The
+`derma_jepa.observability` module is the source of truth. Expected event
+sequence for a primary-tier HAM10000 run:
+
+- `public_data.manifest_build.start`
+- `public_data.records.progress` (~every 5% of metadata rows)
+- `public_data.pair_generation.start` / `.end`
+- `public_data.manifest_build.end`
+- `embeddings.export.start`
+- `embeddings.model.start` (per model in the config)
+- `embeddings.dinov2.load.start` / `.end` (device + model_name attached)
+- `embeddings.dinov2.<model_id>.progress` (batches processed)
+- `embeddings.model.end` / `embeddings.export.end`
+- `baselines.eval.start` / `.end`
+- `train.jepa.start` / `.end` (final event carries primary AUROC, strongest
+  baseline AUROC, delta, collapsed flag, and runtime seconds)
+
+A stage emitting `.end` with `level: error` means the pipeline aborted
+there. Open `logs/progress.jsonl` from the uploaded run directory to see
+the exception class and truncated message attached to the failing stage.
+
+Set `DERMA_JEPA_OBS_DISABLE=1` to silence the event stream entirely when
+you need clean stdout for e.g. piping into another tool.
+
 ## 5. Pulling and summarizing results
 
 ```bash

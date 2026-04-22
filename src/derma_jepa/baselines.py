@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +12,7 @@ from derma_jepa.config import PipelineConfig
 from derma_jepa.contracts import ManifestRow, read_manifest
 from derma_jepa.embeddings import read_embedding_vectors
 from derma_jepa.metrics import binary_metric_summary
+from derma_jepa.observability import log_event
 from derma_jepa.preprocessing import load_preprocessed_rgb
 from derma_jepa.run import append_log, prepare_run_dir, read_json, write_json
 
@@ -19,6 +21,13 @@ def evaluate_baselines(config: PipelineConfig, split: str = "test") -> Path:
     run_dir = prepare_run_dir(config)
     rows = list(read_manifest(run_dir / f"manifest_{split}.parquet"))
     labels = [row.label_int for row in rows]
+    started = time.perf_counter()
+    log_event(
+        "baselines.eval.start",
+        run_dir=run_dir,
+        split=split,
+        pairs=len(rows),
+    )
     pixel_scores = [_pixel_l2(row, config.preprocessing.image_size) for row in rows]
     ssim_scores = [_ssim_distance(row, config.preprocessing.image_size) for row in rows]
 
@@ -67,6 +76,15 @@ def evaluate_baselines(config: PipelineConfig, split: str = "test") -> Path:
     )
     append_log(
         run_dir, "eval.log", f"evaluated {config.tier} baselines on {split} split"
+    )
+    log_event(
+        "baselines.eval.end",
+        run_dir=run_dir,
+        split=split,
+        pairs=len(rows),
+        strongest=strongest[0],
+        strongest_auroc=strongest[1]["metrics"]["auroc"],
+        duration_seconds=round(time.perf_counter() - started, 3),
     )
     return run_dir / "baseline_metrics.json"
 

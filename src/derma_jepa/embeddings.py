@@ -10,6 +10,7 @@ from PIL import Image, ImageOps
 
 from derma_jepa.config import EmbeddingModelConfig, PipelineConfig
 from derma_jepa.contracts import ManifestRow, read_manifest
+from derma_jepa.observability import progress_iter, stage
 from derma_jepa.preprocessing import load_preprocessed_rgb
 from derma_jepa.run import append_log, prepare_run_dir, write_json
 
@@ -23,24 +24,43 @@ def export_embeddings(config: PipelineConfig) -> Path:
         msg = "config.embeddings.models must contain at least one model"
         raise ValueError(msg)
 
-    index_records: list[dict[str, str | int]] = []
-    for model in config.embedding_models:
-        artifact_path, metadata_path, dimension = _export_model_embeddings(
-            config,
-            model,
-            image_records,
-        )
-        index_records.append(
-            {
-                "model_id": model.model_id,
-                "kind": model.kind,
-                "model_name": model.model_name or model.model_id,
-                "artifact_path": str(artifact_path),
-                "metadata_path": str(metadata_path),
-                "dimension": dimension,
-                "image_count": len(image_records),
-            }
-        )
+    with stage(
+        "embeddings.export",
+        run_dir=run_dir,
+        models=[model.model_id for model in config.embedding_models],
+        images=len(image_records),
+    ):
+        index_records: list[dict[str, str | int]] = []
+        for model in config.embedding_models:
+            with stage(
+                "embeddings.model",
+                run_dir=run_dir,
+                model_id=model.model_id,
+                kind=model.kind,
+                model_name=model.model_name,
+                batch_size=model.batch_size,
+            ) as model_stage:
+                artifact_path, metadata_path, dimension = _export_model_embeddings(
+                    config,
+                    model,
+                    image_records,
+                    run_dir=run_dir,
+                )
+                model_stage.set(
+                    artifact_path=str(artifact_path),
+                    dimension=dimension,
+                )
+            index_records.append(
+                {
+                    "model_id": model.model_id,
+                    "kind": model.kind,
+                    "model_name": model.model_name or model.model_id,
+                    "artifact_path": str(artifact_path),
+                    "metadata_path": str(metadata_path),
+                    "dimension": dimension,
+                    "image_count": len(image_records),
+                }
+            )
 
     index_path = run_dir / "artifacts" / "embeddings" / "embedding_index.json"
     write_json(
@@ -88,12 +108,14 @@ def _export_model_embeddings(
     config: PipelineConfig,
     model: EmbeddingModelConfig,
     image_records: dict[str, str],
+    *,
+    run_dir: Path | None = None,
 ) -> tuple[Path, Path, int]:
     if model.kind == "color_texture":
         matrix = _color_texture_matrix(config, image_records)
         feature_type = "color_texture_summary"
     elif model.kind == "dinov2":
-        matrix = _dinov2_matrix(model, image_records)
+        matrix = _dinov2_matrix(model, image_records, run_dir=run_dir)
         feature_type = "dinov2_cls_token"
     else:
         msg = f"unsupported embedding model kind: {model.kind}"
@@ -153,6 +175,8 @@ def _color_texture_matrix(
 def _dinov2_matrix(
     model_config: EmbeddingModelConfig,
     image_records: dict[str, str],
+    *,
+    run_dir: Path | None = None,
 ) -> np.ndarray:
     try:
         import torch
@@ -165,16 +189,31 @@ def _dinov2_matrix(
         )
         raise RuntimeError(msg) from exc
 
-    device = _resolve_device(torch, model_config.device)
-    processor = AutoImageProcessor.from_pretrained(model_config.model_name)
-    model = AutoModel.from_pretrained(model_config.model_name)
-    model.to(device)
-    model.eval()
+    with stage(
+        "embeddings.dinov2.load",
+        run_dir=run_dir,
+        model_name=model_config.model_name,
+    ) as load_stage:
+        device = _resolve_device(torch, model_config.device)
+        load_stage.set(device=device)
+        processor = AutoImageProcessor.from_pretrained(model_config.model_name)
+        model = AutoModel.from_pretrained(model_config.model_name)
+        model.to(device)
+        model.eval()
 
     all_vectors: list[np.ndarray] = []
     paths = [path for _, path in sorted(image_records.items())]
+    batch_size = model_config.batch_size
+    total_batches = (len(paths) + batch_size - 1) // batch_size
+    batch_starts = range(0, len(paths), batch_size)
     with torch.no_grad():
-        for start in range(0, len(paths), model_config.batch_size):
+        for start in progress_iter(
+            batch_starts,
+            name=f"embeddings.dinov2.{model_config.model_id}",
+            total=total_batches,
+            run_dir=run_dir,
+            every=max(1, total_batches // 20),
+        ):
             batch_paths = paths[start : start + model_config.batch_size]
             images = [_load_pil_rgb(path) for path in batch_paths]
             inputs = processor(images=images, return_tensors="pt")

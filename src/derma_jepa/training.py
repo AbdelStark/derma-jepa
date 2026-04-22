@@ -13,6 +13,7 @@ from derma_jepa.config import PipelineConfig
 from derma_jepa.contracts import SPLITS, ManifestRow, read_manifest
 from derma_jepa.embeddings import export_embeddings, read_embedding_vectors
 from derma_jepa.metrics import binary_metric_summary
+from derma_jepa.observability import log_event
 from derma_jepa.run import (
     append_log,
     prepare_run_dir,
@@ -24,6 +25,16 @@ from derma_jepa.run import (
 
 def train_jepa_predictor(config: PipelineConfig) -> Path:
     """Train the Milestone 3 latent predictor over frozen image embeddings."""
+    log_event(
+        "train.jepa.start",
+        run_dir=config.run_dir,
+        run_id=config.run_id,
+        tier=config.tier,
+        model_id=config.training.model_id,
+        epochs=config.training.epochs,
+        batch_size=config.training.batch_size,
+        learning_rate=config.training.learning_rate,
+    )
     _ensure_prerequisites(config)
     with run_lock(config.run_dir):
         run_dir = prepare_run_dir(config)
@@ -129,6 +140,24 @@ def train_jepa_predictor(config: PipelineConfig) -> Path:
                 f"trained {config.training.model_id} on {len(train_rows)} stable "
                 f"pairs with input embedding {embedding_record['model_id']}"
             ),
+        )
+        log_event(
+            "train.jepa.end",
+            run_dir=run_dir,
+            run_id=config.run_id,
+            tier=config.tier,
+            model_id=config.training.model_id,
+            train_stable_pairs=len(train_rows),
+            input_embedding=str(embedding_record["model_id"]),
+            primary_auroc=float(metrics_payload["primary_score"]),
+            strongest_baseline_auroc=float(
+                metrics_payload["result"]["strongest_baseline"]["auroc"]
+            ),
+            delta_vs_baseline=float(
+                metrics_payload["result"]["delta_auroc_vs_strongest_baseline"]
+            ),
+            collapsed=bool(metrics_payload["representation_health"]["collapsed"]),
+            runtime_seconds=round(runtime_seconds, 3),
         )
         return run_dir / "metrics.json"
 
