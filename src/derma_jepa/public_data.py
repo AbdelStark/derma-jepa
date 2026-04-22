@@ -408,6 +408,11 @@ def _create_proxy_pairs(
 ) -> list[ManifestRow]:
     dataset = require_public_dataset_config(config)
     rows: list[ManifestRow] = []
+    stable_reason = (
+        "same_image_post_split_strong_nuisance"
+        if dataset.nuisance_severity == "strong"
+        else "same_image_post_split_mild_nuisance"
+    )
     for split in SPLITS:
         records = split_records[split]
         for index in range(dataset.stable_pairs_per_split):
@@ -419,6 +424,7 @@ def _create_proxy_pairs(
                 record,
                 index,
                 rng,
+                severity=dataset.nuisance_severity,
             )
             rows.append(
                 _manifest_row(
@@ -432,18 +438,32 @@ def _create_proxy_pairs(
                     target_image_id=f"{record.image_id}_stable_{index:04d}",
                     target_path=target_path,
                     augmentation_recipe=recipe,
-                    reason="same_image_post_split_mild_nuisance",
+                    reason=stable_reason,
                 )
             )
 
         offset = dataset.stable_pairs_per_split
-        for index in range(dataset.changing_pairs_per_split):
-            context = records[(index + offset) % len(records)]
-            target, reason = _match_changing_target(context, records, index)
+        collected = 0
+        skipped = 0
+        cursor = 0
+        target_count = dataset.changing_pairs_per_split
+        while collected < target_count and cursor < len(records) * 4:
+            context = records[(cursor + offset) % len(records)]
+            cursor += 1
+            match = _match_changing_target(
+                context,
+                records,
+                cursor - 1,
+                policy=dataset.changing_pair_policy,
+            )
+            if match is None:
+                skipped += 1
+                continue
+            target, reason = match
             rows.append(
                 _manifest_row(
                     config=config,
-                    pair_id=f"{split}_public_changing_{index:04d}",
+                    pair_id=f"{split}_public_changing_{collected:04d}",
                     split=split,
                     pair_label="changing",
                     context=context,
@@ -455,6 +475,24 @@ def _create_proxy_pairs(
                     reason=reason,
                 )
             )
+            collected += 1
+        if collected < target_count:
+            msg = (
+                f"changing_pair_policy={dataset.changing_pair_policy} could not "
+                f"produce {target_count} pairs for split '{split}'; only "
+                f"{collected} matched after {skipped} skips. Lower "
+                f"changing_pairs_per_split or relax the policy."
+            )
+            raise ValueError(msg)
+        if skipped:
+            log_event(
+                "public_data.pair_generation.skipped_anchors",
+                run_dir=run_dir,
+                split=split,
+                policy=dataset.changing_pair_policy,
+                skipped=skipped,
+                collected=collected,
+            )
     return rows
 
 
@@ -462,7 +500,24 @@ def _match_changing_target(
     context: PublicImageRecord,
     records: list[PublicImageRecord],
     index: int,
-) -> tuple[PublicImageRecord, str]:
+    *,
+    policy: str = "fallback",
+) -> tuple[PublicImageRecord, str] | None:
+    same_diagnosis_and_site = [
+        record
+        for record in records
+        if record.lesion_id != context.lesion_id
+        and record.diagnosis == context.diagnosis
+        and record.anatomical_site == context.anatomical_site
+    ]
+    if policy == "strict_same_diagnosis_site":
+        if not same_diagnosis_and_site:
+            return None
+        same_diagnosis_and_site.sort(key=_record_sort_key)
+        return (
+            same_diagnosis_and_site[index % len(same_diagnosis_and_site)],
+            "different_lesion_same_diagnosis_and_site",
+        )
     candidate_sets = [
         (
             "different_lesion_same_patient",
@@ -475,16 +530,7 @@ def _match_changing_target(
                 and record.patient_id == context.patient_id
             ],
         ),
-        (
-            "different_lesion_same_diagnosis_and_site",
-            [
-                record
-                for record in records
-                if record.lesion_id != context.lesion_id
-                and record.diagnosis == context.diagnosis
-                and record.anatomical_site == context.anatomical_site
-            ],
-        ),
+        ("different_lesion_same_diagnosis_and_site", same_diagnosis_and_site),
         (
             "different_lesion_same_diagnosis",
             [
@@ -512,8 +558,7 @@ def _match_changing_target(
         if candidates:
             candidates.sort(key=_record_sort_key)
             return candidates[index % len(candidates)], reason
-    msg = f"no changing-pair target available for {context.image_id}"
-    raise ValueError(msg)
+    return None
 
 
 def _write_stable_variant(
@@ -523,32 +568,20 @@ def _write_stable_variant(
     record: PublicImageRecord,
     index: int,
     rng: np.random.Generator,
+    *,
+    severity: str = "mild",
 ) -> tuple[Path, dict[str, object]]:
     with Image.open(record.path) as image:
         variant = image.convert("RGB")
-        brightness = 1.0 + float(rng.uniform(-0.08, 0.08))
-        contrast = 1.0 + float(rng.uniform(-0.06, 0.06))
-        angle = float(rng.uniform(-4.0, 4.0))
-        blur_radius = 0.18 if index % 3 == 1 else 0.0
-        noise_sigma = 1.5 if index % 3 == 2 else 0.0
         variant = ImageOps.fit(
             variant,
             (config.preprocessing.image_size, config.preprocessing.image_size),
             method=Image.Resampling.BICUBIC,
         )
-        variant = ImageEnhance.Brightness(variant).enhance(brightness)
-        variant = ImageEnhance.Contrast(variant).enhance(contrast)
-        variant = variant.rotate(
-            angle,
-            resample=Image.Resampling.BICUBIC,
-            fillcolor=_corner_fill(variant),
-        )
-        if blur_radius > 0:
-            variant = variant.filter(ImageFilter.GaussianBlur(radius=blur_radius))
-        if noise_sigma > 0:
-            arr = np.asarray(variant, dtype=np.float32)
-            noise = rng.normal(0.0, noise_sigma, size=arr.shape)
-            variant = Image.fromarray(np.clip(arr + noise, 0, 255).astype(np.uint8))
+        if severity == "strong":
+            variant, recipe = _apply_strong_nuisance(variant, index, rng)
+        else:
+            variant, recipe = _apply_mild_nuisance(variant, index, rng)
 
     target_path = (
         run_dir
@@ -558,7 +591,33 @@ def _write_stable_variant(
         / f"{record.image_id}_stable_{index:04d}.png"
     )
     _save_png_atomic(variant, target_path)
-    recipe = {
+    return target_path, recipe
+
+
+def _apply_mild_nuisance(
+    variant: Image.Image,
+    index: int,
+    rng: np.random.Generator,
+) -> tuple[Image.Image, dict[str, object]]:
+    brightness = 1.0 + float(rng.uniform(-0.08, 0.08))
+    contrast = 1.0 + float(rng.uniform(-0.06, 0.06))
+    angle = float(rng.uniform(-4.0, 4.0))
+    blur_radius = 0.18 if index % 3 == 1 else 0.0
+    noise_sigma = 1.5 if index % 3 == 2 else 0.0
+    variant = ImageEnhance.Brightness(variant).enhance(brightness)
+    variant = ImageEnhance.Contrast(variant).enhance(contrast)
+    variant = variant.rotate(
+        angle,
+        resample=Image.Resampling.BICUBIC,
+        fillcolor=_corner_fill(variant),
+    )
+    if blur_radius > 0:
+        variant = variant.filter(ImageFilter.GaussianBlur(radius=blur_radius))
+    if noise_sigma > 0:
+        arr = np.asarray(variant, dtype=np.float32)
+        noise = rng.normal(0.0, noise_sigma, size=arr.shape)
+        variant = Image.fromarray(np.clip(arr + noise, 0, 255).astype(np.uint8))
+    recipe: dict[str, object] = {
         "family": "brightness_contrast_rotation_blur_noise",
         "severity": "mild",
         "brightness": round(brightness, 4),
@@ -567,7 +626,85 @@ def _write_stable_variant(
         "blur_radius": blur_radius,
         "noise_sigma": noise_sigma,
     }
-    return target_path, recipe
+    return variant, recipe
+
+
+def _apply_strong_nuisance(
+    variant: Image.Image,
+    index: int,
+    rng: np.random.Generator,
+) -> tuple[Image.Image, dict[str, object]]:
+    """Stronger family aimed at approximating a real lesion re-photography.
+
+    The goal is to break the trivial pixel-L2 separability observed in
+    EXP-001 by applying perturbations closer to the scale of a second
+    smartphone capture: larger colour/geometry shifts, resize-crop framing
+    change, Gaussian blur, camera noise, and a JPEG re-encode round-trip.
+    """
+    brightness = 1.0 + float(rng.uniform(-0.30, 0.30))
+    contrast = 1.0 + float(rng.uniform(-0.25, 0.25))
+    saturation = 1.0 + float(rng.uniform(-0.25, 0.25))
+    angle = float(rng.uniform(-15.0, 15.0))
+    scale = float(rng.uniform(0.82, 1.00))
+    tx = float(rng.uniform(-0.05, 0.05))
+    ty = float(rng.uniform(-0.05, 0.05))
+    blur_radius = float(rng.uniform(0.3, 1.2))
+    noise_sigma = float(rng.uniform(3.0, 7.0))
+    jpeg_quality = int(rng.integers(45, 70))
+    hflip = bool(index % 2 == 0)
+
+    width, height = variant.size
+    variant = ImageEnhance.Brightness(variant).enhance(brightness)
+    variant = ImageEnhance.Contrast(variant).enhance(contrast)
+    variant = ImageEnhance.Color(variant).enhance(saturation)
+    variant = variant.rotate(
+        angle,
+        resample=Image.Resampling.BICUBIC,
+        fillcolor=_corner_fill(variant),
+    )
+    if hflip:
+        variant = ImageOps.mirror(variant)
+    # Scale + translate by resizing down and pasting back offset, then re-fit
+    scaled_size = (max(1, int(width * scale)), max(1, int(height * scale)))
+    scaled = variant.resize(scaled_size, resample=Image.Resampling.BICUBIC)
+    canvas = Image.new("RGB", (width, height), _corner_fill(variant))
+    paste_x = int((width - scaled_size[0]) // 2 + tx * width)
+    paste_y = int((height - scaled_size[1]) // 2 + ty * height)
+    canvas.paste(scaled, (paste_x, paste_y))
+    variant = canvas
+    if blur_radius > 0:
+        variant = variant.filter(ImageFilter.GaussianBlur(radius=blur_radius))
+    if noise_sigma > 0:
+        arr = np.asarray(variant, dtype=np.float32)
+        noise = rng.normal(0.0, noise_sigma, size=arr.shape)
+        variant = Image.fromarray(np.clip(arr + noise, 0, 255).astype(np.uint8))
+    # JPEG round-trip to introduce camera-like compression artefacts
+    from io import BytesIO
+
+    buffer = BytesIO()
+    variant.save(buffer, format="JPEG", quality=jpeg_quality)
+    buffer.seek(0)
+    variant = Image.open(buffer).convert("RGB").copy()
+
+    recipe: dict[str, object] = {
+        "family": (
+            "brightness_contrast_saturation_rotation_scale_translate_"
+            "hflip_blur_noise_jpeg"
+        ),
+        "severity": "strong",
+        "brightness": round(brightness, 4),
+        "contrast": round(contrast, 4),
+        "saturation": round(saturation, 4),
+        "rotation_degrees": round(angle, 4),
+        "scale": round(scale, 4),
+        "translate_x_fraction": round(tx, 4),
+        "translate_y_fraction": round(ty, 4),
+        "hflip": hflip,
+        "blur_radius": round(blur_radius, 4),
+        "noise_sigma": round(noise_sigma, 4),
+        "jpeg_quality": jpeg_quality,
+    }
+    return variant, recipe
 
 
 def _manifest_row(

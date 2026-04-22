@@ -1,0 +1,78 @@
+# EXP-002 HAM10000 primary-tier config — harder proxy task.
+#
+# Differences from configs/data/ham10000_hf_mounted.yaml:
+#
+# - dataset.nuisance_severity = "strong"
+#     Replaces the mild post-split brightness/contrast/rotation/blur/noise
+#     recipe with a family closer to real lesion re-photography: larger
+#     colour shifts, saturation, horizontal flip, scale + translate
+#     framing change, stronger blur and Gaussian noise, and a JPEG
+#     quality=45-70 round-trip. Goal: stop pixel L2 from trivially
+#     separating stable from changing pairs.
+#
+# - dataset.changing_pair_policy = "strict_same_diagnosis_site"
+#     Changing pairs must share diagnosis AND anatomical site with their
+#     anchor. No same-diagnosis-only or same-site-only fallbacks.
+#     Anchors without a valid partner are skipped. Goal: force the
+#     stable/changing decision to rely on lesion-level content, not
+#     diagnosis category or site.
+#
+# Everything else mirrors the EXP-001 primary config so a fair delta
+# read against EXP-001 is possible.
+
+run_id: ham10000-hf-dinov2-primary-exp002-v1
+output_root: outputs/runs
+artifact_root: outputs/artifacts/demo
+seed: 20260422
+
+dataset:
+  kind: ham10000
+  name: ham10000
+  metadata_csv: /data/HAM10000_metadata.csv
+  image_roots:
+    - /data/HAM10000_images_part_1
+    - /data/HAM10000_images_part_2
+    - /data/images
+  image_extensions:
+    - jpg
+    - jpeg
+    - png
+  stable_pairs_per_split: 1000
+  changing_pairs_per_split: 1000
+  split:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+  max_records:
+  nuisance_severity: strong
+  changing_pair_policy: strict_same_diagnosis_site
+
+preprocessing:
+  profile: ham10000_224_center_crop_v1
+  image_size: 224
+
+metrics:
+  bootstrap_samples: 1000
+  ci_level: 0.95
+  fixed_tpr: 0.80
+
+embeddings:
+  models:
+    - model_id: dinov2_vits14
+      kind: dinov2
+      model_name: facebook/dinov2-small
+      batch_size: 32
+      device: auto
+    - model_id: dinov2_vitb14
+      kind: dinov2
+      model_name: facebook/dinov2-base
+      batch_size: 16
+      device: auto
+
+training:
+  model_id: jepa_predictor_ham10000_exp002_v1
+  embedding_model_id: dinov2_vitb14
+  epochs: 200
+  batch_size: 128
+  learning_rate: 0.03
+  weight_decay: 0.001

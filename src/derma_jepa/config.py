@@ -47,6 +47,8 @@ class PublicDatasetConfig:
     changing_pairs_per_split: int
     split_fractions: SplitFractions
     max_records: int | None = None
+    nuisance_severity: str = "mild"
+    changing_pair_policy: str = "fallback"
 
 
 @dataclass(frozen=True)
@@ -192,6 +194,18 @@ def validate_config(config: PipelineConfig) -> None:
         if config.dataset.max_records is not None and config.dataset.max_records < 1:
             msg = "dataset.max_records must be positive when set"
             raise ValueError(msg)
+        if config.dataset.nuisance_severity not in {"mild", "strong"}:
+            msg = "dataset.nuisance_severity must be 'mild' or 'strong'"
+            raise ValueError(msg)
+        if config.dataset.changing_pair_policy not in {
+            "fallback",
+            "strict_same_diagnosis_site",
+        }:
+            msg = (
+                "dataset.changing_pair_policy must be 'fallback' or "
+                "'strict_same_diagnosis_site'"
+            )
+            raise ValueError(msg)
     for model in config.embedding_models:
         if model.kind not in {"color_texture", "dinov2"}:
             msg = f"unsupported embedding model kind: {model.kind}"
@@ -277,6 +291,8 @@ def to_yaml(config: PipelineConfig) -> str:
                 "test": config.dataset.split_fractions.test,
             },
             "max_records": config.dataset.max_records,
+            "nuisance_severity": config.dataset.nuisance_severity,
+            "changing_pair_policy": config.dataset.changing_pair_policy,
         }
     if config.embedding_models:
         payload["embeddings"] = {
@@ -342,6 +358,10 @@ def _parse_public_dataset_config(
             test=_float(split, "test"),
         ),
         max_records=_optional_int(data, "max_records"),
+        nuisance_severity=_optional_str(data, "nuisance_severity") or "mild",
+        changing_pair_policy=(
+            _optional_str(data, "changing_pair_policy") or "fallback"
+        ),
     )
 
 
