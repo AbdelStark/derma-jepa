@@ -14,7 +14,7 @@ from derma_jepa.preprocessing import load_preprocessed_rgb
 from derma_jepa.run import append_log, prepare_run_dir, write_json
 
 
-def evaluate_fixture_baselines(config: PipelineConfig, split: str = "test") -> Path:
+def evaluate_baselines(config: PipelineConfig, split: str = "test") -> Path:
     run_dir = prepare_run_dir(config)
     rows = list(read_manifest(run_dir / f"manifest_{split}.parquet"))
     labels = [row.label_int for row in rows]
@@ -32,7 +32,7 @@ def evaluate_fixture_baselines(config: PipelineConfig, split: str = "test") -> P
     strongest = max(baselines.items(), key=lambda item: item[1]["metrics"]["auroc"])
     payload: dict[str, Any] = {
         "run_id": config.run_id,
-        "tier": "fixture",
+        "tier": config.tier,
         "split": split,
         "task": "longitudinal_proxy_change_detection",
         "positive_label": "changing",
@@ -50,13 +50,19 @@ def evaluate_fixture_baselines(config: PipelineConfig, split: str = "test") -> P
     write_json(run_dir / "baseline_metrics.json", payload)
     write_json(run_dir / "metrics.json", _metrics_payload(config, payload))
     _write_model_card(run_dir, payload)
-    _write_train_log(run_dir)
+    _write_train_log(run_dir, config.tier)
     _write_score_plot(
         run_dir / "artifacts" / "plots" / "baseline_score_histogram.png",
         baselines,
     )
-    append_log(run_dir, "eval.log", f"evaluated fixture baselines on {split} split")
+    append_log(
+        run_dir, "eval.log", f"evaluated {config.tier} baselines on {split} split"
+    )
     return run_dir / "baseline_metrics.json"
+
+
+def evaluate_fixture_baselines(config: PipelineConfig, split: str = "test") -> Path:
+    return evaluate_baselines(config, split=split)
 
 
 def _baseline_payload(
@@ -96,17 +102,17 @@ def _metrics_payload(
     strongest = baseline_payload["strongest_baseline"]
     return {
         "run_id": config.run_id,
-        "tier": "fixture",
-        "model_id": "baseline_only_fixture_contract",
+        "tier": config.tier,
+        "model_id": f"baseline_only_{config.tier}_contract",
         "primary_metric": "auroc",
         "primary_score": "latent_drift_proxy_not_yet_trained",
-        "status": "baseline_only_fixture_milestone",
+        "status": f"baseline_only_{config.tier}_milestone",
         "result": {
             "strongest_baseline": strongest,
             "jepa_style_model": None,
             "interpretation": (
-                "Milestone 1 validates the fixture contract and cheap baselines. "
-                "No JEPA-style model result is claimed."
+                "This run validates the manifest, preprocessing, metric, and "
+                "cheap-baseline path. No JEPA-style model result is claimed."
             ),
         },
         "clinical_boundary": (
@@ -134,13 +140,23 @@ def _ssim_distance(row: ManifestRow, image_size: int) -> float:
 
 def _write_model_card(run_dir: Path, payload: dict[str, Any]) -> None:
     strongest = payload["strongest_baseline"]
-    text = f"""# Fixture baseline model card
+    tier = str(payload["tier"])
+    limitation = (
+        "The fixture dataset is synthetic and exists to prove schemas, "
+        "preprocessing, metrics, run artifacts, and demo export."
+        if tier == "fixture"
+        else (
+            "The public-data proxy uses local research dataset files and cheap "
+            "baselines only; it establishes the audit and evaluation path before "
+            "model claims."
+        )
+    )
+    text = f"""# {str(payload["tier"]).title()} baseline model card
 
 ## Scope
 
-This run validates the DermaJEPA fixture-tier artifact contract. It uses
-deterministic synthetic images and evaluates pixel-space baselines on a
-longitudinal-proxy task.
+This run validates the DermaJEPA {tier}-tier artifact contract. It
+evaluates pixel-space baselines on a longitudinal-proxy task.
 
 ## Evidence
 
@@ -152,19 +168,18 @@ longitudinal-proxy task.
 
 ## Limitations
 
-No JEPA-style model is trained in this run. The fixture dataset is synthetic and
-exists to prove schemas, preprocessing, metrics, run artifacts, and demo export.
-It is not diagnostic, not medical advice, and not validated for patient use.
+No JEPA-style model is trained in this run. {limitation} It is not diagnostic,
+not medical advice, and not validated for patient use.
 """
     (run_dir / "model_card.md").write_text(text, encoding="utf-8")
 
 
-def _write_train_log(run_dir: Path) -> None:
+def _write_train_log(run_dir: Path, tier: str) -> None:
     append_log(
         run_dir,
         "train.log",
         (
-            "fixture tier has no model training; JEPA-style predictor training "
+            f"{tier} tier has no model training; JEPA-style predictor training "
             "begins in Milestone 3"
         ),
     )

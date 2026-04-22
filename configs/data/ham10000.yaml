@@ -1,0 +1,33 @@
+run_id: ham10000-proxy-v1
+output_root: runs
+artifact_root: artifacts/demo
+seed: 20260422
+
+dataset:
+  kind: ham10000
+  name: ham10000
+  metadata_csv: data/raw/ham10000/HAM10000_metadata.csv
+  image_roots:
+    - data/raw/ham10000/HAM10000_images_part_1
+    - data/raw/ham10000/HAM10000_images_part_2
+    - data/raw/ham10000/images
+  image_extensions:
+    - jpg
+    - jpeg
+    - png
+  stable_pairs_per_split: 1000
+  changing_pairs_per_split: 1000
+  split:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+  max_records:
+
+preprocessing:
+  profile: ham10000_224_center_crop_v1
+  image_size: 224
+
+metrics:
+  bootstrap_samples: 1000
+  ci_level: 0.95
+  fixed_tpr: 0.80

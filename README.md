@@ -51,6 +51,8 @@ Repeated lesion photographs vary heavily because of illumination, angle, skin te
 
 - `src/derma_jepa/` — package, CLI, manifest contracts, fixture pipeline, baselines, and demo export
 - `configs/manifest/fixture.yaml` — deterministic fixture-tier pipeline config
+- `configs/data/ham10000.yaml` — HAM10000-compatible public-data audit and proxy-manifest config
+- `data/README.md` — local data layout, source/citation notes, and leakage rules
 - `tests/` — contract, metric, and end-to-end fixture pipeline tests
 - `docs/prd/PRD.md` — product requirements
 - `docs/spec/SYSTEM-SPEC.md` — system architecture and design contracts
@@ -95,6 +97,23 @@ Open the exported demo entrypoint:
 uv run derma-jepa demo --artifact artifacts/demo/fixture-contract-v1
 ```
 
+## Public data audit path
+
+Milestone 2 now has a HAM10000-compatible local data path. The repo still does
+not vendor public images. Place raw downloads under `data/raw/ham10000/` as
+documented in `data/README.md`, then run:
+
+```bash
+uv run derma-jepa data audit --config configs/data/ham10000.yaml
+uv run derma-jepa manifest build --config configs/data/ham10000.yaml
+uv run derma-jepa baseline eval --config configs/data/ham10000.yaml
+```
+
+The public-data manifest builder writes normalized metadata, an audit report,
+patient/lesion-aware train/validation/test manifests, post-split stable nuisance
+variants, and pixel/SSIM baseline metrics. This is still a longitudinal-proxy
+research path, not a diagnostic workflow.
+
 Validate the codebase:
 
 ```bash
@@ -111,8 +130,10 @@ gated by milestone:
 ```bash
 derma-jepa data audit --config configs/manifest/fixture.yaml
 derma-jepa manifest build --config configs/manifest/fixture.yaml
+derma-jepa manifest build --config configs/data/ham10000.yaml
 derma-jepa embed --config configs/manifest/fixture.yaml
 derma-jepa baseline eval --config configs/manifest/fixture.yaml
+derma-jepa baseline eval --config configs/data/ham10000.yaml
 derma-jepa eval --config configs/manifest/fixture.yaml
 derma-jepa benchmark --run runs/fixture-contract-v1
 derma-jepa demo export --run runs/fixture-contract-v1 --out artifacts/demo/fixture-contract-v1

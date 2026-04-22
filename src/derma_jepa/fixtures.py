@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
-from derma_jepa.config import PipelineConfig
+from derma_jepa.config import FixtureConfig, PipelineConfig, require_fixture_config
 from derma_jepa.contracts import (
     SPLITS,
     ManifestRow,
@@ -31,11 +31,12 @@ class LesionRecord:
 
 
 def build_fixture_manifest(config: PipelineConfig) -> Path:
+    fixture = require_fixture_config(config)
     with run_lock(config.run_dir):
         run_dir = prepare_run_dir(config)
         rng = np.random.default_rng(config.seed)
-        lesions = _create_lesions(config, run_dir, rng)
-        rows = _create_pairs(config, run_dir, lesions, rng)
+        lesions = _create_lesions(fixture, run_dir, rng)
+        rows = _create_pairs(config, fixture, run_dir, lesions, rng)
         validate_manifest(rows)
 
         write_manifest(rows, run_dir / "manifest_all.parquet")
@@ -62,14 +63,16 @@ def audit_fixture_data(config: PipelineConfig) -> Path:
 
 
 def _create_lesions(
-    config: PipelineConfig, run_dir: Path, rng: np.random.Generator
+    fixture: FixtureConfig,
+    run_dir: Path,
+    rng: np.random.Generator,
 ) -> dict[Split, list[LesionRecord]]:
     lesions: dict[Split, list[LesionRecord]] = {split: [] for split in SPLITS}
     image_dir = run_dir / "fixture" / "images"
     image_dir.mkdir(parents=True, exist_ok=True)
     for split_index, split in enumerate(SPLITS):
-        for lesion_index in range(config.fixture.lesions_per_split):
-            global_index = split_index * config.fixture.lesions_per_split + lesion_index
+        for lesion_index in range(fixture.lesions_per_split):
+            global_index = split_index * fixture.lesions_per_split + lesion_index
             image_id = f"{split}_base_{lesion_index:03d}"
             lesion_id = f"{split}_lesion_{lesion_index:03d}"
             patient_id = f"{split}_patient_{lesion_index:03d}"
@@ -81,7 +84,7 @@ def _create_lesions(
             anatomical_site = ("torso", "arm", "leg")[lesion_index % 3]
             path = image_dir / f"{image_id}.png"
             image = _synthetic_lesion_image(
-                config.fixture.image_size,
+                fixture.image_size,
                 global_index,
                 rng,
             )
@@ -102,6 +105,7 @@ def _create_lesions(
 
 def _create_pairs(
     config: PipelineConfig,
+    fixture: FixtureConfig,
     run_dir: Path,
     lesions: dict[Split, list[LesionRecord]],
     rng: np.random.Generator,
@@ -109,7 +113,7 @@ def _create_pairs(
     rows: list[ManifestRow] = []
     for split in SPLITS:
         split_lesions = lesions[split]
-        for index in range(config.fixture.stable_pairs_per_split):
+        for index in range(fixture.stable_pairs_per_split):
             lesion = split_lesions[index % len(split_lesions)]
             target_path, recipe = _write_stable_variant(
                 config,
@@ -134,8 +138,8 @@ def _create_pairs(
                 )
             )
 
-        offset = config.fixture.stable_pairs_per_split
-        for index in range(config.fixture.changing_pairs_per_split):
+        offset = fixture.stable_pairs_per_split
+        for index in range(fixture.changing_pairs_per_split):
             context = split_lesions[(index + offset) % len(split_lesions)]
             target = split_lesions[(index + offset + 1) % len(split_lesions)]
             rows.append(
@@ -205,10 +209,7 @@ def _write_stable_variant(
         if index % 2 == 1:
             variant = variant.filter(ImageFilter.GaussianBlur(radius=0.25))
     target_path = (
-        run_dir
-        / "fixture"
-        / "images"
-        / f"{lesion.image_id}_stable_{index:03d}.png"
+        run_dir / "fixture" / "images" / f"{lesion.image_id}_stable_{index:03d}.png"
     )
     _save_png_atomic(variant, target_path)
     recipe = {
@@ -235,12 +236,13 @@ def _manifest_row(
     augmentation_recipe: dict[str, object],
     reason: str,
 ) -> ManifestRow:
+    fixture = require_fixture_config(config)
     context_size = _image_size(context_path)
     target_size = _image_size(target_path)
     return ManifestRow(
         pair_id=pair_id,
         split=split,
-        source_dataset=config.fixture.source_dataset,
+        source_dataset=fixture.source_dataset,
         pair_label=pair_label,  # type: ignore[arg-type]
         context_image_id=context.image_id,
         target_image_id=target_image_id,
@@ -267,24 +269,21 @@ def _manifest_row(
 def _audit_payload(
     config: PipelineConfig, rows: list[ManifestRow]
 ) -> dict[str, object]:
+    fixture = require_fixture_config(config)
     labels_by_split = {
         split: {
             "stable": sum(
-                1
-                for row in rows
-                if row.split == split and row.pair_label == "stable"
+                1 for row in rows if row.split == split and row.pair_label == "stable"
             ),
             "changing": sum(
-                1
-                for row in rows
-                if row.split == split and row.pair_label == "changing"
+                1 for row in rows if row.split == split and row.pair_label == "changing"
             ),
         }
         for split in SPLITS
     }
     return {
         "run_id": config.run_id,
-        "source_dataset": config.fixture.source_dataset,
+        "source_dataset": fixture.source_dataset,
         "tier": "fixture",
         "synthetic": True,
         "pair_count": len(rows),

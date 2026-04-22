@@ -5,13 +5,14 @@ from typing import Annotated
 
 import typer
 
-from derma_jepa.baselines import evaluate_fixture_baselines
+from derma_jepa.baselines import evaluate_baselines
 from derma_jepa.benchmark import validate_fixture_run
 from derma_jepa.config import load_config
 from derma_jepa.demo_export import export_demo_bundle, validate_demo_artifact
 from derma_jepa.embeddings import export_fixture_embeddings
 from derma_jepa.fixtures import audit_fixture_data, build_fixture_manifest
 from derma_jepa.pipeline import run_fixture_pipeline
+from derma_jepa.public_data import audit_public_dataset, build_public_manifest
 
 app = typer.Typer(no_args_is_help=True)
 data_app = typer.Typer(no_args_is_help=True)
@@ -41,15 +42,25 @@ ArtifactOption = Annotated[
 
 @data_app.command("audit")
 def data_audit(config: ConfigOption) -> None:
-    """Audit the configured fixture dataset and write leakage notes."""
-    output = audit_fixture_data(load_config(config))
+    """Audit the configured dataset and write leakage notes."""
+    parsed = load_config(config)
+    output = (
+        audit_public_dataset(parsed)
+        if parsed.dataset is not None
+        else audit_fixture_data(parsed)
+    )
     typer.echo(f"data audit written: {output}")
 
 
 @manifest_app.command("build")
 def manifest_build(config: ConfigOption) -> None:
     """Build and validate the configured pair/window manifest."""
-    output = build_fixture_manifest(load_config(config))
+    parsed = load_config(config)
+    output = (
+        build_public_manifest(parsed)
+        if parsed.dataset is not None
+        else build_fixture_manifest(parsed)
+    )
     typer.echo(f"manifest written: {output}")
 
 
@@ -65,8 +76,8 @@ def baseline_eval(
     config: ConfigOption,
     split: SplitOption = "test",
 ) -> None:
-    """Evaluate cheap fixture baselines and write metric artifacts."""
-    output = evaluate_fixture_baselines(load_config(config), split=split)
+    """Evaluate cheap baselines and write metric artifacts."""
+    output = evaluate_baselines(load_config(config), split=split)
     typer.echo(f"baseline metrics written: {output}")
 
 
@@ -76,7 +87,7 @@ def eval_command(
     split: SplitOption = "test",
 ) -> None:
     """Evaluate the current fixture-tier scoring path."""
-    output = evaluate_fixture_baselines(load_config(config), split=split)
+    output = evaluate_baselines(load_config(config), split=split)
     typer.echo(f"metrics written: {output}")
 
 

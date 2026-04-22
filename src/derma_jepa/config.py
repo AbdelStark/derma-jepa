@@ -30,12 +30,33 @@ class MetricsConfig:
 
 
 @dataclass(frozen=True)
+class SplitFractions:
+    train: float
+    val: float
+    test: float
+
+
+@dataclass(frozen=True)
+class PublicDatasetConfig:
+    kind: str
+    name: str
+    metadata_csv: Path
+    image_roots: tuple[Path, ...]
+    image_extensions: tuple[str, ...]
+    stable_pairs_per_split: int
+    changing_pairs_per_split: int
+    split_fractions: SplitFractions
+    max_records: int | None = None
+
+
+@dataclass(frozen=True)
 class PipelineConfig:
     run_id: str
     output_root: Path
     artifact_root: Path
     seed: int
-    fixture: FixtureConfig
+    fixture: FixtureConfig | None
+    dataset: PublicDatasetConfig | None
     preprocessing: PreprocessingConfig
     metrics: MetricsConfig
     source_path: Path | None = None
@@ -48,6 +69,12 @@ class PipelineConfig:
     def demo_dir(self) -> Path:
         return self.artifact_root / self.run_id
 
+    @property
+    def tier(self) -> str:
+        if self.fixture is not None:
+            return "fixture"
+        return "public"
+
 
 def load_config(path: Path) -> PipelineConfig:
     data = _read_yaml(path)
@@ -58,6 +85,7 @@ def load_config(path: Path) -> PipelineConfig:
         artifact_root=config.artifact_root,
         seed=config.seed,
         fixture=config.fixture,
+        dataset=config.dataset,
         preprocessing=config.preprocessing,
         metrics=config.metrics,
         source_path=path,
@@ -65,22 +93,24 @@ def load_config(path: Path) -> PipelineConfig:
 
 
 def parse_config(data: dict[str, Any]) -> PipelineConfig:
-    fixture = _mapping(data, "fixture")
     preprocessing = _mapping(data, "preprocessing")
     metrics = _mapping(data, "metrics")
+    fixture_mapping = _optional_mapping(data, "fixture")
+    dataset_mapping = _optional_mapping(data, "dataset")
+    if fixture_mapping is None and dataset_mapping is None:
+        msg = "Expected either fixture or dataset config"
+        raise ValueError(msg)
+    if fixture_mapping is not None and dataset_mapping is not None:
+        msg = "fixture and dataset configs are mutually exclusive"
+        raise ValueError(msg)
 
     parsed = PipelineConfig(
         run_id=_str(data, "run_id"),
         output_root=Path(_str(data, "output_root")),
         artifact_root=Path(_str(data, "artifact_root")),
         seed=_int(data, "seed"),
-        fixture=FixtureConfig(
-            image_size=_int(fixture, "image_size"),
-            lesions_per_split=_int(fixture, "lesions_per_split"),
-            stable_pairs_per_split=_int(fixture, "stable_pairs_per_split"),
-            changing_pairs_per_split=_int(fixture, "changing_pairs_per_split"),
-            source_dataset=_str(fixture, "source_dataset"),
-        ),
+        fixture=_parse_fixture_config(fixture_mapping),
+        dataset=_parse_public_dataset_config(dataset_mapping),
         preprocessing=PreprocessingConfig(
             profile=_str(preprocessing, "profile"),
             image_size=_int(preprocessing, "image_size"),
@@ -96,15 +126,42 @@ def parse_config(data: dict[str, Any]) -> PipelineConfig:
 
 
 def validate_config(config: PipelineConfig) -> None:
-    if config.fixture.lesions_per_split < 4:
-        msg = "fixture.lesions_per_split must be at least 4"
-        raise ValueError(msg)
-    if config.fixture.stable_pairs_per_split < 1:
-        msg = "fixture.stable_pairs_per_split must be positive"
-        raise ValueError(msg)
-    if config.fixture.changing_pairs_per_split < 1:
-        msg = "fixture.changing_pairs_per_split must be positive"
-        raise ValueError(msg)
+    if config.fixture is not None:
+        if config.fixture.lesions_per_split < 4:
+            msg = "fixture.lesions_per_split must be at least 4"
+            raise ValueError(msg)
+        if config.fixture.stable_pairs_per_split < 1:
+            msg = "fixture.stable_pairs_per_split must be positive"
+            raise ValueError(msg)
+        if config.fixture.changing_pairs_per_split < 1:
+            msg = "fixture.changing_pairs_per_split must be positive"
+            raise ValueError(msg)
+    if config.dataset is not None:
+        if config.dataset.kind != "ham10000":
+            msg = "dataset.kind must be 'ham10000'"
+            raise ValueError(msg)
+        if not config.dataset.image_roots:
+            msg = "dataset.image_roots must contain at least one directory"
+            raise ValueError(msg)
+        if not config.dataset.image_extensions:
+            msg = "dataset.image_extensions must contain at least one extension"
+            raise ValueError(msg)
+        if config.dataset.stable_pairs_per_split < 1:
+            msg = "dataset.stable_pairs_per_split must be positive"
+            raise ValueError(msg)
+        if config.dataset.changing_pairs_per_split < 1:
+            msg = "dataset.changing_pairs_per_split must be positive"
+            raise ValueError(msg)
+        fractions = config.dataset.split_fractions
+        if min(fractions.train, fractions.val, fractions.test) <= 0:
+            msg = "dataset.split fractions must be positive"
+            raise ValueError(msg)
+        if abs((fractions.train + fractions.val + fractions.test) - 1.0) > 1e-6:
+            msg = "dataset.split fractions must sum to 1.0"
+            raise ValueError(msg)
+        if config.dataset.max_records is not None and config.dataset.max_records < 1:
+            msg = "dataset.max_records must be positive when set"
+            raise ValueError(msg)
     if config.preprocessing.image_size < 32:
         msg = "preprocessing.image_size must be at least 32"
         raise ValueError(msg)
@@ -127,13 +184,6 @@ def to_yaml(config: PipelineConfig) -> str:
         "output_root": str(config.output_root),
         "artifact_root": str(config.artifact_root),
         "seed": config.seed,
-        "fixture": {
-            "image_size": config.fixture.image_size,
-            "lesions_per_split": config.fixture.lesions_per_split,
-            "stable_pairs_per_split": config.fixture.stable_pairs_per_split,
-            "changing_pairs_per_split": config.fixture.changing_pairs_per_split,
-            "source_dataset": config.fixture.source_dataset,
-        },
         "preprocessing": {
             "profile": config.preprocessing.profile,
             "image_size": config.preprocessing.image_size,
@@ -144,7 +194,82 @@ def to_yaml(config: PipelineConfig) -> str:
             "fixed_tpr": config.metrics.fixed_tpr,
         },
     }
+    if config.fixture is not None:
+        payload["fixture"] = {
+            "image_size": config.fixture.image_size,
+            "lesions_per_split": config.fixture.lesions_per_split,
+            "stable_pairs_per_split": config.fixture.stable_pairs_per_split,
+            "changing_pairs_per_split": config.fixture.changing_pairs_per_split,
+            "source_dataset": config.fixture.source_dataset,
+        }
+    if config.dataset is not None:
+        payload["dataset"] = {
+            "kind": config.dataset.kind,
+            "name": config.dataset.name,
+            "metadata_csv": str(config.dataset.metadata_csv),
+            "image_roots": [str(path) for path in config.dataset.image_roots],
+            "image_extensions": list(config.dataset.image_extensions),
+            "stable_pairs_per_split": config.dataset.stable_pairs_per_split,
+            "changing_pairs_per_split": config.dataset.changing_pairs_per_split,
+            "split": {
+                "train": config.dataset.split_fractions.train,
+                "val": config.dataset.split_fractions.val,
+                "test": config.dataset.split_fractions.test,
+            },
+            "max_records": config.dataset.max_records,
+        }
     return yaml.safe_dump(payload, sort_keys=False)
+
+
+def require_fixture_config(config: PipelineConfig) -> FixtureConfig:
+    if config.fixture is None:
+        msg = "config does not contain a fixture section"
+        raise ValueError(msg)
+    return config.fixture
+
+
+def require_public_dataset_config(config: PipelineConfig) -> PublicDatasetConfig:
+    if config.dataset is None:
+        msg = "config does not contain a dataset section"
+        raise ValueError(msg)
+    return config.dataset
+
+
+def _parse_fixture_config(data: dict[str, Any] | None) -> FixtureConfig | None:
+    if data is None:
+        return None
+    return FixtureConfig(
+        image_size=_int(data, "image_size"),
+        lesions_per_split=_int(data, "lesions_per_split"),
+        stable_pairs_per_split=_int(data, "stable_pairs_per_split"),
+        changing_pairs_per_split=_int(data, "changing_pairs_per_split"),
+        source_dataset=_str(data, "source_dataset"),
+    )
+
+
+def _parse_public_dataset_config(
+    data: dict[str, Any] | None,
+) -> PublicDatasetConfig | None:
+    if data is None:
+        return None
+    split = _mapping(data, "split")
+    return PublicDatasetConfig(
+        kind=_str(data, "kind"),
+        name=_str(data, "name"),
+        metadata_csv=Path(_str(data, "metadata_csv")),
+        image_roots=tuple(Path(value) for value in _str_list(data, "image_roots")),
+        image_extensions=tuple(
+            _normalize_extension(value) for value in _str_list(data, "image_extensions")
+        ),
+        stable_pairs_per_split=_int(data, "stable_pairs_per_split"),
+        changing_pairs_per_split=_int(data, "changing_pairs_per_split"),
+        split_fractions=SplitFractions(
+            train=_float(split, "train"),
+            val=_float(split, "val"),
+            test=_float(split, "test"),
+        ),
+        max_records=_optional_int(data, "max_records"),
+    )
 
 
 def _read_yaml(path: Path) -> dict[str, Any]:
@@ -157,6 +282,16 @@ def _read_yaml(path: Path) -> dict[str, Any]:
 
 def _mapping(data: dict[str, Any], key: str) -> dict[str, Any]:
     value = data.get(key)
+    if not isinstance(value, dict):
+        msg = f"Expected mapping for {key}"
+        raise ValueError(msg)
+    return value
+
+
+def _optional_mapping(data: dict[str, Any], key: str) -> dict[str, Any] | None:
+    value = data.get(key)
+    if value is None:
+        return None
     if not isinstance(value, dict):
         msg = f"Expected mapping for {key}"
         raise ValueError(msg)
@@ -179,9 +314,43 @@ def _int(data: dict[str, Any], key: str) -> int:
     return value
 
 
+def _optional_int(data: dict[str, Any], key: str) -> int | None:
+    value = data.get(key)
+    if value is None:
+        return None
+    if not isinstance(value, int):
+        msg = f"Expected integer or null for {key}"
+        raise ValueError(msg)
+    return value
+
+
 def _float(data: dict[str, Any], key: str) -> float:
     value = data.get(key)
     if not isinstance(value, int | float):
         msg = f"Expected number for {key}"
         raise ValueError(msg)
     return float(value)
+
+
+def _str_list(data: dict[str, Any], key: str) -> list[str]:
+    value = data.get(key)
+    if not isinstance(value, list) or not value:
+        msg = f"Expected non-empty list for {key}"
+        raise ValueError(msg)
+    result: list[str] = []
+    for item in value:
+        if not isinstance(item, str) or not item:
+            msg = f"Expected non-empty string values for {key}"
+            raise ValueError(msg)
+        result.append(item)
+    return result
+
+
+def _normalize_extension(value: str) -> str:
+    extension = value.lower()
+    if extension.startswith("."):
+        extension = extension[1:]
+    if not extension:
+        msg = "image extension cannot be empty"
+        raise ValueError(msg)
+    return extension

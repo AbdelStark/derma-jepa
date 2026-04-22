@@ -1,6 +1,7 @@
 # DermaJEPA MVP status
 
-Current state: Milestone 1 complete; fixture-tier implementation is runnable.
+Current state: Milestone 1 complete; first Milestone 2 public-data slice is
+runnable against local HAM10000-style files.
 
 ## Completed
 
@@ -43,23 +44,23 @@ uv run derma-jepa fixture pipeline --config configs/manifest/fixture.yaml
 
 Milestone 2 must produce:
 
-- [ ] `data/README.md` with source, license/access, expected files, checksums
+- [x] `data/README.md` with source, license/access, expected files, checksums
       where possible, and citations
-- [ ] HAM10000/ISIC indexing or download instructions
-- [ ] normalized metadata tables
-- [ ] leakage audit with patient/lesion/source/duplicate checks
-- [ ] stable/changing proxy manifest
+- [x] HAM10000 indexing or download instructions
+- [x] normalized metadata tables
+- [x] leakage audit with patient/lesion/source/duplicate checks
+- [x] stable/changing proxy manifest
 - [ ] gold audit subset
-- [ ] pixel/SSIM baseline report on the public-data proxy
+- [x] pixel/SSIM baseline report on the public-data proxy
 - [ ] DINOv2 ViT-S/14 and ViT-B/14 embedding export
 - [ ] DINOv2 baseline report
 - [ ] initial failure-case templates
 
-## Not started
+## Remaining / in progress
 
-- [ ] public data audit
-- [ ] public dataset indexing/download workflow
-- [ ] leakage-controlled primary manifest
+- [x] public data audit
+- [x] public dataset indexing/download workflow
+- [x] leakage-controlled primary manifest
 - [ ] DINOv2 baseline implementation
 - [ ] dermatology-supervised baseline investigation
 - [ ] JEPA-style predictor training scaffold
@@ -70,6 +71,38 @@ Milestone 2 must produce:
 - [ ] local dashboard/demo surface
 - [ ] primary-tier evaluation reports
 - [ ] primary-tier model card
+
+## Completed implementation slice
+
+- [x] Milestone 2 slice: HAM10000-style audit, proxy manifest, and cheap
+      baseline path
+
+This slice produced:
+
+- [x] `configs/data/ham10000.yaml`
+- [x] `data/README.md`
+- [x] public dataset config parsing and validation
+- [x] HAM10000-style CSV normalization into `metadata_normalized.parquet`
+- [x] image availability, duplicate ID/checksum, metadata coverage, and leakage
+      audit JSON
+- [x] deterministic patient/lesion-aware split assignment
+- [x] post-split stable nuisance variants
+- [x] changing-pair matching by same patient, same diagnosis/site, same
+      diagnosis, same site, then fallback
+- [x] public-tier pixel L2 and SSIM baseline metrics
+- [x] tests covering audit, missing-image failure, manifest validation, leakage
+      constraints, and baseline artifact generation
+
+Public-data local acceptance commands:
+
+```bash
+uv run derma-jepa data audit --config configs/data/ham10000.yaml
+uv run derma-jepa manifest build --config configs/data/ham10000.yaml
+uv run derma-jepa baseline eval --config configs/data/ham10000.yaml
+```
+
+These commands require local HAM10000-style raw data under `data/raw/ham10000/`;
+the repository does not vendor the dataset.
 
 ## Rule
 
