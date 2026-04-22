@@ -50,6 +50,15 @@ class PublicDatasetConfig:
 
 
 @dataclass(frozen=True)
+class EmbeddingModelConfig:
+    model_id: str
+    kind: str
+    model_name: str | None
+    batch_size: int
+    device: str
+
+
+@dataclass(frozen=True)
 class PipelineConfig:
     run_id: str
     output_root: Path
@@ -57,6 +66,7 @@ class PipelineConfig:
     seed: int
     fixture: FixtureConfig | None
     dataset: PublicDatasetConfig | None
+    embedding_models: tuple[EmbeddingModelConfig, ...]
     preprocessing: PreprocessingConfig
     metrics: MetricsConfig
     source_path: Path | None = None
@@ -86,6 +96,7 @@ def load_config(path: Path) -> PipelineConfig:
         seed=config.seed,
         fixture=config.fixture,
         dataset=config.dataset,
+        embedding_models=config.embedding_models,
         preprocessing=config.preprocessing,
         metrics=config.metrics,
         source_path=path,
@@ -97,6 +108,7 @@ def parse_config(data: dict[str, Any]) -> PipelineConfig:
     metrics = _mapping(data, "metrics")
     fixture_mapping = _optional_mapping(data, "fixture")
     dataset_mapping = _optional_mapping(data, "dataset")
+    embeddings_mapping = _optional_mapping(data, "embeddings")
     if fixture_mapping is None and dataset_mapping is None:
         msg = "Expected either fixture or dataset config"
         raise ValueError(msg)
@@ -111,6 +123,10 @@ def parse_config(data: dict[str, Any]) -> PipelineConfig:
         seed=_int(data, "seed"),
         fixture=_parse_fixture_config(fixture_mapping),
         dataset=_parse_public_dataset_config(dataset_mapping),
+        embedding_models=_parse_embedding_models(
+            embeddings_mapping,
+            has_fixture=fixture_mapping is not None,
+        ),
         preprocessing=PreprocessingConfig(
             profile=_str(preprocessing, "profile"),
             image_size=_int(preprocessing, "image_size"),
@@ -161,6 +177,16 @@ def validate_config(config: PipelineConfig) -> None:
             raise ValueError(msg)
         if config.dataset.max_records is not None and config.dataset.max_records < 1:
             msg = "dataset.max_records must be positive when set"
+            raise ValueError(msg)
+    for model in config.embedding_models:
+        if model.kind not in {"color_texture", "dinov2"}:
+            msg = f"unsupported embedding model kind: {model.kind}"
+            raise ValueError(msg)
+        if model.batch_size < 1:
+            msg = f"embedding model {model.model_id} batch_size must be positive"
+            raise ValueError(msg)
+        if model.kind == "dinov2" and model.model_name is None:
+            msg = f"embedding model {model.model_id} requires model_name"
             raise ValueError(msg)
     if config.preprocessing.image_size < 32:
         msg = "preprocessing.image_size must be at least 32"
@@ -218,6 +244,19 @@ def to_yaml(config: PipelineConfig) -> str:
             },
             "max_records": config.dataset.max_records,
         }
+    if config.embedding_models:
+        payload["embeddings"] = {
+            "models": [
+                {
+                    "model_id": model.model_id,
+                    "kind": model.kind,
+                    "model_name": model.model_name,
+                    "batch_size": model.batch_size,
+                    "device": model.device,
+                }
+                for model in config.embedding_models
+            ]
+        }
     return yaml.safe_dump(payload, sort_keys=False)
 
 
@@ -272,6 +311,38 @@ def _parse_public_dataset_config(
     )
 
 
+def _parse_embedding_models(
+    data: dict[str, Any] | None,
+    *,
+    has_fixture: bool,
+) -> tuple[EmbeddingModelConfig, ...]:
+    if data is None:
+        if has_fixture:
+            return (
+                EmbeddingModelConfig(
+                    model_id="fixture_color_texture_v1",
+                    kind="color_texture",
+                    model_name=None,
+                    batch_size=64,
+                    device="cpu",
+                ),
+            )
+        return ()
+    models = _mapping_list(data, "models")
+    parsed: list[EmbeddingModelConfig] = []
+    for item in models:
+        parsed.append(
+            EmbeddingModelConfig(
+                model_id=_str(item, "model_id"),
+                kind=_str(item, "kind"),
+                model_name=_optional_str(item, "model_name"),
+                batch_size=_int(item, "batch_size"),
+                device=_optional_str(item, "device") or "cpu",
+            )
+        )
+    return tuple(parsed)
+
+
 def _read_yaml(path: Path) -> dict[str, Any]:
     payload = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
@@ -324,6 +395,16 @@ def _optional_int(data: dict[str, Any], key: str) -> int | None:
     return value
 
 
+def _optional_str(data: dict[str, Any], key: str) -> str | None:
+    value = data.get(key)
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value:
+        msg = f"Expected non-empty string or null for {key}"
+        raise ValueError(msg)
+    return value
+
+
 def _float(data: dict[str, Any], key: str) -> float:
     value = data.get(key)
     if not isinstance(value, int | float):
@@ -341,6 +422,20 @@ def _str_list(data: dict[str, Any], key: str) -> list[str]:
     for item in value:
         if not isinstance(item, str) or not item:
             msg = f"Expected non-empty string values for {key}"
+            raise ValueError(msg)
+        result.append(item)
+    return result
+
+
+def _mapping_list(data: dict[str, Any], key: str) -> list[dict[str, Any]]:
+    value = data.get(key)
+    if not isinstance(value, list) or not value:
+        msg = f"Expected non-empty list for {key}"
+        raise ValueError(msg)
+    result: list[dict[str, Any]] = []
+    for item in value:
+        if not isinstance(item, dict):
+            msg = f"Expected mapping values for {key}"
             raise ValueError(msg)
         result.append(item)
     return result

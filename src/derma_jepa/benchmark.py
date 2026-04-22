@@ -16,7 +16,9 @@ REQUIRED_RUN_FILES = (
     "environment.txt",
     "artifacts/embeddings/fixture_embeddings.npz",
     "artifacts/embeddings/fixture_embeddings.parquet",
+    "artifacts/embeddings/embedding_index.json",
     "artifacts/plots/baseline_score_histogram.png",
+    "artifacts/reports/baseline_failure_cases.json",
     "logs/train.log",
     "logs/eval.log",
 )

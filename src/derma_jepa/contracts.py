@@ -87,8 +87,7 @@ def write_manifest(rows: list[ManifestRow], path: Path) -> None:
 def read_manifest(path: Path) -> list[ManifestRow]:
     table = pq.read_table(path, schema=MANIFEST_SCHEMA)  # type: ignore[no-untyped-call]
     return [
-        ManifestRow(**_typed_manifest_record(record))
-        for record in table.to_pylist()
+        ManifestRow(**_typed_manifest_record(record)) for record in table.to_pylist()
     ]
 
 

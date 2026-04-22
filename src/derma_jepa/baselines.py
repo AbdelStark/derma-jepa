@@ -11,7 +11,7 @@ from derma_jepa.config import PipelineConfig
 from derma_jepa.contracts import ManifestRow, read_manifest
 from derma_jepa.metrics import binary_metric_summary
 from derma_jepa.preprocessing import load_preprocessed_rgb
-from derma_jepa.run import append_log, prepare_run_dir, write_json
+from derma_jepa.run import append_log, prepare_run_dir, read_json, write_json
 
 
 def evaluate_baselines(config: PipelineConfig, split: str = "test") -> Path:
@@ -29,6 +29,8 @@ def evaluate_baselines(config: PipelineConfig, split: str = "test") -> Path:
             config, labels, ssim_scores, rows, seed_offset=23
         ),
     }
+    embedding_baselines = _embedding_baselines(config, rows, labels)
+    baselines.update(embedding_baselines)
     strongest = max(baselines.items(), key=lambda item: item[1]["metrics"]["auroc"])
     payload: dict[str, Any] = {
         "run_id": config.run_id,
@@ -51,6 +53,13 @@ def evaluate_baselines(config: PipelineConfig, split: str = "test") -> Path:
     write_json(run_dir / "metrics.json", _metrics_payload(config, payload))
     _write_model_card(run_dir, payload)
     _write_train_log(run_dir, config.tier)
+    _write_failure_case_report(
+        run_dir / "artifacts" / "reports" / "baseline_failure_cases.json",
+        config,
+        split,
+        baselines,
+        rows,
+    )
     _write_score_plot(
         run_dir / "artifacts" / "plots" / "baseline_score_histogram.png",
         baselines,
@@ -138,6 +147,70 @@ def _ssim_distance(row: ManifestRow, image_size: int) -> float:
     return float(1.0 - similarity)
 
 
+def _embedding_baselines(
+    config: PipelineConfig,
+    rows: list[ManifestRow],
+    labels: list[int],
+) -> dict[str, dict[str, Any]]:
+    index_path = config.run_dir / "artifacts" / "embeddings" / "embedding_index.json"
+    if not index_path.exists():
+        return {}
+    index = read_json(index_path)
+    models = index.get("models")
+    if not isinstance(models, list):
+        msg = f"Invalid embedding index: {index_path}"
+        raise ValueError(msg)
+
+    baselines: dict[str, dict[str, Any]] = {}
+    for model_index, model_record in enumerate(models):
+        if not isinstance(model_record, dict):
+            msg = f"Invalid embedding model record in {index_path}"
+            raise ValueError(msg)
+        model_id = str(model_record["model_id"])
+        vectors = _read_embedding_vectors(Path(str(model_record["artifact_path"])))
+        scores = [
+            _cosine_distance(
+                vectors[row.context_image_id],
+                vectors[row.target_image_id],
+            )
+            for row in rows
+        ]
+        baseline_name = f"embedding_cosine_{model_id}"
+        baselines[baseline_name] = _baseline_payload(
+            config,
+            labels,
+            scores,
+            rows,
+            seed_offset=101 + model_index,
+        )
+    return baselines
+
+
+def _read_embedding_vectors(path: Path) -> dict[str, np.ndarray]:
+    with np.load(path, allow_pickle=False) as payload:
+        image_ids = [str(image_id) for image_id in payload["image_id"].tolist()]
+        matrix = payload["vector"].astype(np.float32)
+    if len(image_ids) != matrix.shape[0]:
+        msg = f"Embedding artifact row mismatch: {path}"
+        raise ValueError(msg)
+    return {
+        image_id: _l2_normalize_vector(matrix[index])
+        for index, image_id in enumerate(image_ids)
+    }
+
+
+def _cosine_distance(left: np.ndarray, right: np.ndarray) -> float:
+    similarity = float(np.dot(left, right))
+    return float(1.0 - np.clip(similarity, -1.0, 1.0))
+
+
+def _l2_normalize_vector(vector: np.ndarray) -> np.ndarray:
+    norm = float(np.linalg.norm(vector))
+    if norm <= 1e-12:
+        return vector
+    return vector / norm
+
+
 def _write_model_card(run_dir: Path, payload: dict[str, Any]) -> None:
     strongest = payload["strongest_baseline"]
     tier = str(payload["tier"])
@@ -174,6 +247,92 @@ not medical advice, and not validated for patient use.
     (run_dir / "model_card.md").write_text(text, encoding="utf-8")
 
 
+def _write_failure_case_report(
+    path: Path,
+    config: PipelineConfig,
+    split: str,
+    baselines: dict[str, Any],
+    rows: list[ManifestRow],
+) -> None:
+    rows_by_pair_id = {row.pair_id: row for row in rows}
+    cases: list[dict[str, Any]] = []
+    for baseline_name, payload in baselines.items():
+        sorted_scores = sorted(
+            payload["pair_scores"],
+            key=lambda item: float(item["score"]),
+        )
+        cases.extend(
+            _failure_case_items(
+                baseline_name,
+                "stable_high_score",
+                [item for item in reversed(sorted_scores) if item["label"] == "stable"],
+                rows_by_pair_id,
+            )
+        )
+        cases.extend(
+            _failure_case_items(
+                baseline_name,
+                "changing_low_score",
+                [item for item in sorted_scores if item["label"] == "changing"],
+                rows_by_pair_id,
+            )
+        )
+    write_json(
+        path,
+        {
+            "run_id": config.run_id,
+            "tier": config.tier,
+            "split": split,
+            "task": "baseline_failure_case_review",
+            "cases": cases,
+            "review_protocol": (
+                "Inspect whether high stable scores are nuisance sensitivity and "
+                "whether low changing scores indicate weak proxy construction."
+            ),
+            "clinical_boundary": (
+                "research error-analysis template only; not diagnostic and not "
+                "validated for patient use"
+            ),
+        },
+    )
+
+
+def _failure_case_items(
+    baseline_name: str,
+    failure_mode: str,
+    candidates: list[dict[str, Any]],
+    rows_by_pair_id: dict[str, ManifestRow],
+) -> list[dict[str, Any]]:
+    selected = candidates[:3]
+    cases: list[dict[str, Any]] = []
+    for item in selected:
+        row = rows_by_pair_id[str(item["pair_id"])]
+        cases.append(
+            {
+                "baseline": baseline_name,
+                "failure_mode": failure_mode,
+                "pair_id": row.pair_id,
+                "label": row.pair_label,
+                "score": item["score"],
+                "context_image_id": row.context_image_id,
+                "target_image_id": row.target_image_id,
+                "context_path": row.context_path,
+                "target_path": row.target_path,
+                "diagnosis": row.diagnosis,
+                "anatomical_site": row.anatomical_site,
+                "pair_construction_reason": row.pair_construction_reason,
+                "review_question": _review_question(failure_mode),
+            }
+        )
+    return cases
+
+
+def _review_question(failure_mode: str) -> str:
+    if failure_mode == "stable_high_score":
+        return "Did nuisance variation dominate the score despite no proxy change?"
+    return "Is this changing proxy visually too subtle or mismatched for the task?"
+
+
 def _write_train_log(run_dir: Path, tier: str) -> None:
     append_log(
         run_dir,
@@ -187,7 +346,7 @@ def _write_train_log(run_dir: Path, tier: str) -> None:
 
 def _write_score_plot(path: Path, baselines: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    width, height = 720, 420
+    width, height = 720, max(420, 130 + 145 * len(baselines))
     image = Image.new("RGB", (width, height), "white")
     draw = ImageDraw.Draw(image)
     margin = 54
@@ -202,7 +361,7 @@ def _write_score_plot(path: Path, baselines: dict[str, Any]) -> None:
     for baseline_index, (name, payload) in enumerate(baselines.items()):
         y_origin = margin + 50 + baseline_index * 145
         draw.text((margin, y_origin - 34), name, fill=(20, 20, 20))
-        pair_scores = payload["pair_scores"]
+        pair_scores = payload["pair_scores"][:20]
         max_score = max(float(item["score"]) for item in pair_scores) or 1.0
         for item_index, item in enumerate(pair_scores):
             bar_w = int((float(item["score"]) / max_score) * (plot_w - 160))

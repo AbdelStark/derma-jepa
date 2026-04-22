@@ -9,7 +9,7 @@ from derma_jepa.baselines import evaluate_baselines
 from derma_jepa.benchmark import validate_fixture_run
 from derma_jepa.config import load_config
 from derma_jepa.demo_export import export_demo_bundle, validate_demo_artifact
-from derma_jepa.embeddings import export_fixture_embeddings
+from derma_jepa.embeddings import export_embeddings
 from derma_jepa.fixtures import audit_fixture_data, build_fixture_manifest
 from derma_jepa.pipeline import run_fixture_pipeline
 from derma_jepa.public_data import audit_public_dataset, build_public_manifest
@@ -66,8 +66,8 @@ def manifest_build(config: ConfigOption) -> None:
 
 @app.command("embed")
 def embed(config: ConfigOption) -> None:
-    """Export deterministic fixture embeddings for manifest images."""
-    output = export_fixture_embeddings(load_config(config))
+    """Export configured embeddings for manifest images."""
+    output = export_embeddings(load_config(config))
     typer.echo(f"embeddings written: {output}")
 
 

@@ -68,21 +68,34 @@ uv run derma-jepa manifest build --config configs/data/ham10000.yaml
 Run cheap public-tier baselines on the held-out split:
 
 ```bash
+uv run derma-jepa embed --config configs/data/ham10000.yaml
 uv run derma-jepa baseline eval --config configs/data/ham10000.yaml
+```
+
+The default HAM10000 config exports DINOv2 ViT-S/14 and ViT-B/14 embeddings.
+Install optional model dependencies first:
+
+```bash
+uv sync --extra model
 ```
 
 Generated run files live under `runs/ham10000-proxy-v1/`:
 
 - `metadata_normalized.parquet`
 - `data_audit.json`
+- `artifacts/reports/gold_audit_subset.csv`
 - `manifest_all.parquet`
 - `manifest_train.parquet`
 - `manifest_val.parquet`
 - `manifest_test.parquet`
+- `artifacts/embeddings/embedding_index.json`
+- `artifacts/embeddings/dinov2_vits14.npz`
+- `artifacts/embeddings/dinov2_vitb14.npz`
 - `baseline_metrics.json`
 - `metrics.json`
 - `model_card.md`
 - `artifacts/plots/baseline_score_histogram.png`
+- `artifacts/reports/baseline_failure_cases.json`
 
 ## Leakage Rules
 

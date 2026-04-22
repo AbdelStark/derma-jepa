@@ -9,6 +9,7 @@ from PIL import Image, ImageDraw
 from derma_jepa.baselines import evaluate_baselines
 from derma_jepa.config import PipelineConfig, parse_config
 from derma_jepa.contracts import SPLITS, read_manifest, validate_manifest
+from derma_jepa.embeddings import export_embeddings
 from derma_jepa.public_data import audit_public_dataset, build_public_manifest
 from derma_jepa.run import read_json
 
@@ -33,6 +34,8 @@ def test_public_dataset_manifest_is_leakage_checked_and_baseline_ready(
 
     validate_manifest(rows)
     assert len(rows) == 12
+    assert (config.run_dir / "artifacts" / "reports" / "gold_audit_subset.csv").exists()
+    assert manifest_audit["gold_audit_subset"].endswith("gold_audit_subset.csv")
     for split in SPLITS:
         split_rows = [row for row in rows if row.split == split]
         assert {row.pair_label for row in split_rows} == {"stable", "changing"}
@@ -43,13 +46,25 @@ def test_public_dataset_manifest_is_leakage_checked_and_baseline_ready(
         "val_test",
     }
 
+    embedding_index_path = export_embeddings(config)
+    embedding_index = read_json(embedding_index_path)
+    assert embedding_index["models"][0]["model_id"] == "public_color_texture_v1"
+
     baseline_path = evaluate_baselines(config, split="test")
     baseline = read_json(baseline_path)
     assert baseline["tier"] == "public"
-    assert baseline["strongest_baseline"]["name"] in {"pixel_l2", "ssim_distance"}
+    assert "embedding_cosine_public_color_texture_v1" in baseline["baselines"]
+    assert baseline["strongest_baseline"]["name"] in {
+        "pixel_l2",
+        "ssim_distance",
+        "embedding_cosine_public_color_texture_v1",
+    }
     assert (config.run_dir / "metrics.json").exists()
     assert (
         config.run_dir / "artifacts" / "plots" / "baseline_score_histogram.png"
+    ).exists()
+    assert (
+        config.run_dir / "artifacts" / "reports" / "baseline_failure_cases.json"
     ).exists()
 
 
@@ -99,6 +114,17 @@ def _public_config(
                 "image_size": 64,
             },
             "metrics": {"bootstrap_samples": 20, "ci_level": 0.95, "fixed_tpr": 0.8},
+            "embeddings": {
+                "models": [
+                    {
+                        "model_id": "public_color_texture_v1",
+                        "kind": "color_texture",
+                        "model_name": None,
+                        "batch_size": 16,
+                        "device": "cpu",
+                    }
+                ]
+            },
         }
     )
 

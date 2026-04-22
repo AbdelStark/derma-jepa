@@ -70,6 +70,8 @@ uv run derma-jepa fixture pipeline --config configs/manifest/fixture.yaml
 
 ## Milestone 2 - public data audit and baseline path
 
+Status: Complete as a local-data path with optional model dependencies.
+
 Purpose: establish the leakage-controlled benchmark before JEPA training.
 
 Deliverables:
@@ -91,6 +93,19 @@ Acceptance:
 - primary-tier manifest can be regenerated from config
 - baseline metrics include bootstrap confidence intervals
 - leakage-risk note is written before model training
+
+Implemented commands:
+
+```bash
+uv run derma-jepa data audit --config configs/data/ham10000.yaml
+uv run derma-jepa manifest build --config configs/data/ham10000.yaml
+uv run derma-jepa embed --config configs/data/ham10000.yaml
+uv run derma-jepa baseline eval --config configs/data/ham10000.yaml
+```
+
+The default embedding config uses DINOv2 ViT-S/14 and ViT-B/14 through the
+optional model dependency group. Tests validate the same embedding artifact and
+baseline contract with a deterministic local embedding backend.
 
 ## Milestone 3 - JEPA-style predictor training
 

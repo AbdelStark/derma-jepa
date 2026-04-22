@@ -19,6 +19,7 @@ def prepare_run_dir(config: PipelineConfig) -> Path:
     for relative in (
         "artifacts/embeddings",
         "artifacts/plots",
+        "artifacts/reports",
         "artifacts/demo_cases",
         "logs",
         "fixture/images",

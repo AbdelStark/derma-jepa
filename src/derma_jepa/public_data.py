@@ -103,6 +103,10 @@ def build_public_manifest(config: PipelineConfig) -> Path:
         rng = np.random.default_rng(config.seed + 1009)
         rows = _create_proxy_pairs(config, run_dir, split_records, rng)
         validate_manifest(rows)
+        gold_audit_path = _write_gold_audit_subset(
+            run_dir / "artifacts" / "reports" / "gold_audit_subset.csv",
+            rows,
+        )
 
         write_manifest(rows, run_dir / "manifest_all.parquet")
         for split in SPLITS:
@@ -111,16 +115,15 @@ def build_public_manifest(config: PipelineConfig) -> Path:
                 run_dir / f"manifest_{split}.parquet",
             )
         _write_normalized_metadata(run_dir / "metadata_normalized.parquet", records)
-        write_json(
-            run_dir / "data_audit.json",
-            _audit_payload(
-                config=config,
-                records=records,
-                issues=issues,
-                rows=rows,
-                split_groups=split_groups,
-            ),
+        audit_payload = _audit_payload(
+            config=config,
+            records=records,
+            issues=issues,
+            rows=rows,
+            split_groups=split_groups,
         )
+        audit_payload["gold_audit_subset"] = str(gold_audit_path)
+        write_json(run_dir / "data_audit.json", audit_payload)
         append_log(
             run_dir,
             "manifest.log",
@@ -696,6 +699,55 @@ def _labels_by_split(rows: list[ManifestRow]) -> dict[str, dict[str, int]]:
         }
         for split in SPLITS
     }
+
+
+def _write_gold_audit_subset(path: Path, rows: list[ManifestRow]) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = [
+        "split",
+        "pair_label",
+        "pair_id",
+        "context_image_id",
+        "target_image_id",
+        "context_path",
+        "target_path",
+        "diagnosis",
+        "anatomical_site",
+        "pair_construction_reason",
+        "augmentation_recipe_json",
+        "review_decision",
+        "review_notes",
+    ]
+    selected: list[ManifestRow] = []
+    for split in SPLITS:
+        for label in ("stable", "changing"):
+            selected.extend(
+                [row for row in rows if row.split == split and row.pair_label == label][
+                    :5
+                ]
+            )
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in selected:
+            writer.writerow(
+                {
+                    "split": row.split,
+                    "pair_label": row.pair_label,
+                    "pair_id": row.pair_id,
+                    "context_image_id": row.context_image_id,
+                    "target_image_id": row.target_image_id,
+                    "context_path": row.context_path,
+                    "target_path": row.target_path,
+                    "diagnosis": row.diagnosis,
+                    "anatomical_site": row.anatomical_site,
+                    "pair_construction_reason": row.pair_construction_reason,
+                    "augmentation_recipe_json": row.augmentation_recipe_json,
+                    "review_decision": "",
+                    "review_notes": "",
+                }
+            )
+    return path
 
 
 def _write_normalized_metadata(path: Path, records: list[PublicImageRecord]) -> None:

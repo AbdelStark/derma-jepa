@@ -25,8 +25,7 @@ def export_demo_bundle(run_dir: Path, out_dir: Path) -> Path:
         "run_id": metrics["run_id"],
         "demo_type": "deterministic_fixture_research_demo",
         "safety_boundary": (
-            "research demo; longitudinal-proxy task; not diagnostic; "
-            "not medical advice"
+            "research demo; longitudinal-proxy task; not diagnostic; not medical advice"
         ),
         "provenance": {
             "run_dir": str(run_dir),
@@ -149,9 +148,9 @@ def _write_html(path: Path, payload: dict[str, Any]) -> None:
     )
     timeline = "\n".join(
         "<figure>"
-        f"<img src=\"{case['context_image']}\" "
-        f"alt=\"{case['context_image_id']}\">"
-        f"<img src=\"{case['target_image']}\" alt=\"{case['target_image_id']}\">"
+        f'<img src="{case["context_image"]}" '
+        f'alt="{case["context_image_id"]}">'
+        f'<img src="{case["target_image"]}" alt="{case["target_image_id"]}">'
         f"<figcaption>{case['pair_id']}</figcaption></figure>"
         for case in payload["timeline"]
     )

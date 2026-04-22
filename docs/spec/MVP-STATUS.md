@@ -1,7 +1,9 @@
 # DermaJEPA MVP status
 
-Current state: Milestone 1 complete; first Milestone 2 public-data slice is
-runnable against local HAM10000-style files.
+Current state: Milestone 1 complete; Milestone 2 public-data audit, manifest,
+embedding export, and baseline-report path is runnable against local
+HAM10000-style files. DINOv2 export requires the optional model dependency group
+and local raw data.
 
 ## Completed
 
@@ -14,6 +16,7 @@ runnable against local HAM10000-style files.
 - [x] implementation plan
 - [x] MVP schedule
 - [x] Milestone 1: contract-first fixture pipeline
+- [x] Milestone 2: public data audit and baseline path
 
 ## Completed implementation milestone
 
@@ -40,9 +43,9 @@ uv run derma-jepa fixture pipeline --config configs/manifest/fixture.yaml
 
 ## Active next milestone
 
-- [ ] Milestone 2: public data audit and baseline path
+- [ ] Milestone 3: JEPA-style predictor training
 
-Milestone 2 must produce:
+Milestone 2 produced:
 
 - [x] `data/README.md` with source, license/access, expected files, checksums
       where possible, and citations
@@ -50,27 +53,27 @@ Milestone 2 must produce:
 - [x] normalized metadata tables
 - [x] leakage audit with patient/lesion/source/duplicate checks
 - [x] stable/changing proxy manifest
-- [ ] gold audit subset
+- [x] gold audit subset
 - [x] pixel/SSIM baseline report on the public-data proxy
-- [ ] DINOv2 ViT-S/14 and ViT-B/14 embedding export
-- [ ] DINOv2 baseline report
-- [ ] initial failure-case templates
+- [x] DINOv2 ViT-S/14 and ViT-B/14 embedding export
+- [x] DINOv2 baseline report
+- [x] initial failure-case templates
 
 ## Remaining / in progress
 
 - [x] public data audit
 - [x] public dataset indexing/download workflow
 - [x] leakage-controlled primary manifest
-- [ ] DINOv2 baseline implementation
+- [x] DINOv2 baseline implementation
+- [x] primary-tier embedding export contract
+- [x] initial primary-tier evaluation reports
+- [x] initial primary-tier model card
 - [ ] dermatology-supervised baseline investigation
 - [ ] JEPA-style predictor training scaffold
-- [ ] primary-tier embedding export contract
 - [ ] JEPA-style downstream drift scoring path
 - [ ] nuisance robustness benchmark
 - [ ] representation health checks
 - [ ] local dashboard/demo surface
-- [ ] primary-tier evaluation reports
-- [ ] primary-tier model card
 
 ## Completed implementation slice
 
@@ -92,6 +95,23 @@ This slice produced:
 - [x] public-tier pixel L2 and SSIM baseline metrics
 - [x] tests covering audit, missing-image failure, manifest validation, leakage
       constraints, and baseline artifact generation
+
+## Completed implementation milestone
+
+- [x] Milestone 2: public data audit and model-baseline path
+
+This milestone added:
+
+- [x] configurable embedding model contract
+- [x] optional DINOv2 ViT-S/14 and ViT-B/14 export path
+- [x] deterministic embedding backend for local contract tests
+- [x] embedding index artifacts under `artifacts/embeddings/`
+- [x] embedding-cosine baseline integration into `baseline_metrics.json`
+- [x] manual gold-audit subset under `artifacts/reports/gold_audit_subset.csv`
+- [x] baseline failure-case templates under
+      `artifacts/reports/baseline_failure_cases.json`
+- [x] fixture benchmark gate updated to require embedding index and failure-case
+      artifacts
 
 Public-data local acceptance commands:
 

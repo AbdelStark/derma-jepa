@@ -80,9 +80,9 @@ uv run derma-jepa fixture pipeline --config configs/manifest/fixture.yaml
 ```
 
 This command builds and validates the synthetic pair manifest, exports
-deterministic fixture embeddings, evaluates pixel L2 and SSIM baselines, writes a
-self-contained run directory, validates the fixture acceptance gate, and exports
-a local demo bundle.
+deterministic fixture embeddings, evaluates pixel L2, SSIM, and embedding-distance
+baselines, writes a self-contained run directory, validates the fixture acceptance
+gate, and exports a local demo bundle.
 
 Generated outputs:
 
@@ -106,12 +106,22 @@ documented in `data/README.md`, then run:
 ```bash
 uv run derma-jepa data audit --config configs/data/ham10000.yaml
 uv run derma-jepa manifest build --config configs/data/ham10000.yaml
+uv run derma-jepa embed --config configs/data/ham10000.yaml
 uv run derma-jepa baseline eval --config configs/data/ham10000.yaml
 ```
 
 The public-data manifest builder writes normalized metadata, an audit report,
 patient/lesion-aware train/validation/test manifests, post-split stable nuisance
-variants, and pixel/SSIM baseline metrics. This is still a longitudinal-proxy
+variants, and a manual gold-audit subset. The embedding command exports the
+configured DINOv2 ViT-S/14 and ViT-B/14 image embeddings when optional model
+dependencies are installed:
+
+```bash
+uv sync --extra model
+```
+
+Baseline evaluation then reports pixel L2, SSIM, and embedding-distance metrics,
+plus failure-case templates for manual review. This is still a longitudinal-proxy
 research path, not a diagnostic workflow.
 
 Validate the codebase:
@@ -132,6 +142,7 @@ derma-jepa data audit --config configs/manifest/fixture.yaml
 derma-jepa manifest build --config configs/manifest/fixture.yaml
 derma-jepa manifest build --config configs/data/ham10000.yaml
 derma-jepa embed --config configs/manifest/fixture.yaml
+derma-jepa embed --config configs/data/ham10000.yaml
 derma-jepa baseline eval --config configs/manifest/fixture.yaml
 derma-jepa baseline eval --config configs/data/ham10000.yaml
 derma-jepa eval --config configs/manifest/fixture.yaml

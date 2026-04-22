@@ -1,56 +1,121 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any, cast
 
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
+from PIL import Image, ImageOps
 
-from derma_jepa.config import PipelineConfig
+from derma_jepa.config import EmbeddingModelConfig, PipelineConfig
 from derma_jepa.contracts import ManifestRow, read_manifest
 from derma_jepa.preprocessing import load_preprocessed_rgb
-from derma_jepa.run import append_log, prepare_run_dir
+from derma_jepa.run import append_log, prepare_run_dir, write_json
+
+
+def export_embeddings(config: PipelineConfig) -> Path:
+    """Export configured image embeddings for the manifest in a completed run."""
+    run_dir = prepare_run_dir(config)
+    rows = read_manifest(run_dir / "manifest_all.parquet")
+    image_records = _unique_images(rows)
+    if not config.embedding_models:
+        msg = "config.embeddings.models must contain at least one model"
+        raise ValueError(msg)
+
+    index_records: list[dict[str, str | int]] = []
+    for model in config.embedding_models:
+        artifact_path, metadata_path, dimension = _export_model_embeddings(
+            config,
+            model,
+            image_records,
+        )
+        index_records.append(
+            {
+                "model_id": model.model_id,
+                "kind": model.kind,
+                "model_name": model.model_name or model.model_id,
+                "artifact_path": str(artifact_path),
+                "metadata_path": str(metadata_path),
+                "dimension": dimension,
+                "image_count": len(image_records),
+            }
+        )
+
+    index_path = run_dir / "artifacts" / "embeddings" / "embedding_index.json"
+    write_json(
+        index_path,
+        {
+            "run_id": config.run_id,
+            "tier": config.tier,
+            "models": index_records,
+            "clinical_boundary": (
+                "research embedding export only; not diagnostic and not medical advice"
+            ),
+        },
+    )
+    append_log(
+        run_dir,
+        "embed.log",
+        (
+            f"exported {len(index_records)} embedding model(s) for "
+            f"{len(image_records)} images"
+        ),
+    )
+    return index_path
 
 
 def export_fixture_embeddings(config: PipelineConfig) -> Path:
-    run_dir = prepare_run_dir(config)
-    manifest_path = run_dir / "manifest_all.parquet"
-    rows = read_manifest(manifest_path)
-    image_records = _unique_images(rows)
+    """Backward-compatible fixture embedding entrypoint used by the fixture pipeline."""
+    export_embeddings(config)
+    return config.run_dir / "artifacts" / "embeddings" / "fixture_embeddings.npz"
 
-    image_ids: list[str] = []
-    paths: list[str] = []
-    vectors: list[np.ndarray] = []
-    for image_id, path in sorted(image_records.items()):
-        arr = load_preprocessed_rgb(Path(path), config.preprocessing.image_size)
-        image_ids.append(image_id)
-        paths.append(path)
-        vectors.append(_feature_vector(arr))
 
-    matrix = np.stack(vectors).astype(np.float32)
-    out_path = run_dir / "artifacts" / "embeddings" / "fixture_embeddings.npz"
+def _export_model_embeddings(
+    config: PipelineConfig,
+    model: EmbeddingModelConfig,
+    image_records: dict[str, str],
+) -> tuple[Path, Path, int]:
+    if model.kind == "color_texture":
+        matrix = _color_texture_matrix(config, image_records)
+        feature_type = "color_texture_summary"
+    elif model.kind == "dinov2":
+        matrix = _dinov2_matrix(model, image_records)
+        feature_type = "dinov2_cls_token"
+    else:
+        msg = f"unsupported embedding model kind: {model.kind}"
+        raise ValueError(msg)
+
+    image_ids = [image_id for image_id, _ in sorted(image_records.items())]
+    paths = [path for _, path in sorted(image_records.items())]
+    stem = _artifact_stem(model)
+    out_path = config.run_dir / "artifacts" / "embeddings" / f"{stem}.npz"
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(out_path, image_id=np.asarray(image_ids), vector=matrix)
+    np.savez_compressed(
+        out_path,
+        image_id=np.asarray(image_ids),
+        vector=matrix.astype(np.float32),
+        model_id=np.asarray([model.model_id]),
+    )
 
+    metadata_path = config.run_dir / "artifacts" / "embeddings" / f"{stem}.parquet"
     metadata = pa.Table.from_pylist(
         [
             {
                 "image_id": image_id,
                 "path": path,
-                "model_id": "fixture_color_texture_v1",
-                "feature_type": "color_texture_summary",
+                "model_id": model.model_id,
+                "model_name": model.model_name or model.model_id,
+                "model_kind": model.kind,
+                "feature_type": feature_type,
                 "dimension": int(matrix.shape[1]),
                 "preprocessing_profile": config.preprocessing.profile,
             }
             for image_id, path in zip(image_ids, paths, strict=True)
         ]
     )
-    pq.write_table(  # type: ignore[no-untyped-call]
-        metadata,
-        run_dir / "artifacts" / "embeddings" / "fixture_embeddings.parquet",
-    )
-    append_log(run_dir, "embed.log", f"exported {len(image_ids)} fixture embeddings")
-    return out_path
+    pq.write_table(metadata, metadata_path)  # type: ignore[no-untyped-call]
+    return out_path, metadata_path, int(matrix.shape[1])
 
 
 def _unique_images(rows: list[ManifestRow]) -> dict[str, str]:
@@ -58,7 +123,82 @@ def _unique_images(rows: list[ManifestRow]) -> dict[str, str]:
     for row in rows:
         images[row.context_image_id] = row.context_path
         images[row.target_image_id] = row.target_path
-    return images
+    return dict(sorted(images.items()))
+
+
+def _color_texture_matrix(
+    config: PipelineConfig,
+    image_records: dict[str, str],
+) -> np.ndarray:
+    vectors: list[np.ndarray] = []
+    for _, path in sorted(image_records.items()):
+        arr = load_preprocessed_rgb(Path(path), config.preprocessing.image_size)
+        vectors.append(_feature_vector(arr))
+    return _l2_normalize_matrix(np.stack(vectors).astype(np.float32))
+
+
+def _dinov2_matrix(
+    model_config: EmbeddingModelConfig,
+    image_records: dict[str, str],
+) -> np.ndarray:
+    try:
+        import torch
+        from transformers import AutoImageProcessor, AutoModel
+    except ImportError as exc:
+        msg = (
+            "DINOv2 embedding export requires optional model dependencies. "
+            "Install them with `uv sync --extra model` before running "
+            "`derma-jepa embed` for a DINOv2 config."
+        )
+        raise RuntimeError(msg) from exc
+
+    device = _resolve_device(torch, model_config.device)
+    processor = AutoImageProcessor.from_pretrained(model_config.model_name)
+    model = AutoModel.from_pretrained(model_config.model_name)
+    model.to(device)
+    model.eval()
+
+    all_vectors: list[np.ndarray] = []
+    paths = [path for _, path in sorted(image_records.items())]
+    with torch.no_grad():
+        for start in range(0, len(paths), model_config.batch_size):
+            batch_paths = paths[start : start + model_config.batch_size]
+            images = [_load_pil_rgb(path) for path in batch_paths]
+            inputs = processor(images=images, return_tensors="pt")
+            inputs = {key: value.to(device) for key, value in inputs.items()}
+            outputs = model(**inputs)
+            vectors = _output_vectors(outputs)
+            all_vectors.append(vectors.detach().cpu().numpy().astype(np.float32))
+    return _l2_normalize_matrix(np.concatenate(all_vectors, axis=0))
+
+
+def _load_pil_rgb(path: str) -> Image.Image:
+    with Image.open(path) as image:
+        return ImageOps.exif_transpose(image).convert("RGB")
+
+
+def _resolve_device(torch: Any, requested: str) -> str:
+    if requested != "auto":
+        return requested
+    if torch.cuda.is_available():
+        return "cuda"
+    if (
+        getattr(torch.backends, "mps", None) is not None
+        and torch.backends.mps.is_available()
+    ):
+        return "mps"
+    return "cpu"
+
+
+def _output_vectors(outputs: Any) -> Any:
+    pooler = getattr(outputs, "pooler_output", None)
+    if pooler is not None:
+        return pooler
+    hidden = getattr(outputs, "last_hidden_state", None)
+    if hidden is None:
+        msg = "DINOv2 model output did not contain pooler_output or last_hidden_state"
+        raise RuntimeError(msg)
+    return hidden[:, 0]
 
 
 def _feature_vector(arr: np.ndarray) -> np.ndarray:
@@ -76,3 +216,18 @@ def _feature_vector(arr: np.ndarray) -> np.ndarray:
     gray = arr.mean(axis=2)
     quantiles = np.quantile(gray, [0.05, 0.25, 0.5, 0.75, 0.95])
     return np.concatenate([means, stds, *histograms, quantiles]).astype(np.float32)
+
+
+def _l2_normalize_matrix(matrix: np.ndarray) -> np.ndarray:
+    norms = np.linalg.norm(matrix, axis=1, keepdims=True)
+    normalized = matrix / np.clip(norms, 1e-12, None)
+    return cast(np.ndarray, normalized.astype(np.float32, copy=False))
+
+
+def _artifact_stem(model: EmbeddingModelConfig) -> str:
+    if model.model_id == "fixture_color_texture_v1":
+        return "fixture_embeddings"
+    return "".join(
+        character if character.isalnum() or character in {"_", "-"} else "_"
+        for character in model.model_id
+    )

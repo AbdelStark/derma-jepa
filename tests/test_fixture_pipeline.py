@@ -30,8 +30,11 @@ def test_fixture_pipeline_writes_run_and_demo_artifacts(tmp_path: Path) -> None:
     assert demo_case.exists()
     assert (run_dir / "benchmark_report.json").exists()
     assert (run_dir / "artifacts" / "embeddings" / "fixture_embeddings.npz").exists()
+    assert (run_dir / "artifacts" / "embeddings" / "embedding_index.json").exists()
     assert (run_dir / "artifacts" / "plots" / "baseline_score_histogram.png").exists()
+    assert (run_dir / "artifacts" / "reports" / "baseline_failure_cases.json").exists()
     baseline_metrics = read_json(run_dir / "baseline_metrics.json")
+    assert "embedding_cosine_fixture_color_texture_v1" in baseline_metrics["baselines"]
     assert baseline_metrics["strongest_baseline"]["auroc"] >= 0.95
     demo_payload = read_json(demo_case)
     assert demo_payload["safety_boundary"].startswith("research demo")
