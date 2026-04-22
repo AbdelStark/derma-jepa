@@ -105,7 +105,10 @@ is expected — the proxy task is trivially separable at tiny scale. It does
 
 Single-command launcher lives at `scripts/hf_jobs_ham10000_primary.sh`. It
 pins the config path, extras, and mount to the canonical values and
-defaults to `a100-large` + `12h`:
+defaults to `a10g-large` + `12h`. The default is `a10g-large` (not
+`a100-large`) because A100 availability on the Hub Jobs queue is
+inconsistent and we prefer a flavor that actually schedules; override to
+`a100-large` when the queue has capacity:
 
 ```bash
 ./scripts/hf_jobs_ham10000_primary.sh
@@ -220,9 +223,12 @@ From observed smoke timing:
 - Manifest + baselines + JEPA fit: seconds to low minutes.
 - Upload of run dir: ~30s.
 
-Rule of thumb: primary-tier run completes in well under 1h on `a100-large`.
-The 12h timeout is a safety net, not an expected runtime. Bill only what
-the Job actually uses.
+Rule of thumb: primary-tier run completes in well under 1h on `a100-large`
+and within ~1-2h on `a10g-large`. The 12h timeout is a safety net, not an
+expected runtime. Bill only what the Job actually uses. If the queue is
+saturated for the selected flavor, the Job can sit in `SCHEDULING` for
+tens of minutes — cancel and fall back to a smaller flavor rather than
+waiting.
 
 ## 9. Safety and licensing reminders
 
