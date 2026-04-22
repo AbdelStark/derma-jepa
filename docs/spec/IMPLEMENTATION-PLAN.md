@@ -134,6 +134,12 @@ Current fixture smoke:
 ```bash
 uv run derma-jepa train --config configs/train/jepa_predictor.yaml
 ```
+
+Hosted compute smoke:
+
+```bash
+HF_JOBS_DRY_RUN=1 ./scripts/hf_jobs_train.sh
+```
 - changing pairs are not trained to collapse together
 
 ## Milestone 4 - evaluation and benchmark suite
