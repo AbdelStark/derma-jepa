@@ -67,19 +67,53 @@ The launcher passes `HF_TOKEN` as a Job secret when `HF_OUTPUT_REPO_ID` is set.
 
 ## Public-data or primary-tier run
 
-Use a config URL whose dataset paths match the mounted volume:
+Use the mounted-data HAM10000 config and a volume that resolves the same paths
+inside the Job. `configs/data/ham10000_hf_mounted.yaml` is the checked-in
+counterpart to `configs/data/ham10000.yaml` with `/data` paths that match the
+volume mount:
 
 ```bash
-DERMA_JEPA_CONFIG_URL="https://raw.githubusercontent.com/AbdelStark/derma-jepa/main/configs/data/ham10000.yaml" \
+DERMA_JEPA_CONFIG_PATH=configs/data/ham10000_hf_mounted.yaml \
 HF_JOBS_VOLUME="hf://datasets/<namespace>/<dataset-repo>:/data:ro" \
 HF_JOBS_FLAVOR=a100-large \
 HF_JOBS_TIMEOUT=12h \
 ./scripts/hf_jobs_train_bundle.sh
 ```
 
-For public dermatology datasets, prefer a separate config whose `metadata_csv`
-and `image_roots` point at the mounted paths. Do not upload raw patient or
-personal images. The MVP remains a research artifact, not a diagnostic system.
+The mounted dataset repo must contain `HAM10000_metadata.csv` at the root and
+images under `HAM10000_images_part_1/` and `HAM10000_images_part_2/`. Do not
+upload raw patient or personal images. The MVP remains a research artifact,
+not a diagnostic system.
+
+## Pinned hosted dependencies
+
+Both launchers apply `scripts/hf_jobs_constraints.txt` so hosted runs do not
+float to whatever numpy/scipy/torch/transformers happens to be newest when the
+Job starts:
+
+- `hf_jobs_train.sh` adds each pin as a `--with pkg==ver` flag so `uv run`
+  resolves the ephemeral environment against them.
+- `hf_jobs_train_bundle.sh` embeds the file into the Job script and passes it
+  to `pip install --constraint` during bootstrap.
+
+Keep the pins aligned with `uv.lock` when you upgrade. Override the file with
+`DERMA_JEPA_PINS_FILE=/path/to/custom.txt` when experimenting.
+
+## Fetch and summarize a completed run
+
+Run outputs are uploaded to the Hub under `path_in_repo = run_id`. To pull the
+artifacts back and see the headline numbers:
+
+```bash
+uv run derma-jepa hf-run summary \
+  --repo-id "$HF_USER/derma-jepa-runs" \
+  --run-id hf-jepa-fixture-20260422-120000
+```
+
+Use `--json` for machine-readable output, `--dest` to pick a local cache root,
+`--path-in-repo` if the upload used a non-default subfolder, and `--revision`
+for a specific Hub commit. The command requires `huggingface-hub` to be
+installed locally.
 
 ## Useful overrides
 

@@ -11,6 +11,7 @@ from derma_jepa.config import load_config
 from derma_jepa.demo_export import export_demo_bundle, validate_demo_artifact
 from derma_jepa.embeddings import export_embeddings
 from derma_jepa.fixtures import audit_fixture_data, build_fixture_manifest
+from derma_jepa.hf_runs import fetch_and_summarize, summary_as_json
 from derma_jepa.pipeline import run_fixture_pipeline
 from derma_jepa.public_data import audit_public_dataset, build_public_manifest
 from derma_jepa.training import train_jepa_predictor
@@ -21,12 +22,14 @@ manifest_app = typer.Typer(no_args_is_help=True)
 baseline_app = typer.Typer(no_args_is_help=True)
 demo_app = typer.Typer(no_args_is_help=True)
 fixture_app = typer.Typer(no_args_is_help=True)
+hf_run_app = typer.Typer(no_args_is_help=True)
 
 app.add_typer(data_app, name="data")
 app.add_typer(manifest_app, name="manifest")
 app.add_typer(baseline_app, name="baseline")
 app.add_typer(demo_app, name="demo")
 app.add_typer(fixture_app, name="fixture")
+app.add_typer(hf_run_app, name="hf-run")
 
 ConfigOption = Annotated[Path, typer.Option(exists=True, readable=True)]
 RunDirOption = Annotated[
@@ -149,3 +152,37 @@ def train(
         return
     output = train_jepa_predictor(parsed)
     typer.echo(f"training metrics written: {output}")
+
+
+@hf_run_app.command("summary")
+def hf_run_summary(
+    run_id: Annotated[str, typer.Option(help="Run ID used as the Hub path.")],
+    repo_id: Annotated[str, typer.Option(help="Hub repo holding run artifacts.")],
+    dest: Annotated[
+        Path,
+        typer.Option(help="Local directory where the run is downloaded."),
+    ] = Path("outputs/hf-runs"),
+    repo_type: Annotated[
+        str, typer.Option(help="Hub repo type: dataset, model, or space.")
+    ] = "dataset",
+    revision: Annotated[
+        str | None, typer.Option(help="Optional git revision on the Hub repo.")
+    ] = None,
+    path_in_repo: Annotated[
+        str | None,
+        typer.Option(help="Override the subfolder path inside the repo."),
+    ] = None,
+    as_json: Annotated[
+        bool, typer.Option("--json", help="Emit the summary as JSON.")
+    ] = False,
+) -> None:
+    """Fetch a completed run from the Hub by run ID and print its summary."""
+    summary = fetch_and_summarize(
+        repo_id=repo_id,
+        run_id=run_id,
+        dest=dest,
+        repo_type=repo_type,
+        revision=revision,
+        path_in_repo=path_in_repo,
+    )
+    typer.echo(summary_as_json(summary) if as_json else summary.to_text())
