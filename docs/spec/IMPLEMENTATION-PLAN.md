@@ -109,6 +109,10 @@ baseline contract with a deterministic local embedding backend.
 
 ## Milestone 3 - JEPA-style predictor training
 
+Status: Scaffold complete in the fixture tier; hosted fixture smoke runs on
+Hugging Face Jobs. Full primary-tier training on public HAM10000 data is the
+next open item.
+
 Purpose: test the project thesis with a compact latent prediction objective.
 
 Deliverables:
@@ -116,7 +120,8 @@ Deliverables:
 - context/target latent dataset
 - predictor/projection model
 - training loop
-- collapse checks
+- collapse checks (stable pairs are trained to predict; changing pairs are
+  held out for evaluation and never trained to collapse together)
 - tiny overfit/debug run
 - smoke training run under 30 minutes
 - full primary-tier training run targeting under 12 hours on GB10, hard cap 24
@@ -135,12 +140,29 @@ Current fixture smoke:
 uv run derma-jepa train --config configs/train/jepa_predictor.yaml
 ```
 
-Hosted compute smoke:
+Hosted compute surfaces:
 
 ```bash
+# dry-run preview of the uv-run launcher
 HF_JOBS_DRY_RUN=1 ./scripts/hf_jobs_train.sh
+
+# private-wheel bundle launcher
+./scripts/hf_jobs_train_bundle.sh
+
+# mounted-data HAM10000 run (first real public-data JEPA job)
+DERMA_JEPA_CONFIG_PATH=configs/data/ham10000_hf_mounted.yaml \
+HF_JOBS_VOLUME="hf://datasets/<ns>/<repo>:/data:ro" \
+./scripts/hf_jobs_train_bundle.sh
+
+# pull a completed run back from the Hub by run ID
+uv run derma-jepa hf-run summary \
+  --repo-id "$HF_USER/derma-jepa-runs" \
+  --run-id <run_id>
 ```
-- changing pairs are not trained to collapse together
+
+Both launchers apply `scripts/hf_jobs_constraints.txt` so hosted dependency
+resolution does not float between Jobs. The runbook at
+`docs/runbooks/huggingface-jobs.md` is authoritative for the hosted path.
 
 ## Milestone 4 - evaluation and benchmark suite
 

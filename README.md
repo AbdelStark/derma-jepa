@@ -132,6 +132,35 @@ uv run mypy
 uv run pytest
 ```
 
+## Hosted compute via Hugging Face Jobs
+
+The fixture-tier JEPA training scaffold also runs on Hugging Face Jobs. See
+`docs/runbooks/huggingface-jobs.md` for the authoritative walkthrough.
+Quick summary:
+
+```bash
+# uv-run launcher for a public GitHub ref
+./scripts/hf_jobs_train.sh
+
+# private-wheel bundle launcher (no GitHub access required from the Job)
+./scripts/hf_jobs_train_bundle.sh
+
+# first real public-data run with the dataset mounted at /data
+DERMA_JEPA_CONFIG_PATH=configs/data/ham10000_hf_mounted.yaml \
+HF_JOBS_VOLUME="hf://datasets/<ns>/<repo>:/data:ro" \
+HF_JOBS_FLAVOR=a100-large HF_JOBS_TIMEOUT=12h \
+  ./scripts/hf_jobs_train_bundle.sh
+
+# fetch and summarize a completed run uploaded under run_id
+uv run derma-jepa hf-run summary \
+  --repo-id "$HF_USER/derma-jepa-runs" \
+  --run-id <run_id>
+```
+
+Both launchers pin hosted dependency versions from
+`scripts/hf_jobs_constraints.txt` so numpy, scipy, torch, and transformers do
+not float between Jobs. Keep the pin file aligned with `uv.lock`.
+
 ## Command surface
 
 The MVP command surface is locked even though later model/data commands remain
@@ -150,6 +179,8 @@ derma-jepa benchmark --run runs/fixture-contract-v1
 derma-jepa demo export --run runs/fixture-contract-v1 --out artifacts/demo/fixture-contract-v1
 derma-jepa demo --artifact artifacts/demo/fixture-contract-v1
 derma-jepa train --config configs/train/jepa_predictor.yaml
+derma-jepa hf-run summary --repo-id <hub-repo> --run-id <run_id>
+./scripts/hf_jobs_train.sh
 ./scripts/hf_jobs_train_bundle.sh
 ```
 

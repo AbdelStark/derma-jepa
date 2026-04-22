@@ -19,6 +19,30 @@ data/raw/ham10000/
 
 The default config also accepts a flat `data/raw/ham10000/images/` directory.
 
+### Hugging Face Jobs mounted layout
+
+For hosted runs, mount a Hub dataset repo at `/data` and use
+`configs/data/ham10000_hf_mounted.yaml`. The mounted repo must expose:
+
+```text
+/data/
+  HAM10000_metadata.csv
+  HAM10000_images_part_1/
+    ISIC_*.jpg
+  HAM10000_images_part_2/
+    ISIC_*.jpg
+```
+
+`/data/images/` is also accepted as a flat fallback. Launch with, for example:
+
+```bash
+HF_JOBS_VOLUME="hf://datasets/<namespace>/<ham10000-repo>:/data:ro" \
+DERMA_JEPA_CONFIG_PATH=configs/data/ham10000_hf_mounted.yaml \
+./scripts/hf_jobs_train_bundle.sh
+```
+
+Do not upload raw patient or personal images to any public Hub repo.
+
 Required metadata columns:
 
 - `image_id`
