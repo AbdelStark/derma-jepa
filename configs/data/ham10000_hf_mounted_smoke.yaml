@@ -32,13 +32,13 @@ dataset:
     - jpg
     - jpeg
     - png
-  stable_pairs_per_split: 200
-  changing_pairs_per_split: 200
+  stable_pairs_per_split: 100
+  changing_pairs_per_split: 100
   split:
     train: 0.70
     val: 0.15
     test: 0.15
-  max_records: 800
+  max_records: 2000
 
 preprocessing:
   profile: ham10000_224_center_crop_v1
