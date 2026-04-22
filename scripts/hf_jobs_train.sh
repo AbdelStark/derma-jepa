@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONSTRAINTS_FILE_DEFAULT="$SCRIPT_DIR/hf_jobs_constraints.txt"
+
 load_env_defaults() {
   local line key value
   [[ -f .env ]] || return 0
@@ -13,6 +16,21 @@ load_env_defaults() {
       export "$key=$value"
     fi
   done < .env
+}
+
+PIN_WITH_FLAGS=()
+load_pin_with_flags() {
+  local file="$1"
+  local line trimmed
+  PIN_WITH_FLAGS=()
+  [[ -f "$file" ]] || return 0
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%%#*}"
+    # trim leading/trailing whitespace (bash 3.2 safe)
+    trimmed="$(printf '%s' "$line" | awk '{$1=$1; print}')"
+    [[ -z "$trimmed" ]] && continue
+    PIN_WITH_FLAGS+=(--with "$trimmed")
+  done < "$file"
 }
 
 load_env_defaults
@@ -32,16 +50,22 @@ DERMA_JEPA_OUTPUT_ROOT="${DERMA_JEPA_OUTPUT_ROOT:-outputs/runs}"
 DERMA_JEPA_ARTIFACT_ROOT="${DERMA_JEPA_ARTIFACT_ROOT:-outputs/artifacts/demo}"
 HF_JOBS_FLAVOR="${HF_JOBS_FLAVOR:-a10g-small}"
 HF_JOBS_TIMEOUT="${HF_JOBS_TIMEOUT:-2h}"
+DERMA_JEPA_PINS_FILE="${DERMA_JEPA_PINS_FILE:-$CONSTRAINTS_FILE_DEFAULT}"
 
 cmd=(
   hf jobs uv run
   --flavor "$HF_JOBS_FLAVOR"
   --timeout "$HF_JOBS_TIMEOUT"
-  --with "$DERMA_JEPA_PACKAGE_SPEC"
-  --with "huggingface-hub>=1.0"
   --label "project=derma-jepa"
   --label "task=jepa-train"
 )
+
+load_pin_with_flags "$DERMA_JEPA_PINS_FILE"
+if [[ ${#PIN_WITH_FLAGS[@]} -gt 0 ]]; then
+  cmd+=("${PIN_WITH_FLAGS[@]}")
+fi
+
+cmd+=(--with "$DERMA_JEPA_PACKAGE_SPEC")
 
 if [[ -n "${HF_JOBS_NAMESPACE:-}" ]]; then
   cmd+=(--namespace "$HF_JOBS_NAMESPACE")

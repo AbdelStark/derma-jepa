@@ -1,0 +1,30 @@
+# Pinned dependency versions for DermaJEPA Hugging Face Jobs runs.
+#
+# These pins keep hosted jobs reproducible instead of floating to whatever
+# numpy/scipy/torch/transformers happens to be newest when the Job starts. The
+# versions are aligned with uv.lock so a Job run matches what works locally.
+#
+# Each non-comment, non-empty line is passed as `--with <spec>` to `hf jobs uv
+# run` by scripts/hf_jobs_train.sh and scripts/hf_jobs_train_bundle.sh.
+# Update in lock-step with uv.lock — do not drift unless you have retested the
+# full fixture and public-data paths.
+
+numpy==2.4.4
+scipy==1.17.1
+scikit-image==0.26.0
+scikit-learn==1.8.0
+pillow==12.2.0
+pyarrow==24.0.0
+pyyaml==6.0.3
+typer==0.24.1
+tqdm==4.67.3
+packaging==26.1
+filelock==3.29.0
+fsspec==2026.3.0
+huggingface-hub==1.11.0
+safetensors==0.7.0
+tokenizers==0.22.2
+timm==1.0.26
+torch==2.11.0
+torchvision==0.26.0
+transformers==5.5.4

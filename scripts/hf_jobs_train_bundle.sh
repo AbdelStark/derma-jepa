@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONSTRAINTS_FILE_DEFAULT="$SCRIPT_DIR/hf_jobs_constraints.txt"
+
 load_env_defaults() {
   local line key value
   [[ -f .env ]] || return 0
@@ -13,6 +16,20 @@ load_env_defaults() {
       export "$key=$value"
     fi
   done < .env
+}
+
+PIN_WITH_FLAGS=()
+load_pin_with_flags() {
+  local file="$1"
+  local line trimmed
+  PIN_WITH_FLAGS=()
+  [[ -f "$file" ]] || return 0
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%%#*}"
+    trimmed="$(printf '%s' "$line" | awk '{$1=$1; print}')"
+    [[ -z "$trimmed" ]] && continue
+    PIN_WITH_FLAGS+=(--with "$trimmed")
+  done < "$file"
 }
 
 load_env_defaults
@@ -37,9 +54,14 @@ DERMA_JEPA_ARTIFACT_ROOT="${DERMA_JEPA_ARTIFACT_ROOT:-outputs/artifacts/demo}"
 DERMA_JEPA_INSTALL_EXTRAS="${DERMA_JEPA_INSTALL_EXTRAS:-}"
 HF_JOBS_FLAVOR="${HF_JOBS_FLAVOR:-cpu-upgrade}"
 HF_JOBS_TIMEOUT="${HF_JOBS_TIMEOUT:-2h}"
+DERMA_JEPA_PINS_FILE="${DERMA_JEPA_PINS_FILE:-$CONSTRAINTS_FILE_DEFAULT}"
 
 if [[ ! -f "$DERMA_JEPA_CONFIG_PATH" ]]; then
   echo "Config does not exist: $DERMA_JEPA_CONFIG_PATH" >&2
+  exit 1
+fi
+if [[ ! -f "$DERMA_JEPA_PINS_FILE" ]]; then
+  echo "Pinned constraints file does not exist: $DERMA_JEPA_PINS_FILE" >&2
   exit 1
 fi
 
@@ -51,7 +73,7 @@ if [[ -z "$wheel_path" ]]; then
 fi
 
 job_script="$tmpdir/derma_jepa_hf_job_bundle.py"
-uv run python - "$wheel_path" "$DERMA_JEPA_CONFIG_PATH" "$job_script" <<'PY'
+uv run python - "$wheel_path" "$DERMA_JEPA_CONFIG_PATH" "$DERMA_JEPA_PINS_FILE" "$job_script" <<'PY'
 from __future__ import annotations
 
 import base64
@@ -60,10 +82,12 @@ from pathlib import Path
 
 wheel_path = Path(sys.argv[1])
 config_path = Path(sys.argv[2])
-job_script = Path(sys.argv[3])
+constraints_path = Path(sys.argv[3])
+job_script = Path(sys.argv[4])
 wheel_name = wheel_path.name
 wheel_b64 = base64.b64encode(wheel_path.read_bytes()).decode("ascii")
 config_b64 = base64.b64encode(config_path.read_bytes()).decode("ascii")
+constraints_b64 = base64.b64encode(constraints_path.read_bytes()).decode("ascii")
 
 job_script.write_text(
     f'''from __future__ import annotations
@@ -78,6 +102,7 @@ from pathlib import Path
 WHEEL_B64 = "{wheel_b64}"
 WHEEL_NAME = "{wheel_name}"
 CONFIG_B64 = "{config_b64}"
+CONSTRAINTS_B64 = "{constraints_b64}"
 
 
 def main() -> None:
@@ -86,14 +111,24 @@ def main() -> None:
     workdir.mkdir(parents=True, exist_ok=True)
     wheel_path = workdir / WHEEL_NAME
     config_path = workdir / "derma_jepa_train.yaml"
+    constraints_path = workdir / "hf_jobs_constraints.txt"
     wheel_path.write_bytes(base64.b64decode(WHEEL_B64))
     config_path.write_bytes(base64.b64decode(CONFIG_B64))
+    constraints_path.write_bytes(base64.b64decode(CONSTRAINTS_B64))
 
     _ensure_pip()
     package_spec = str(wheel_path)
     if args.install_extras:
         package_spec = f"{{package_spec}}[{{args.install_extras}}]"
-    install_args = [sys.executable, "-m", "pip", "install", package_spec]
+    install_args = [
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "--constraint",
+        str(constraints_path),
+        package_spec,
+    ]
     if os.environ.get("HF_OUTPUT_REPO_ID"):
         install_args.append("huggingface-hub>=1.0")
     subprocess.run(install_args, check=True)
