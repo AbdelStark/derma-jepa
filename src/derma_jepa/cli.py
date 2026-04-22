@@ -13,6 +13,7 @@ from derma_jepa.embeddings import export_embeddings
 from derma_jepa.fixtures import audit_fixture_data, build_fixture_manifest
 from derma_jepa.pipeline import run_fixture_pipeline
 from derma_jepa.public_data import audit_public_dataset, build_public_manifest
+from derma_jepa.training import train_jepa_predictor
 
 app = typer.Typer(no_args_is_help=True)
 data_app = typer.Typer(no_args_is_help=True)
@@ -138,13 +139,13 @@ def train(
     config: ConfigOption,
     dry_run: DryRunOption = False,
 ) -> None:
-    """Guard the locked training command until the JEPA milestone starts."""
-    _ = load_config(config)
-    message = (
-        "train is locked but intentionally gated for Milestone 3; "
-        "Milestone 1 validates manifests, baselines, metrics, and demo artifacts"
-    )
+    """Train the JEPA-style latent predictor over configured embeddings."""
+    parsed = load_config(config)
     if dry_run:
-        typer.echo(message)
+        typer.echo(
+            "train ready: would build missing manifests/embeddings/baselines and "
+            f"run {parsed.training.model_id}"
+        )
         return
-    raise typer.BadParameter(message)
+    output = train_jepa_predictor(parsed)
+    typer.echo(f"training metrics written: {output}")

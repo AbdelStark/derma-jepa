@@ -71,6 +71,19 @@ def export_fixture_embeddings(config: PipelineConfig) -> Path:
     return config.run_dir / "artifacts" / "embeddings" / "fixture_embeddings.npz"
 
 
+def read_embedding_vectors(path: Path) -> dict[str, np.ndarray]:
+    with np.load(path, allow_pickle=False) as payload:
+        image_ids = [str(image_id) for image_id in payload["image_id"].tolist()]
+        matrix = payload["vector"].astype(np.float32)
+    if len(image_ids) != matrix.shape[0]:
+        msg = f"Embedding artifact row mismatch: {path}"
+        raise ValueError(msg)
+    return {
+        image_id: _l2_normalize_vector(matrix[index])
+        for index, image_id in enumerate(image_ids)
+    }
+
+
 def _export_model_embeddings(
     config: PipelineConfig,
     model: EmbeddingModelConfig,
@@ -215,13 +228,103 @@ def _feature_vector(arr: np.ndarray) -> np.ndarray:
         histograms.append(hist.astype(np.float32))
     gray = arr.mean(axis=2)
     quantiles = np.quantile(gray, [0.05, 0.25, 0.5, 0.75, 0.95])
-    return np.concatenate([means, stds, *histograms, quantiles]).astype(np.float32)
+    coarse_grid = _coarse_grid_features(arr, cells=8)
+    contrast_grid = _contrast_grid_features(arr, cells=12)
+    foreground = _foreground_features(arr)
+    return np.concatenate(
+        [
+            means,
+            stds,
+            *histograms,
+            quantiles,
+            coarse_grid,
+            contrast_grid * 8.0,
+            foreground * 4.0,
+        ]
+    ).astype(np.float32)
+
+
+def _coarse_grid_features(arr: np.ndarray, *, cells: int) -> np.ndarray:
+    rows = np.array_split(np.arange(arr.shape[0]), cells)
+    cols = np.array_split(np.arange(arr.shape[1]), cells)
+    features: list[np.ndarray] = []
+    for row_indices in rows:
+        for col_indices in cols:
+            patch = arr[np.ix_(row_indices, col_indices)]
+            features.append(patch.mean(axis=(0, 1)))
+    return np.concatenate(features).astype(np.float32)
+
+
+def _contrast_grid_features(arr: np.ndarray, *, cells: int) -> np.ndarray:
+    background = _background_color(arr)
+    distance = np.linalg.norm(arr - background, axis=2)
+    rows = np.array_split(np.arange(distance.shape[0]), cells)
+    cols = np.array_split(np.arange(distance.shape[1]), cells)
+    features: list[float] = []
+    for row_indices in rows:
+        for col_indices in cols:
+            patch = distance[np.ix_(row_indices, col_indices)]
+            features.append(float(patch.mean()))
+    return np.asarray(features, dtype=np.float32)
+
+
+def _foreground_features(arr: np.ndarray) -> np.ndarray:
+    background = _background_color(arr)
+    distance = np.linalg.norm(arr - background, axis=2)
+    threshold = max(0.08, float(np.quantile(distance, 0.75)))
+    mask = distance > threshold
+    if not bool(mask.any()):
+        return np.zeros(15, dtype=np.float32)
+
+    y_indices, x_indices = np.nonzero(mask)
+    height, width = arr.shape[:2]
+    x_norm = x_indices.astype(np.float32) / max(1, width - 1)
+    y_norm = y_indices.astype(np.float32) / max(1, height - 1)
+    foreground = arr[mask]
+    bbox_width = (float(x_indices.max()) - float(x_indices.min()) + 1.0) / width
+    bbox_height = (float(y_indices.max()) - float(y_indices.min()) + 1.0) / height
+    return np.asarray(
+        [
+            float(mask.mean()),
+            float(x_norm.mean()),
+            float(y_norm.mean()),
+            float(x_norm.std()),
+            float(y_norm.std()),
+            bbox_width,
+            bbox_height,
+            *foreground.mean(axis=0).tolist(),
+            *foreground.std(axis=0).tolist(),
+            float(distance[mask].mean()),
+            float(distance[mask].max()),
+        ],
+        dtype=np.float32,
+    )
+
+
+def _background_color(arr: np.ndarray) -> np.ndarray:
+    border = np.concatenate(
+        [
+            arr[0, :, :],
+            arr[-1, :, :],
+            arr[:, 0, :],
+            arr[:, -1, :],
+        ],
+        axis=0,
+    )
+    return cast(np.ndarray, np.median(border, axis=0))
 
 
 def _l2_normalize_matrix(matrix: np.ndarray) -> np.ndarray:
     norms = np.linalg.norm(matrix, axis=1, keepdims=True)
     normalized = matrix / np.clip(norms, 1e-12, None)
     return cast(np.ndarray, normalized.astype(np.float32, copy=False))
+
+
+def _l2_normalize_vector(vector: np.ndarray) -> np.ndarray:
+    norm = float(np.linalg.norm(vector))
+    if norm <= 1e-12:
+        return vector
+    return vector / norm
 
 
 def _artifact_stem(model: EmbeddingModelConfig) -> str:

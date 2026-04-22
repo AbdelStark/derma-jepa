@@ -59,6 +59,16 @@ class EmbeddingModelConfig:
 
 
 @dataclass(frozen=True)
+class TrainingConfig:
+    model_id: str
+    embedding_model_id: str | None
+    epochs: int
+    batch_size: int
+    learning_rate: float
+    weight_decay: float
+
+
+@dataclass(frozen=True)
 class PipelineConfig:
     run_id: str
     output_root: Path
@@ -67,6 +77,7 @@ class PipelineConfig:
     fixture: FixtureConfig | None
     dataset: PublicDatasetConfig | None
     embedding_models: tuple[EmbeddingModelConfig, ...]
+    training: TrainingConfig
     preprocessing: PreprocessingConfig
     metrics: MetricsConfig
     source_path: Path | None = None
@@ -97,6 +108,7 @@ def load_config(path: Path) -> PipelineConfig:
         fixture=config.fixture,
         dataset=config.dataset,
         embedding_models=config.embedding_models,
+        training=config.training,
         preprocessing=config.preprocessing,
         metrics=config.metrics,
         source_path=path,
@@ -109,6 +121,7 @@ def parse_config(data: dict[str, Any]) -> PipelineConfig:
     fixture_mapping = _optional_mapping(data, "fixture")
     dataset_mapping = _optional_mapping(data, "dataset")
     embeddings_mapping = _optional_mapping(data, "embeddings")
+    training_mapping = _optional_mapping(data, "training")
     if fixture_mapping is None and dataset_mapping is None:
         msg = "Expected either fixture or dataset config"
         raise ValueError(msg)
@@ -127,6 +140,7 @@ def parse_config(data: dict[str, Any]) -> PipelineConfig:
             embeddings_mapping,
             has_fixture=fixture_mapping is not None,
         ),
+        training=_parse_training_config(training_mapping),
         preprocessing=PreprocessingConfig(
             profile=_str(preprocessing, "profile"),
             image_size=_int(preprocessing, "image_size"),
@@ -188,6 +202,18 @@ def validate_config(config: PipelineConfig) -> None:
         if model.kind == "dinov2" and model.model_name is None:
             msg = f"embedding model {model.model_id} requires model_name"
             raise ValueError(msg)
+    if config.training.epochs < 1:
+        msg = "training.epochs must be positive"
+        raise ValueError(msg)
+    if config.training.batch_size < 1:
+        msg = "training.batch_size must be positive"
+        raise ValueError(msg)
+    if config.training.learning_rate <= 0:
+        msg = "training.learning_rate must be positive"
+        raise ValueError(msg)
+    if config.training.weight_decay < 0:
+        msg = "training.weight_decay must be non-negative"
+        raise ValueError(msg)
     if config.preprocessing.image_size < 32:
         msg = "preprocessing.image_size must be at least 32"
         raise ValueError(msg)
@@ -218,6 +244,14 @@ def to_yaml(config: PipelineConfig) -> str:
             "bootstrap_samples": config.metrics.bootstrap_samples,
             "ci_level": config.metrics.ci_level,
             "fixed_tpr": config.metrics.fixed_tpr,
+        },
+        "training": {
+            "model_id": config.training.model_id,
+            "embedding_model_id": config.training.embedding_model_id,
+            "epochs": config.training.epochs,
+            "batch_size": config.training.batch_size,
+            "learning_rate": config.training.learning_rate,
+            "weight_decay": config.training.weight_decay,
         },
     }
     if config.fixture is not None:
@@ -341,6 +375,26 @@ def _parse_embedding_models(
             )
         )
     return tuple(parsed)
+
+
+def _parse_training_config(data: dict[str, Any] | None) -> TrainingConfig:
+    if data is None:
+        return TrainingConfig(
+            model_id="jepa_predictor_v1",
+            embedding_model_id=None,
+            epochs=200,
+            batch_size=32,
+            learning_rate=0.05,
+            weight_decay=0.001,
+        )
+    return TrainingConfig(
+        model_id=_str(data, "model_id"),
+        embedding_model_id=_optional_str(data, "embedding_model_id"),
+        epochs=_int(data, "epochs"),
+        batch_size=_int(data, "batch_size"),
+        learning_rate=_float(data, "learning_rate"),
+        weight_decay=_float(data, "weight_decay"),
+    )
 
 
 def _read_yaml(path: Path) -> dict[str, Any]:

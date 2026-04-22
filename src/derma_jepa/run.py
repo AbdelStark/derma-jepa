@@ -18,6 +18,7 @@ def prepare_run_dir(config: PipelineConfig) -> Path:
     run_dir = config.run_dir
     for relative in (
         "artifacts/embeddings",
+        "artifacts/models",
         "artifacts/plots",
         "artifacts/reports",
         "artifacts/demo_cases",

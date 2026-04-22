@@ -9,6 +9,7 @@ from skimage.metrics import structural_similarity
 
 from derma_jepa.config import PipelineConfig
 from derma_jepa.contracts import ManifestRow, read_manifest
+from derma_jepa.embeddings import read_embedding_vectors
 from derma_jepa.metrics import binary_metric_summary
 from derma_jepa.preprocessing import load_preprocessed_rgb
 from derma_jepa.run import append_log, prepare_run_dir, read_json, write_json
@@ -167,7 +168,7 @@ def _embedding_baselines(
             msg = f"Invalid embedding model record in {index_path}"
             raise ValueError(msg)
         model_id = str(model_record["model_id"])
-        vectors = _read_embedding_vectors(Path(str(model_record["artifact_path"])))
+        vectors = read_embedding_vectors(Path(str(model_record["artifact_path"])))
         scores = [
             _cosine_distance(
                 vectors[row.context_image_id],
@@ -186,29 +187,9 @@ def _embedding_baselines(
     return baselines
 
 
-def _read_embedding_vectors(path: Path) -> dict[str, np.ndarray]:
-    with np.load(path, allow_pickle=False) as payload:
-        image_ids = [str(image_id) for image_id in payload["image_id"].tolist()]
-        matrix = payload["vector"].astype(np.float32)
-    if len(image_ids) != matrix.shape[0]:
-        msg = f"Embedding artifact row mismatch: {path}"
-        raise ValueError(msg)
-    return {
-        image_id: _l2_normalize_vector(matrix[index])
-        for index, image_id in enumerate(image_ids)
-    }
-
-
 def _cosine_distance(left: np.ndarray, right: np.ndarray) -> float:
     similarity = float(np.dot(left, right))
     return float(1.0 - np.clip(similarity, -1.0, 1.0))
-
-
-def _l2_normalize_vector(vector: np.ndarray) -> np.ndarray:
-    norm = float(np.linalg.norm(vector))
-    if norm <= 1e-12:
-        return vector
-    return vector / norm
 
 
 def _write_model_card(run_dir: Path, payload: dict[str, Any]) -> None:

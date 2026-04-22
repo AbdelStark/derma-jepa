@@ -1,7 +1,7 @@
-run_id: fixture-contract-v1
+run_id: fixture-jepa-train-v1
 output_root: runs
 artifact_root: artifacts/demo
-seed: 20260421
+seed: 20260422
 
 fixture:
   image_size: 96

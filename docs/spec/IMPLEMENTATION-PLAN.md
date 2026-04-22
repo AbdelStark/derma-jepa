@@ -128,6 +128,12 @@ Acceptance:
 - model can overfit a tiny fixture slice
 - full run exports metrics, embeddings, plots, logs, config, model card, and demo
   cases
+
+Current fixture smoke:
+
+```bash
+uv run derma-jepa train --config configs/train/jepa_predictor.yaml
+```
 - changing pairs are not trained to collapse together
 
 ## Milestone 4 - evaluation and benchmark suite

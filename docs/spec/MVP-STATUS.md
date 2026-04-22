@@ -69,14 +69,17 @@ Milestone 2 produced:
 - [x] initial primary-tier evaluation reports
 - [x] initial primary-tier model card
 - [ ] dermatology-supervised baseline investigation
-- [ ] JEPA-style predictor training scaffold
-- [ ] JEPA-style downstream drift scoring path
+- [x] JEPA-style predictor training scaffold
+- [x] JEPA-style downstream drift scoring path
 - [ ] nuisance robustness benchmark
-- [ ] representation health checks
+- [x] representation health checks
 - [ ] local dashboard/demo surface
 
 ## Completed implementation slice
 
+- [x] Milestone 3 scaffold slice: fixture/tiny JEPA-style latent predictor,
+      prediction-error drift scoring, collapse checks, checkpoint export, model
+      card, and training report
 - [x] Milestone 2 slice: HAM10000-style audit, proxy manifest, and cheap
       baseline path
 
