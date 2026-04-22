@@ -14,3 +14,8 @@ runs/
 artifacts/demo/
 data/raw/
 data/interim/
+outputs/
+.claude/scheduled_tasks.lock
+.claude/tsc-cache/
+.tldr/
+.tldrignore
