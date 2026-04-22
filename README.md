@@ -146,10 +146,8 @@ Quick summary:
 ./scripts/hf_jobs_train_bundle.sh
 
 # first real public-data run with the dataset mounted at /data
-DERMA_JEPA_CONFIG_PATH=configs/data/ham10000_hf_mounted.yaml \
-HF_JOBS_VOLUME="hf://datasets/<ns>/<repo>:/data:ro" \
-HF_JOBS_FLAVOR=a100-large HF_JOBS_TIMEOUT=12h \
-  ./scripts/hf_jobs_train_bundle.sh
+./scripts/hf_jobs_ham10000_primary.sh
+# see docs/runbooks/ham10000-jepa-playbook.md for the operational playbook
 
 # fetch and summarize a completed run uploaded under run_id
 uv run derma-jepa hf-run summary \

@@ -65,6 +65,11 @@ HF_OUTPUT_REPO_TYPE=dataset \
 
 The launcher passes `HF_TOKEN` as a Job secret when `HF_OUTPUT_REPO_ID` is set.
 
+For the HAM10000 research run lifecycle (prereqs, smoke, primary launch,
+result interpretation, and archiving for writeups), see the dedicated
+playbook at `docs/runbooks/ham10000-jepa-playbook.md`. This file covers
+the infra tooling; the playbook covers the research loop on top of it.
+
 ## Public-data or primary-tier run
 
 Use the mounted-data HAM10000 config and a volume that resolves the same paths
