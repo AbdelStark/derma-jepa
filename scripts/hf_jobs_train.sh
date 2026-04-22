@@ -1,6 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+load_env_defaults() {
+  local line key value
+  [[ -f .env ]] || return 0
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ -z "$line" || "$line" == \#* || "$line" != *=* ]] && continue
+    key="${line%%=*}"
+    value="${line#*=}"
+    [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+    if [[ -z "${!key+x}" ]]; then
+      export "$key=$value"
+    fi
+  done < .env
+}
+
+load_env_defaults
+
 if ! command -v hf >/dev/null 2>&1; then
   echo "Missing Hugging Face CLI. Install with: brew install hf" >&2
   exit 1

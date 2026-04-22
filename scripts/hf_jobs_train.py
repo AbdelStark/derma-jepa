@@ -28,6 +28,11 @@ def main() -> None:
 
     metrics_path = train_jepa_predictor(config)
     print(f"training metrics written: {metrics_path}")
+    if config.fixture is not None:
+        from derma_jepa.benchmark import validate_fixture_run
+
+        benchmark_path = validate_fixture_run(config.run_dir)
+        print(f"benchmark report written: {benchmark_path}")
 
     upload_repo = args.upload_repo or os.environ.get("HF_OUTPUT_REPO_ID")
     if upload_repo:

@@ -150,7 +150,7 @@ derma-jepa benchmark --run runs/fixture-contract-v1
 derma-jepa demo export --run runs/fixture-contract-v1 --out artifacts/demo/fixture-contract-v1
 derma-jepa demo --artifact artifacts/demo/fixture-contract-v1
 derma-jepa train --config configs/train/jepa_predictor.yaml
-./scripts/hf_jobs_train.sh
+./scripts/hf_jobs_train_bundle.sh
 ```
 
 ## Build principle

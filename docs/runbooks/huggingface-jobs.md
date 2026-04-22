@@ -13,9 +13,27 @@ brew install hf
 hf auth login
 ```
 
-## Fixture smoke on Hugging Face
+## Fixture smoke on Hugging Face for a private GitHub repo
 
-This launches the same fixture training config used by the local smoke:
+This builds a local wheel, embeds the wheel plus the local config into the Job
+script, and avoids cloning GitHub from inside Hugging Face:
+
+```bash
+./scripts/hf_jobs_train_bundle.sh
+```
+
+The fixture Job runs training, then runs the fixture benchmark gate before
+uploading artifacts.
+
+To print the exact `hf jobs uv run` command without launching compute:
+
+```bash
+HF_JOBS_DRY_RUN=1 ./scripts/hf_jobs_train_bundle.sh
+```
+
+## Fixture smoke on Hugging Face for a public GitHub repo
+
+This launches from raw GitHub URLs and installs the package from the Git ref:
 
 ```bash
 ./scripts/hf_jobs_train.sh
@@ -25,7 +43,7 @@ Defaults:
 
 - Git ref: `main`
 - config: `configs/train/jepa_predictor.yaml`
-- hardware: `a10g-small`
+- hardware: `cpu-upgrade`
 - timeout: `2h`
 - run output root inside the Job: `outputs/runs`
 
@@ -42,7 +60,7 @@ Set a Hub dataset repo for run outputs:
 ```bash
 HF_OUTPUT_REPO_ID="$HF_USER/derma-jepa-runs" \
 HF_OUTPUT_REPO_TYPE=dataset \
-./scripts/hf_jobs_train.sh
+./scripts/hf_jobs_train_bundle.sh
 ```
 
 The launcher passes `HF_TOKEN` as a Job secret when `HF_OUTPUT_REPO_ID` is set.
@@ -56,7 +74,7 @@ DERMA_JEPA_CONFIG_URL="https://raw.githubusercontent.com/AbdelStark/derma-jepa/m
 HF_JOBS_VOLUME="hf://datasets/<namespace>/<dataset-repo>:/data:ro" \
 HF_JOBS_FLAVOR=a100-large \
 HF_JOBS_TIMEOUT=12h \
-./scripts/hf_jobs_train.sh
+./scripts/hf_jobs_train_bundle.sh
 ```
 
 For public dermatology datasets, prefer a separate config whose `metadata_csv`
@@ -66,9 +84,11 @@ personal images. The MVP remains a research artifact, not a diagnostic system.
 ## Useful overrides
 
 - `DERMA_JEPA_REF`: Git ref for both package install and raw script/config URLs.
+- `DERMA_JEPA_CONFIG_PATH`: local config path for the private bundle launcher.
 - `DERMA_JEPA_CONFIG_URL`: raw YAML config URL used by the Job entrypoint.
 - `DERMA_JEPA_RUN_ID`: run ID written into artifacts.
-- `HF_JOBS_FLAVOR`: hardware flavor, for example `a10g-small` or `a100-large`.
+- `DERMA_JEPA_INSTALL_EXTRAS`: optional package extras installed from the wheel.
+- `HF_JOBS_FLAVOR`: hardware flavor, for example `cpu-upgrade` or `a100-large`.
 - `HF_JOBS_TIMEOUT`: max Job runtime, for example `2h` or `12h`.
 - `HF_JOBS_NAMESPACE`: user or organization namespace to bill/run under.
 - `HF_JOBS_VOLUME`: one volume mount, for example `hf://datasets/org/ds:/data:ro`.
