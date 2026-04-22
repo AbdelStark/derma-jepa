@@ -119,7 +119,9 @@ compute without requiring cloud-first infrastructure. Both launchers load
 - [x] JEPA-style downstream drift scoring path
 - [x] representation health checks
 - [x] hosted-compute path for fixture-tier JEPA training
-- [ ] first real public-data JEPA training run on HAM10000 via HF Jobs
+- [x] first real public-data JEPA training run on HAM10000 via HF Jobs
+      (EXP-001, see `docs/experiments/EXP-001-ham10000-jepa-primary-v1.md`)
+- [ ] stronger proxy-task construction (next-run follow-up from EXP-001)
 - [ ] dermatology-supervised baseline investigation
 - [ ] nuisance robustness benchmark
 - [ ] local dashboard/demo surface

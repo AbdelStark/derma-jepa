@@ -60,6 +60,7 @@ Repeated lesion photographs vary heavily because of illumination, angle, skin te
 - `docs/spec/IMPLEMENTATION-PLAN.md` — phased execution plan
 - `docs/spec/MVP-STATUS.md` — current implementation state
 - `docs/rfcs/` — decision records that lock the design before code expands
+- `docs/experiments/` — per-run reports (one markdown file per primary-tier run)
 
 ## Fixture pipeline
 
