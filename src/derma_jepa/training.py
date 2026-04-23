@@ -52,17 +52,26 @@ def train_jepa_predictor(config: PipelineConfig) -> Path:
             val_rows = train_rows
 
         start = time.perf_counter()
-        state = _fit_linear_predictor(
-            config,
-            train_rows,
-            val_rows,
-            vectors,
-            feature_dim,
-        )
+        if config.training.predictor == "mlp":
+            state = _fit_mlp_predictor(
+                config,
+                train_rows,
+                val_rows,
+                vectors,
+                feature_dim,
+            )
+        else:
+            state = _fit_linear_predictor(
+                config,
+                train_rows,
+                val_rows,
+                vectors,
+                feature_dim,
+            )
         runtime_seconds = time.perf_counter() - start
 
         scores_by_split = {
-            split: _score_rows(rows, vectors, state["weight"], state["bias"])
+            split: _score_rows(rows, vectors, state)
             for split, rows in manifest.items()
         }
         metrics_by_split = {
@@ -73,12 +82,7 @@ def train_jepa_predictor(config: PipelineConfig) -> Path:
                 ("test", manifest["test"], 719),
             )
         }
-        collapse_checks = _collapse_checks(
-            manifest["test"],
-            vectors,
-            state["weight"],
-            state["bias"],
-        )
+        collapse_checks = _collapse_checks(manifest["test"], vectors, state)
 
         checkpoint_path = run_dir / "artifacts" / "models" / "jepa_predictor.npz"
         _write_checkpoint(
@@ -86,8 +90,7 @@ def train_jepa_predictor(config: PipelineConfig) -> Path:
             config,
             embedding_record,
             feature_dim,
-            state["weight"],
-            state["bias"],
+            state,
         )
         _write_latent_artifacts(
             run_dir,
@@ -95,8 +98,7 @@ def train_jepa_predictor(config: PipelineConfig) -> Path:
             embedding_record,
             manifest,
             vectors,
-            state["weight"],
-            state["bias"],
+            state,
             scores_by_split,
         )
         _write_score_plot(
@@ -266,7 +268,117 @@ def _fit_linear_predictor(
                     ),
                 }
             )
-    return {"weight": weight, "bias": bias, "history": history}
+    return {
+        "kind": "linear",
+        "weight": weight,
+        "bias": bias,
+        "history": history,
+    }
+
+
+def _fit_mlp_predictor(
+    config: PipelineConfig,
+    train_rows: list[ManifestRow],
+    val_rows: list[ManifestRow],
+    vectors: dict[str, np.ndarray],
+    feature_dim: int,
+) -> dict[str, Any]:
+    """Fit a 2-layer MLP with identity residual: y = x + W2 relu(W1 x + b1) + b2.
+
+    Residual is initialised so the initial function is the identity (W2 = 0,
+    b2 = 0), matching the linear predictor's identity warm-start so the
+    two predictor classes compete on equal footing.
+    """
+    try:
+        import torch
+    except ImportError as exc:
+        msg = (
+            "training.predictor='mlp' requires torch. Install with "
+            "`uv sync --extra model` and re-run."
+        )
+        raise RuntimeError(msg) from exc
+
+    torch.manual_seed(config.seed + 401)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    hidden_dim = config.training.hidden_dim
+    w1 = torch.empty((feature_dim, hidden_dim), device=device)
+    torch.nn.init.kaiming_uniform_(w1, a=0.0)
+    w1 = w1 * 0.1
+    w1.requires_grad_(True)
+    b1 = torch.zeros(hidden_dim, device=device, requires_grad=True)
+    w2 = torch.zeros((hidden_dim, feature_dim), device=device, requires_grad=True)
+    b2 = torch.zeros(feature_dim, device=device, requires_grad=True)
+
+    train_x_np, train_y_np = _pair_matrices(train_rows, vectors)
+    val_x_np, val_y_np = _pair_matrices(val_rows, vectors)
+    train_x = torch.from_numpy(train_x_np).to(device)
+    train_y = torch.from_numpy(train_y_np).to(device)
+    val_x = torch.from_numpy(val_x_np).to(device)
+    val_y = torch.from_numpy(val_y_np).to(device)
+
+    optimizer = torch.optim.SGD(
+        [w1, b1, w2, b2],
+        lr=config.training.learning_rate,
+        weight_decay=config.training.weight_decay,
+    )
+
+    history: list[dict[str, float | int]] = []
+    rng = np.random.default_rng(config.seed + 409)
+
+    def forward(x: torch.Tensor) -> torch.Tensor:
+        hidden = torch.relu(x @ w1 + b1)
+        return x + hidden @ w2 + b2
+
+    for epoch in range(1, config.training.epochs + 1):
+        order = rng.permutation(train_x.shape[0])
+        for start_idx in range(0, order.shape[0], config.training.batch_size):
+            batch_idx = order[start_idx : start_idx + config.training.batch_size]
+            x_batch = train_x[batch_idx]
+            y_batch = train_y[batch_idx]
+            pred = forward(x_batch)
+            loss = torch.mean((pred - y_batch) ** 2)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+        if _should_record_epoch(epoch, config.training.epochs):
+            with torch.no_grad():
+                train_mse = torch.mean((forward(train_x) - train_y) ** 2).item()
+                val_mse = torch.mean((forward(val_x) - val_y) ** 2).item()
+            history.append(
+                {
+                    "epoch": epoch,
+                    "train_loss": float(train_mse),
+                    "val_loss": float(val_mse),
+                }
+            )
+    return {
+        "kind": "mlp",
+        "w1": w1.detach().cpu().numpy().astype(np.float32),
+        "b1": b1.detach().cpu().numpy().astype(np.float32),
+        "w2": w2.detach().cpu().numpy().astype(np.float32),
+        "b2": b2.detach().cpu().numpy().astype(np.float32),
+        "hidden_dim": hidden_dim,
+        "history": history,
+    }
+
+
+def _predict_matrix_unnormalised(
+    x: np.ndarray, state: dict[str, Any]
+) -> np.ndarray:
+    if state["kind"] == "mlp":
+        hidden = x @ state["w1"] + state["b1"]
+        hidden = np.maximum(hidden, 0.0)
+        residual = hidden @ state["w2"] + state["b2"]
+        return cast(np.ndarray, (x + residual).astype(np.float32))
+    return cast(np.ndarray, (x @ state["weight"] + state["bias"]).astype(np.float32))
+
+
+def _l2_normalise_rows(matrix: np.ndarray) -> np.ndarray:
+    norms = np.linalg.norm(matrix, axis=1, keepdims=True)
+    safe = np.where(norms <= 1e-12, 1.0, norms)
+    normalised: np.ndarray = (matrix / safe).astype(np.float32)
+    return normalised
 
 
 def _should_record_epoch(epoch: int, epochs: int) -> bool:
@@ -301,23 +413,22 @@ def _loss(
 def _score_rows(
     rows: list[ManifestRow],
     vectors: dict[str, np.ndarray],
-    weight: np.ndarray,
-    bias: np.ndarray,
+    state: dict[str, Any],
 ) -> list[float]:
+    context = np.stack([vectors[row.context_image_id] for row in rows]).astype(
+        np.float32
+    )
+    predicted = _l2_normalise_rows(_predict_matrix_unnormalised(context, state))
     scores: list[float] = []
-    for row in rows:
-        predicted = _predict(vectors[row.context_image_id], weight, bias)
+    for row, pred in zip(rows, predicted, strict=True):
         target = vectors[row.target_image_id]
-        scores.append(_cosine_distance(predicted, target))
+        scores.append(_cosine_distance(pred, target))
     return scores
 
 
-def _predict(vector: np.ndarray, weight: np.ndarray, bias: np.ndarray) -> np.ndarray:
-    predicted = vector @ weight + bias
-    norm = float(np.linalg.norm(predicted))
-    if norm <= 1e-12:
-        return cast(np.ndarray, predicted.astype(np.float32))
-    return cast(np.ndarray, (predicted / norm).astype(np.float32))
+def _predict(vector: np.ndarray, state: dict[str, Any]) -> np.ndarray:
+    predicted = _predict_matrix_unnormalised(vector[None, :], state)
+    return cast(np.ndarray, _l2_normalise_rows(predicted)[0])
 
 
 def _cosine_distance(left: np.ndarray, right: np.ndarray) -> float:
@@ -365,12 +476,12 @@ def _pair_score_records(
 def _collapse_checks(
     rows: list[ManifestRow],
     vectors: dict[str, np.ndarray],
-    weight: np.ndarray,
-    bias: np.ndarray,
+    state: dict[str, Any],
 ) -> dict[str, float | bool]:
-    predictions = np.stack(
-        [_predict(vectors[row.context_image_id], weight, bias) for row in rows]
+    context = np.stack([vectors[row.context_image_id] for row in rows]).astype(
+        np.float32
     )
+    predictions = _l2_normalise_rows(_predict_matrix_unnormalised(context, state))
     norms = np.linalg.norm(predictions, axis=1)
     variances = np.var(predictions, axis=0)
     variance_mean = float(np.mean(variances))
@@ -389,18 +500,27 @@ def _write_checkpoint(
     config: PipelineConfig,
     embedding_record: dict[str, Any],
     feature_dim: int,
-    weight: np.ndarray,
-    bias: np.ndarray,
+    state: dict[str, Any],
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(
-        path,
-        weight=weight.astype(np.float32),
-        bias=bias.astype(np.float32),
-        model_id=np.asarray([config.training.model_id]),
-        input_embedding_model_id=np.asarray([str(embedding_record["model_id"])]),
-        feature_dim=np.asarray([feature_dim], dtype=np.int32),
-    )
+    payload: dict[str, np.ndarray] = {
+        "model_id": np.asarray([config.training.model_id]),
+        "input_embedding_model_id": np.asarray(
+            [str(embedding_record["model_id"])]
+        ),
+        "feature_dim": np.asarray([feature_dim], dtype=np.int32),
+        "predictor_kind": np.asarray([str(state["kind"])]),
+    }
+    if state["kind"] == "mlp":
+        payload["mlp_w1"] = np.asarray(state["w1"], dtype=np.float32)
+        payload["mlp_b1"] = np.asarray(state["b1"], dtype=np.float32)
+        payload["mlp_w2"] = np.asarray(state["w2"], dtype=np.float32)
+        payload["mlp_b2"] = np.asarray(state["b2"], dtype=np.float32)
+        payload["hidden_dim"] = np.asarray([int(state["hidden_dim"])], dtype=np.int32)
+    else:
+        payload["weight"] = np.asarray(state["weight"], dtype=np.float32)
+        payload["bias"] = np.asarray(state["bias"], dtype=np.float32)
+    np.savez_compressed(path, **payload)  # type: ignore[arg-type]
 
 
 def _write_latent_artifacts(
@@ -409,15 +529,15 @@ def _write_latent_artifacts(
     embedding_record: dict[str, Any],
     manifest: dict[str, list[ManifestRow]],
     vectors: dict[str, np.ndarray],
-    weight: np.ndarray,
-    bias: np.ndarray,
+    state: dict[str, Any],
     scores_by_split: dict[str, list[float]],
 ) -> None:
     rows = [row for split in SPLITS for row in manifest[split]]
     scores = [score for split in SPLITS for score in scores_by_split[split]]
-    predicted = np.stack(
-        [_predict(vectors[row.context_image_id], weight, bias) for row in rows]
+    context = np.stack(
+        [vectors[row.context_image_id] for row in rows]
     ).astype(np.float32)
+    predicted = _l2_normalise_rows(_predict_matrix_unnormalised(context, state))
     target = np.stack([vectors[row.target_image_id] for row in rows]).astype(np.float32)
     npz_path = run_dir / "artifacts" / "embeddings" / "jepa_predictor_latents.npz"
     np.savez_compressed(

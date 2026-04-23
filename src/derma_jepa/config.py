@@ -69,6 +69,8 @@ class TrainingConfig:
     batch_size: int
     learning_rate: float
     weight_decay: float
+    predictor: str = "linear"
+    hidden_dim: int = 512
 
 
 @dataclass(frozen=True)
@@ -244,6 +246,12 @@ def validate_config(config: PipelineConfig) -> None:
     if config.training.weight_decay < 0:
         msg = "training.weight_decay must be non-negative"
         raise ValueError(msg)
+    if config.training.predictor not in {"linear", "mlp"}:
+        msg = "training.predictor must be 'linear' or 'mlp'"
+        raise ValueError(msg)
+    if config.training.hidden_dim < 1:
+        msg = "training.hidden_dim must be positive"
+        raise ValueError(msg)
     if config.preprocessing.image_size < 32:
         msg = "preprocessing.image_size must be at least 32"
         raise ValueError(msg)
@@ -282,6 +290,8 @@ def to_yaml(config: PipelineConfig) -> str:
             "batch_size": config.training.batch_size,
             "learning_rate": config.training.learning_rate,
             "weight_decay": config.training.weight_decay,
+            "predictor": config.training.predictor,
+            "hidden_dim": config.training.hidden_dim,
         },
     }
     if config.fixture is not None:
@@ -425,6 +435,8 @@ def _parse_training_config(data: dict[str, Any] | None) -> TrainingConfig:
             learning_rate=0.05,
             weight_decay=0.001,
         )
+    hidden = data.get("hidden_dim")
+    hidden_dim = 512 if hidden is None else int(hidden)
     return TrainingConfig(
         model_id=_str(data, "model_id"),
         embedding_model_id=_optional_str(data, "embedding_model_id"),
@@ -432,6 +444,8 @@ def _parse_training_config(data: dict[str, Any] | None) -> TrainingConfig:
         batch_size=_int(data, "batch_size"),
         learning_rate=_float(data, "learning_rate"),
         weight_decay=_float(data, "weight_decay"),
+        predictor=_optional_str(data, "predictor") or "linear",
+        hidden_dim=hidden_dim,
     )
 
 
