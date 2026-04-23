@@ -408,13 +408,10 @@ def _create_proxy_pairs(
 ) -> list[ManifestRow]:
     dataset = require_public_dataset_config(config)
     rows: list[ManifestRow] = []
-    stable_reason = (
-        "same_image_post_split_strong_nuisance"
-        if dataset.nuisance_severity == "strong"
-        else "same_image_post_split_mild_nuisance"
-    )
     for split in SPLITS:
         records = split_records[split]
+        split_severity = _severity_for_split(dataset, split)
+        stable_reason = _stable_reason_for_severity(split_severity)
         for index in range(dataset.stable_pairs_per_split):
             record = records[index]
             target_path, recipe = _write_stable_variant(
@@ -424,7 +421,7 @@ def _create_proxy_pairs(
                 record,
                 index,
                 rng,
-                severity=dataset.nuisance_severity,
+                severity=split_severity,
             )
             rows.append(
                 _manifest_row(
@@ -494,6 +491,30 @@ def _create_proxy_pairs(
                 collected=collected,
             )
     return rows
+
+
+def _severity_for_split(dataset: Any, split: Split) -> str:
+    """Return the nuisance severity to apply for this split.
+
+    Train always uses `dataset.nuisance_severity`. Val and test use
+    `dataset.nuisance_severity_eval` when set, which enables held-out
+    nuisance generalization testing. Falling back to `nuisance_severity`
+    when the eval override is absent preserves the EXP-001 / EXP-002
+    behaviour for existing configs.
+    """
+    if split == "train":
+        return str(dataset.nuisance_severity)
+    if dataset.nuisance_severity_eval is not None:
+        return str(dataset.nuisance_severity_eval)
+    return str(dataset.nuisance_severity)
+
+
+def _stable_reason_for_severity(severity: str) -> str:
+    if severity == "strong":
+        return "same_image_post_split_strong_nuisance"
+    if severity == "strong_held_out":
+        return "same_image_post_split_strong_held_out_nuisance"
+    return "same_image_post_split_mild_nuisance"
 
 
 def _match_changing_target(
@@ -580,6 +601,8 @@ def _write_stable_variant(
         )
         if severity == "strong":
             variant, recipe = _apply_strong_nuisance(variant, index, rng)
+        elif severity == "strong_held_out":
+            variant, recipe = _apply_strong_held_out_nuisance(variant, index, rng)
         else:
             variant, recipe = _apply_mild_nuisance(variant, index, rng)
 
@@ -702,6 +725,100 @@ def _apply_strong_nuisance(
         "hflip": hflip,
         "blur_radius": round(blur_radius, 4),
         "noise_sigma": round(noise_sigma, 4),
+        "jpeg_quality": jpeg_quality,
+    }
+    return variant, recipe
+
+
+def _apply_strong_held_out_nuisance(
+    variant: Image.Image,
+    index: int,
+    rng: np.random.Generator,
+) -> tuple[Image.Image, dict[str, object]]:
+    """Disjoint nuisance family for held-out evaluation.
+
+    Shares no transform type with _apply_strong_nuisance. Intended to test
+    whether a JEPA-style predictor trained on one nuisance family
+    generalizes to a family it has never seen at training time. The
+    transforms picked here are plausible lesion-photography perturbations
+    (occlusion by hair / debris, motion blur from handheld capture,
+    camera colour processing) that do not overlap with
+    brightness/contrast/saturation/rotation/flip/scale/gaussian-blur/
+    gaussian-noise/mid-range-JPEG.
+    """
+    from io import BytesIO
+
+    # Hue shift via HSV rotation (saturation / value preserved).
+    hue_shift_degrees = float(rng.uniform(-12.0, 12.0))
+    width, height = variant.size
+    hsv = variant.convert("HSV")
+    hsv_array = np.asarray(hsv, dtype=np.int16)
+    hue_shift = int(round(hue_shift_degrees / 360.0 * 255))
+    hsv_array[..., 0] = (hsv_array[..., 0] + hue_shift) % 256
+    variant = Image.fromarray(hsv_array.astype(np.uint8), mode="HSV").convert("RGB")
+
+    # Posterize (reduce bits per channel to simulate aggressive camera colour
+    # processing).
+    posterize_bits = int(rng.integers(4, 7))
+    variant = ImageOps.posterize(variant, posterize_bits)
+
+    # Sharpen via UnsharpMask (opposite direction to the Gaussian blur used
+    # in the strong family).
+    sharpen_radius = float(rng.uniform(1.0, 3.0))
+    sharpen_percent = int(rng.integers(100, 220))
+    variant = variant.filter(
+        ImageFilter.UnsharpMask(radius=sharpen_radius, percent=sharpen_percent)
+    )
+
+    # Motion blur (linear kernel). Implemented as an average over N
+    # translated copies along one axis; PIL's ImageFilter.Kernel only
+    # supports 3x3 and 5x5 so we roll our own via numpy.
+    motion_length = int(rng.integers(5, 16))
+    motion_vertical = bool(rng.integers(0, 2))
+    motion_arr = np.asarray(variant, dtype=np.float32)
+    accumulator = np.zeros_like(motion_arr)
+    half = motion_length // 2
+    for offset in range(-half, half + 1):
+        axis = 0 if motion_vertical else 1
+        accumulator += np.roll(motion_arr, offset, axis=axis)
+    accumulator /= float(motion_length)
+    variant = Image.fromarray(np.clip(accumulator, 0, 255).astype(np.uint8))
+
+    # Random rectangular erasing (simulates occlusion by hair / debris /
+    # dermoscope artefacts). Mean-colour fill.
+    area_fraction = float(rng.uniform(0.06, 0.18))
+    erase_w = int(round(width * np.sqrt(area_fraction)))
+    erase_h = int(round(height * np.sqrt(area_fraction)))
+    erase_x = int(rng.integers(0, max(1, width - erase_w)))
+    erase_y = int(rng.integers(0, max(1, height - erase_h)))
+    erase_fill = _corner_fill(variant)
+    erase_canvas = variant.copy()
+    for y in range(erase_y, min(erase_y + erase_h, height)):
+        for x in range(erase_x, min(erase_x + erase_w, width)):
+            erase_canvas.putpixel((x, y), erase_fill)
+    variant = erase_canvas
+
+    # JPEG round-trip at lower quality than the strong family (45-70).
+    jpeg_quality = int(rng.integers(20, 41))
+    buffer = BytesIO()
+    variant.save(buffer, format="JPEG", quality=jpeg_quality)
+    buffer.seek(0)
+    variant = Image.open(buffer).convert("RGB").copy()
+
+    recipe: dict[str, object] = {
+        "family": (
+            "hue_posterize_sharpen_motionblur_erase_lowq_jpeg"
+        ),
+        "severity": "strong_held_out",
+        "hue_shift_degrees": round(hue_shift_degrees, 4),
+        "posterize_bits": posterize_bits,
+        "sharpen_radius": round(sharpen_radius, 4),
+        "sharpen_percent": sharpen_percent,
+        "motion_blur_length_px": motion_length,
+        "motion_blur_vertical": motion_vertical,
+        "erase_area_fraction": round(area_fraction, 4),
+        "erase_x": erase_x,
+        "erase_y": erase_y,
         "jpeg_quality": jpeg_quality,
     }
     return variant, recipe

@@ -48,6 +48,7 @@ class PublicDatasetConfig:
     split_fractions: SplitFractions
     max_records: int | None = None
     nuisance_severity: str = "mild"
+    nuisance_severity_eval: str | None = None
     changing_pair_policy: str = "fallback"
 
 
@@ -194,8 +195,21 @@ def validate_config(config: PipelineConfig) -> None:
         if config.dataset.max_records is not None and config.dataset.max_records < 1:
             msg = "dataset.max_records must be positive when set"
             raise ValueError(msg)
-        if config.dataset.nuisance_severity not in {"mild", "strong"}:
-            msg = "dataset.nuisance_severity must be 'mild' or 'strong'"
+        allowed_severities = {"mild", "strong", "strong_held_out"}
+        if config.dataset.nuisance_severity not in allowed_severities:
+            msg = (
+                "dataset.nuisance_severity must be one of "
+                f"{sorted(allowed_severities)}"
+            )
+            raise ValueError(msg)
+        if (
+            config.dataset.nuisance_severity_eval is not None
+            and config.dataset.nuisance_severity_eval not in allowed_severities
+        ):
+            msg = (
+                "dataset.nuisance_severity_eval must be one of "
+                f"{sorted(allowed_severities)} or null"
+            )
             raise ValueError(msg)
         if config.dataset.changing_pair_policy not in {
             "fallback",
@@ -292,6 +306,7 @@ def to_yaml(config: PipelineConfig) -> str:
             },
             "max_records": config.dataset.max_records,
             "nuisance_severity": config.dataset.nuisance_severity,
+            "nuisance_severity_eval": config.dataset.nuisance_severity_eval,
             "changing_pair_policy": config.dataset.changing_pair_policy,
         }
     if config.embedding_models:
@@ -359,6 +374,7 @@ def _parse_public_dataset_config(
         ),
         max_records=_optional_int(data, "max_records"),
         nuisance_severity=_optional_str(data, "nuisance_severity") or "mild",
+        nuisance_severity_eval=_optional_str(data, "nuisance_severity_eval"),
         changing_pair_policy=(
             _optional_str(data, "changing_pair_policy") or "fallback"
         ),
