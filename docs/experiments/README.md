@@ -30,3 +30,4 @@ reproduce every number.
 | ID | Run ID | Tier | Date (UTC) | Primary AUROC | Strongest baseline | Δ | Outcome |
 |---|---|---|---|---|---|---|---|
 | [EXP-001](EXP-001-ham10000-jepa-primary-v1.md) | `ham10000-hf-dinov2-primary-v1` | public | 2026-04-22 | 0.9998 | DINOv2 ViT-S/14 cos = 1.0000 | -0.0001 | Ceiling / proxy-construction-bound |
+| [EXP-002](EXP-002-ham10000-jepa-hardened-proxy-v1.md) | `ham10000-hf-dinov2-exp002-v1` | public | 2026-04-22 | 0.9201 [0.9084, 0.9313] | DINOv2 ViT-S/14 cos = 0.6515 [0.6272, 0.6744] | **+0.2687** | Positive, non-overlapping CIs |

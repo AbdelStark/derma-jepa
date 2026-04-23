@@ -121,7 +121,12 @@ compute without requiring cloud-first infrastructure. Both launchers load
 - [x] hosted-compute path for fixture-tier JEPA training
 - [x] first real public-data JEPA training run on HAM10000 via HF Jobs
       (EXP-001, see `docs/experiments/EXP-001-ham10000-jepa-primary-v1.md`)
-- [ ] stronger proxy-task construction (next-run follow-up from EXP-001)
+- [x] stronger proxy-task construction with hardened stable nuisance and
+      strict same-dx-site changing pairs; first positive JEPA delta over
+      frozen DINOv2 with non-overlapping bootstrap CIs (EXP-002, see
+      `docs/experiments/EXP-002-ham10000-jepa-hardened-proxy-v1.md`)
+- [ ] held-out nuisance family evaluation (EXP-003 scope)
+- [ ] seed sweep across proxy variants (EXP-003 scope)
 - [ ] dermatology-supervised baseline investigation
 - [ ] nuisance robustness benchmark
 - [ ] local dashboard/demo surface
