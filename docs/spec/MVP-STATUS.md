@@ -125,8 +125,13 @@ compute without requiring cloud-first infrastructure. Both launchers load
       strict same-dx-site changing pairs; first positive JEPA delta over
       frozen DINOv2 with non-overlapping bootstrap CIs (EXP-002, see
       `docs/experiments/EXP-002-ham10000-jepa-hardened-proxy-v1.md`)
-- [ ] held-out nuisance family evaluation (EXP-003 scope)
-- [ ] seed sweep across proxy variants (EXP-003 scope)
+- [x] held-out nuisance family evaluation (EXP-003: JEPA in-distribution
+      advantage does not transfer to a disjoint nuisance family; SSIM
+      becomes the strongest baseline at 0.961 AUROC while DINOv2 cosine
+      drops below random — see
+      `docs/experiments/EXP-003-ham10000-jepa-held-out-nuisance-v1.md`)
+- [ ] multi-family held-out eval + mixed-family training (EXP-004 scope)
+- [ ] seed sweep across proxy variants (EXP-004 / EXP-005 scope)
 - [ ] dermatology-supervised baseline investigation
 - [ ] nuisance robustness benchmark
 - [ ] local dashboard/demo surface

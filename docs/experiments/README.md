@@ -31,3 +31,4 @@ reproduce every number.
 |---|---|---|---|---|---|---|---|
 | [EXP-001](EXP-001-ham10000-jepa-primary-v1.md) | `ham10000-hf-dinov2-primary-v1` | public | 2026-04-22 | 0.9998 | DINOv2 ViT-S/14 cos = 1.0000 | -0.0001 | Ceiling / proxy-construction-bound |
 | [EXP-002](EXP-002-ham10000-jepa-hardened-proxy-v1.md) | `ham10000-hf-dinov2-exp002-v1` | public | 2026-04-22 | 0.9201 [0.9084, 0.9313] | DINOv2 ViT-S/14 cos = 0.6515 [0.6272, 0.6744] | **+0.2687** | Positive, non-overlapping CIs |
+| [EXP-003](EXP-003-ham10000-jepa-held-out-nuisance-v1.md) | `ham10000-hf-dinov2-exp003-v1` | public | 2026-04-23 | 0.6795 [0.6563, 0.7021] | SSIM distance = 0.9605 [0.9529, 0.9677] | **−0.2810** | Falsification positive: EXP-002 delta does not generalize to held-out nuisance family |
