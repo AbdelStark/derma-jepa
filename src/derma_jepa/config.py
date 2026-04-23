@@ -195,22 +195,24 @@ def validate_config(config: PipelineConfig) -> None:
         if config.dataset.max_records is not None and config.dataset.max_records < 1:
             msg = "dataset.max_records must be positive when set"
             raise ValueError(msg)
-        allowed_severities = {"mild", "strong", "strong_held_out"}
-        if config.dataset.nuisance_severity not in allowed_severities:
-            msg = (
-                "dataset.nuisance_severity must be one of "
-                f"{sorted(allowed_severities)}"
-            )
-            raise ValueError(msg)
-        if (
-            config.dataset.nuisance_severity_eval is not None
-            and config.dataset.nuisance_severity_eval not in allowed_severities
+        allowed_severities = {"mild", "strong", "strong_held_out", "strong_held_out_2"}
+        for field_name, value in (
+            ("nuisance_severity", config.dataset.nuisance_severity),
+            ("nuisance_severity_eval", config.dataset.nuisance_severity_eval),
         ):
-            msg = (
-                "dataset.nuisance_severity_eval must be one of "
-                f"{sorted(allowed_severities)} or null"
-            )
-            raise ValueError(msg)
+            if value is None:
+                continue
+            families = [item.strip() for item in value.split(",") if item.strip()]
+            if not families:
+                msg = f"dataset.{field_name} must be non-empty"
+                raise ValueError(msg)
+            unknown = [f for f in families if f not in allowed_severities]
+            if unknown:
+                msg = (
+                    f"dataset.{field_name} contains unknown families "
+                    f"{unknown}; allowed: {sorted(allowed_severities)}"
+                )
+                raise ValueError(msg)
         if config.dataset.changing_pair_policy not in {
             "fallback",
             "strict_same_diagnosis_site",

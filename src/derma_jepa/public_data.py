@@ -493,6 +493,80 @@ def _create_proxy_pairs(
     return rows
 
 
+def _apply_strong_held_out_2_nuisance(
+    variant: Image.Image,
+    index: int,
+    rng: np.random.Generator,
+) -> tuple[Image.Image, dict[str, object]]:
+    """Third disjoint nuisance family for multi-family held-out evaluation.
+
+    Shares zero transform types with `_apply_strong_nuisance` or
+    `_apply_strong_held_out_nuisance`. Purely photometric / optical
+    perturbations (gamma, colour temperature, vignette, salt-and-pepper
+    impulse noise, high-quality JPEG) that model lighting variation and
+    sensor imperfection rather than geometric change or framing shift.
+    """
+    from io import BytesIO
+
+    width, height = variant.size
+
+    # Gamma correction (non-linear, distinct from brightness / contrast).
+    gamma = float(rng.uniform(0.6, 1.6))
+    arr = np.asarray(variant, dtype=np.float32) / 255.0
+    arr = np.power(arr, gamma)
+    arr = np.clip(arr * 255.0, 0, 255)
+    variant = Image.fromarray(arr.astype(np.uint8))
+
+    # Colour temperature shift: warm / cool lighting.
+    temperature = float(rng.uniform(0.85, 1.15))
+    arr = np.asarray(variant, dtype=np.float32)
+    arr[..., 0] *= temperature  # R
+    arr[..., 2] /= temperature  # B
+    arr = np.clip(arr, 0, 255)
+    variant = Image.fromarray(arr.astype(np.uint8))
+
+    # Radial vignette (cos^2 falloff toward corners).
+    vignette_strength = float(rng.uniform(0.25, 0.55))
+    yy, xx = np.mgrid[0:height, 0:width].astype(np.float32)
+    cx, cy = (width - 1) / 2.0, (height - 1) / 2.0
+    rmax = float(np.hypot(cx, cy))
+    r = np.hypot(xx - cx, yy - cy) / rmax
+    mask = 1.0 - vignette_strength * np.clip(r, 0.0, 1.0) ** 2
+    arr = np.asarray(variant, dtype=np.float32) * mask[..., None]
+    arr = np.clip(arr, 0, 255)
+    variant = Image.fromarray(arr.astype(np.uint8))
+
+    # Salt-and-pepper impulse noise (distinct from Gaussian noise in strong).
+    sp_fraction = float(rng.uniform(0.005, 0.025))
+    arr = np.asarray(variant).copy()
+    flat_size = height * width
+    n_sp = int(flat_size * sp_fraction)
+    xs = rng.integers(0, width, size=n_sp)
+    ys = rng.integers(0, height, size=n_sp)
+    values = rng.integers(0, 2, size=n_sp) * 255
+    arr[ys, xs] = values[:, None]
+    variant = Image.fromarray(arr)
+
+    # High-quality JPEG round-trip (distinct quality from strong's 45-70
+    # and strong_held_out's 20-40).
+    jpeg_quality = int(rng.integers(80, 96))
+    buffer = BytesIO()
+    variant.save(buffer, format="JPEG", quality=jpeg_quality)
+    buffer.seek(0)
+    variant = Image.open(buffer).convert("RGB").copy()
+
+    recipe: dict[str, object] = {
+        "family": "gamma_colortemp_vignette_saltpepper_highq_jpeg",
+        "severity": "strong_held_out_2",
+        "gamma": round(gamma, 4),
+        "color_temperature": round(temperature, 4),
+        "vignette_strength": round(vignette_strength, 4),
+        "salt_pepper_fraction": round(sp_fraction, 4),
+        "jpeg_quality_hq": jpeg_quality,
+    }
+    return variant, recipe
+
+
 def _severity_for_split(dataset: Any, split: Split) -> str:
     """Return the nuisance severity to apply for this split.
 
@@ -509,11 +583,28 @@ def _severity_for_split(dataset: Any, split: Split) -> str:
     return str(dataset.nuisance_severity)
 
 
+def _parse_severity_list(severity: str) -> list[str]:
+    """Parse a severity string that may be a single family or a comma-list.
+
+    `"strong"` → `["strong"]`; `"strong,strong_held_out"` →
+    `["strong", "strong_held_out"]`. Whitespace tolerant. Order is
+    preserved so the deterministic `index % len(families)` rotation is
+    stable.
+    """
+    return [item.strip() for item in severity.split(",") if item.strip()]
+
+
 def _stable_reason_for_severity(severity: str) -> str:
-    if severity == "strong":
+    families = _parse_severity_list(severity)
+    if len(families) > 1:
+        return "same_image_post_split_mixed_nuisance"
+    family = families[0] if families else "mild"
+    if family == "strong":
         return "same_image_post_split_strong_nuisance"
-    if severity == "strong_held_out":
+    if family == "strong_held_out":
         return "same_image_post_split_strong_held_out_nuisance"
+    if family == "strong_held_out_2":
+        return "same_image_post_split_strong_held_out_2_nuisance"
     return "same_image_post_split_mild_nuisance"
 
 
@@ -592,6 +683,8 @@ def _write_stable_variant(
     *,
     severity: str = "mild",
 ) -> tuple[Path, dict[str, object]]:
+    families = _parse_severity_list(severity)
+    chosen_family = families[index % len(families)]
     with Image.open(record.path) as image:
         variant = image.convert("RGB")
         variant = ImageOps.fit(
@@ -599,12 +692,17 @@ def _write_stable_variant(
             (config.preprocessing.image_size, config.preprocessing.image_size),
             method=Image.Resampling.BICUBIC,
         )
-        if severity == "strong":
+        if chosen_family == "strong":
             variant, recipe = _apply_strong_nuisance(variant, index, rng)
-        elif severity == "strong_held_out":
+        elif chosen_family == "strong_held_out":
             variant, recipe = _apply_strong_held_out_nuisance(variant, index, rng)
+        elif chosen_family == "strong_held_out_2":
+            variant, recipe = _apply_strong_held_out_2_nuisance(variant, index, rng)
         else:
             variant, recipe = _apply_mild_nuisance(variant, index, rng)
+        if len(families) > 1:
+            recipe = dict(recipe)
+            recipe["mixture"] = ",".join(families)
 
     target_path = (
         run_dir

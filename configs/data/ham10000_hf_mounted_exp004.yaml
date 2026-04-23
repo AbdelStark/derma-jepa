@@ -1,0 +1,81 @@
+# EXP-004 HAM10000 primary-tier config — mixed-family training,
+# third-family held-out eval.
+#
+# Changes from EXP-003:
+#
+# - dataset.nuisance_severity = "strong,strong_held_out"
+#     Training stable pairs rotate deterministically between the two
+#     prior families by pair index. Goal: expose the JEPA predictor to
+#     enough nuisance diversity at training time that it can learn a
+#     broader correction, not a family-specific vector field.
+#
+# - dataset.nuisance_severity_eval = "strong_held_out_2"
+#     Validation and test stable pairs use a third family that is
+#     disjoint from both training families: gamma correction, colour
+#     temperature shift, radial vignette, salt-and-pepper impulse noise,
+#     and high-quality JPEG. Tests generalization to a genuinely unseen
+#     nuisance distribution rather than one the predictor has already
+#     seen.
+#
+# - training.model_id, run_id updated for provenance.
+#
+# Everything else mirrors EXP-003: strict same-diagnosis-site changing
+# pairs, 1000 pairs per split, same DINOv2 backbones.
+
+run_id: ham10000-hf-dinov2-primary-exp004-v1
+output_root: outputs/runs
+artifact_root: outputs/artifacts/demo
+seed: 20260422
+
+dataset:
+  kind: ham10000
+  name: ham10000
+  metadata_csv: /data/HAM10000_metadata.csv
+  image_roots:
+    - /data/HAM10000_images_part_1
+    - /data/HAM10000_images_part_2
+    - /data/images
+  image_extensions:
+    - jpg
+    - jpeg
+    - png
+  stable_pairs_per_split: 1000
+  changing_pairs_per_split: 1000
+  split:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+  max_records:
+  nuisance_severity: "strong,strong_held_out"
+  nuisance_severity_eval: strong_held_out_2
+  changing_pair_policy: strict_same_diagnosis_site
+
+preprocessing:
+  profile: ham10000_224_center_crop_v1
+  image_size: 224
+
+metrics:
+  bootstrap_samples: 1000
+  ci_level: 0.95
+  fixed_tpr: 0.80
+
+embeddings:
+  models:
+    - model_id: dinov2_vits14
+      kind: dinov2
+      model_name: facebook/dinov2-small
+      batch_size: 32
+      device: auto
+    - model_id: dinov2_vitb14
+      kind: dinov2
+      model_name: facebook/dinov2-base
+      batch_size: 16
+      device: auto
+
+training:
+  model_id: jepa_predictor_ham10000_exp004_v1
+  embedding_model_id: dinov2_vitb14
+  epochs: 200
+  batch_size: 128
+  learning_rate: 0.03
+  weight_decay: 0.001
