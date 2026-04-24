@@ -135,8 +135,13 @@ compute without requiring cloud-first infrastructure. Both launchers load
       (below-random, inverted) and SSIM / DINOv2 cosines also invert.
       Bottleneck identified as linear-over-frozen-DINOv2 — see
       `docs/experiments/EXP-004-ham10000-jepa-mixed-train-held-out-2-v1.md`)
-- [ ] small-MLP predictor ablation + backbone swap (EXP-005 scope)
-- [ ] seed sweep across proxy variants (EXP-005 / EXP-006 scope)
+- [x] small-MLP predictor ablation (EXP-005: MLP underfit under the
+      inherited SGD+weight-decay optimiser, stayed near identity, test
+      AUROC matches DINOv2 baseline. Training-configuration issue, not
+      capacity conclusion. See
+      `docs/experiments/EXP-005-ham10000-jepa-mlp-predictor-v1.md`.)
+- [ ] properly-tuned MLP (Adam) + backbone swap (EXP-006 scope)
+- [ ] seed sweep across proxy variants (EXP-006 / EXP-007 scope)
 - [ ] dermatology-supervised baseline investigation
 - [ ] nuisance robustness benchmark
 - [ ] local dashboard/demo surface
