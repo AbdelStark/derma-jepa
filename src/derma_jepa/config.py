@@ -71,6 +71,7 @@ class TrainingConfig:
     weight_decay: float
     predictor: str = "linear"
     hidden_dim: int = 512
+    optimizer: str = "sgd"
 
 
 @dataclass(frozen=True)
@@ -225,13 +226,13 @@ def validate_config(config: PipelineConfig) -> None:
             )
             raise ValueError(msg)
     for model in config.embedding_models:
-        if model.kind not in {"color_texture", "dinov2"}:
+        if model.kind not in {"color_texture", "dinov2", "clip"}:
             msg = f"unsupported embedding model kind: {model.kind}"
             raise ValueError(msg)
         if model.batch_size < 1:
             msg = f"embedding model {model.model_id} batch_size must be positive"
             raise ValueError(msg)
-        if model.kind == "dinov2" and model.model_name is None:
+        if model.kind in {"dinov2", "clip"} and model.model_name is None:
             msg = f"embedding model {model.model_id} requires model_name"
             raise ValueError(msg)
     if config.training.epochs < 1:
@@ -251,6 +252,9 @@ def validate_config(config: PipelineConfig) -> None:
         raise ValueError(msg)
     if config.training.hidden_dim < 1:
         msg = "training.hidden_dim must be positive"
+        raise ValueError(msg)
+    if config.training.optimizer not in {"sgd", "adam"}:
+        msg = "training.optimizer must be 'sgd' or 'adam'"
         raise ValueError(msg)
     if config.preprocessing.image_size < 32:
         msg = "preprocessing.image_size must be at least 32"
@@ -292,6 +296,7 @@ def to_yaml(config: PipelineConfig) -> str:
             "weight_decay": config.training.weight_decay,
             "predictor": config.training.predictor,
             "hidden_dim": config.training.hidden_dim,
+            "optimizer": config.training.optimizer,
         },
     }
     if config.fixture is not None:
@@ -446,6 +451,7 @@ def _parse_training_config(data: dict[str, Any] | None) -> TrainingConfig:
         weight_decay=_float(data, "weight_decay"),
         predictor=_optional_str(data, "predictor") or "linear",
         hidden_dim=hidden_dim,
+        optimizer=_optional_str(data, "optimizer") or "sgd",
     )
 
 

@@ -316,11 +316,18 @@ def _fit_mlp_predictor(
     val_x = torch.from_numpy(val_x_np).to(device)
     val_y = torch.from_numpy(val_y_np).to(device)
 
-    optimizer = torch.optim.SGD(
-        [w1, b1, w2, b2],
-        lr=config.training.learning_rate,
-        weight_decay=config.training.weight_decay,
-    )
+    if config.training.optimizer == "adam":
+        optimizer = torch.optim.Adam(
+            [w1, b1, w2, b2],
+            lr=config.training.learning_rate,
+            weight_decay=config.training.weight_decay,
+        )
+    else:
+        optimizer = torch.optim.SGD(
+            [w1, b1, w2, b2],
+            lr=config.training.learning_rate,
+            weight_decay=config.training.weight_decay,
+        )
 
     history: list[dict[str, float | int]] = []
     rng = np.random.default_rng(config.seed + 409)

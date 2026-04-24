@@ -117,6 +117,9 @@ def _export_model_embeddings(
     elif model.kind == "dinov2":
         matrix = _dinov2_matrix(model, image_records, run_dir=run_dir)
         feature_type = "dinov2_cls_token"
+    elif model.kind == "clip":
+        matrix = _clip_matrix(model, image_records, run_dir=run_dir)
+        feature_type = "clip_image_features"
     else:
         msg = f"unsupported embedding model kind: {model.kind}"
         raise ValueError(msg)
@@ -220,6 +223,57 @@ def _dinov2_matrix(
             inputs = {key: value.to(device) for key, value in inputs.items()}
             outputs = model(**inputs)
             vectors = _output_vectors(outputs)
+            all_vectors.append(vectors.detach().cpu().numpy().astype(np.float32))
+    return _l2_normalize_matrix(np.concatenate(all_vectors, axis=0))
+
+
+def _clip_matrix(
+    model_config: EmbeddingModelConfig,
+    image_records: dict[str, str],
+    *,
+    run_dir: Path | None = None,
+) -> np.ndarray:
+    try:
+        import torch
+        from transformers import CLIPImageProcessor, CLIPModel
+    except ImportError as exc:
+        msg = (
+            "CLIP embedding export requires optional model dependencies. "
+            "Install them with `uv sync --extra model` before running "
+            "`derma-jepa embed` for a CLIP config."
+        )
+        raise RuntimeError(msg) from exc
+
+    with stage(
+        "embeddings.clip.load",
+        run_dir=run_dir,
+        model_name=model_config.model_name,
+    ) as load_stage:
+        device = _resolve_device(torch, model_config.device)
+        load_stage.set(device=device)
+        processor = CLIPImageProcessor.from_pretrained(model_config.model_name)
+        model = CLIPModel.from_pretrained(model_config.model_name)
+        model.to(device)
+        model.eval()
+
+    all_vectors: list[np.ndarray] = []
+    paths = [path for _, path in sorted(image_records.items())]
+    batch_size = model_config.batch_size
+    total_batches = (len(paths) + batch_size - 1) // batch_size
+    batch_starts = range(0, len(paths), batch_size)
+    with torch.no_grad():
+        for start in progress_iter(
+            batch_starts,
+            name=f"embeddings.clip.{model_config.model_id}",
+            total=total_batches,
+            run_dir=run_dir,
+            every=max(1, total_batches // 20),
+        ):
+            batch_paths = paths[start : start + batch_size]
+            images = [_load_pil_rgb(path) for path in batch_paths]
+            inputs = processor(images=images, return_tensors="pt")
+            inputs = {key: value.to(device) for key, value in inputs.items()}
+            vectors = model.get_image_features(**inputs)
             all_vectors.append(vectors.detach().cpu().numpy().astype(np.float32))
     return _l2_normalize_matrix(np.concatenate(all_vectors, axis=0))
 
