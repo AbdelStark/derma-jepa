@@ -226,13 +226,13 @@ def validate_config(config: PipelineConfig) -> None:
             )
             raise ValueError(msg)
     for model in config.embedding_models:
-        if model.kind not in {"color_texture", "dinov2", "clip"}:
+        if model.kind not in {"color_texture", "dinov2", "clip", "open_clip"}:
             msg = f"unsupported embedding model kind: {model.kind}"
             raise ValueError(msg)
         if model.batch_size < 1:
             msg = f"embedding model {model.model_id} batch_size must be positive"
             raise ValueError(msg)
-        if model.kind in {"dinov2", "clip"} and model.model_name is None:
+        if model.kind in {"dinov2", "clip", "open_clip"} and model.model_name is None:
             msg = f"embedding model {model.model_id} requires model_name"
             raise ValueError(msg)
     if config.training.epochs < 1:

@@ -16,6 +16,7 @@ dependencies = [
 
 [project.optional-dependencies]
 model = [
+  "open_clip_torch>=2.24",
   "timm>=1.0",
   "torch>=2.3",
   "torchvision>=0.18",
