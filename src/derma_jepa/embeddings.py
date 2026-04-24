@@ -273,7 +273,8 @@ def _clip_matrix(
             images = [_load_pil_rgb(path) for path in batch_paths]
             inputs = processor(images=images, return_tensors="pt")
             inputs = {key: value.to(device) for key, value in inputs.items()}
-            vectors = model.get_image_features(**inputs)
+            outputs = model.get_image_features(**inputs)
+            vectors = getattr(outputs, "pooler_output", outputs)
             all_vectors.append(vectors.detach().cpu().numpy().astype(np.float32))
     return _l2_normalize_matrix(np.concatenate(all_vectors, axis=0))
 
