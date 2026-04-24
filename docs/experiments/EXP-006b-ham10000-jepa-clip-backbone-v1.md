@@ -148,13 +148,15 @@ Unchanged qualitative profile from EXP-002/003/004/005. `dimension_variance_min`
 
 ### 4.6 JEPA pair-score distributions across splits
 
-| Split | Stable mean | Changing mean | Gap (stable − changing) |
-|---|---:|---:|---:|
-| train | 0.559 | 0.224 | **−0.335 (correct, strong)** |
-| val | 0.446 | 0.371 | +0.075 (inverted) |
-| test | 0.448 | 0.360 | **+0.088 (inverted)** |
+Scores below are per-pair predicted-target distances; lower distance means the predictor places the context and target closer together, which is the correct direction for a stable pair. Gap = `stable_mean − changing_mean`; negative = correct (stable closer), positive = inverted (stable farther).
 
-Train gap is dramatically the right sign and strongest-ever in the arc. Val and test gaps retain the inverted orientation seen under DINOv2 but with slightly smaller magnitude (EXP-004 linear showed test gap +0.104 under DINOv2). The pattern — "train score separation works beautifully, unseen-family separation inverts" — is now visible in two backbones.
+| Split | Stable mean | Changing mean | Gap |
+|---|---:|---:|---:|
+| train | 0.104 | 0.238 | **−0.133 (correct, strong)** |
+| val | 0.279 | 0.232 | +0.047 (inverted) |
+| test | 0.281 | 0.233 | **+0.049 (inverted)** |
+
+Train gap magnitude (0.133) is the strongest correct-direction separation in the arc and matches the train AUROC 0.986 reading: the CLIP-linear predictor is producing a very clean stable-closer-than-changing ranking in-distribution. Val and test flip sign to inverted, with smaller magnitude (≈0.05) than EXP-004 linear's test gap (+0.104 under DINOv2). The smaller absolute gap under CLIP despite comparable AUROC inversion reflects the overall compression of the JEPA-latent-space score range under CLIP (all test scores sit in roughly [0.2, 0.3]) rather than a weaker inversion per se. The pattern — "train score separation works beautifully, unseen-family separation inverts" — is now visible in two backbones.
 
 ---
 
