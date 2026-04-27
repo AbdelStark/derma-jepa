@@ -11,7 +11,7 @@
 
 ## 1. What this run did
 
-EXP-007 reported test AUROC 0.9447 on `strong_held_out_2` for the DermLIP backbone; EXP-008 reported 0.3247 for BiomedCLIP. Both used a single seed (20260422, the project default since EXP-001). The seed determines lesion-ID split assignment, pair-generation pseudo-randomness, predictor weight initialisation, and the data-loader shuffle order. None of those choices is *a priori* expected to matter at this scale, but the entire arc had cohabited a single seed up to this point. Before committing GPU time to EXP-009 (a non-HAM10000 dermoscopy SSL pretrain — multi-day work) we wanted bootstrap-CI-tight ranges on the two existing headline numbers.
+EXP-007 reported test AUROC 0.9447 on `strong_held_out_2` for the DermLIP backbone; EXP-008 reported 0.3247 for BiomedCLIP. Both used a single seed (20260422, the project default since EXP-001). The seed determines lesion-ID split assignment, pair-generation pseudo-randomness, predictor weight initialisation, and the data-loader shuffle order. None of those choices is a priori expected to matter at this scale, but every prior run had used the same seed. Locking bootstrap-CI-tight ranges on the two existing headlines is cheap GPU time and worth doing before any larger follow-up.
 
 Four additional seeds (1, 2, 3, 4) per configuration were launched in parallel via the new `hf_jobs_seed_sweep.sh` launcher. Each seed run uses an identical YAML config to its base (EXP-007 or EXP-008) with only `seed:` and `run_id:` substituted, then exec's the standard train bundle. Two of the eight initial launches failed at the HF "Volume mount failed" infra error (same as observed earlier on April 24); both were re-launched with no code change and completed cleanly. End-to-end wall time was ~85 min for the parallel cohort plus ~85 min for the two re-launches that hit the infra flake.
 
@@ -52,7 +52,7 @@ Four additional seeds (1, 2, 3, 4) per configuration were launched in parallel v
 | EXP-008 BiomedCLIP | val | 5 | 0.3316 | 0.0143 | 0.3150 | 0.3507 | [0.3190, 0.3441] |
 | **EXP-008 BiomedCLIP** | **test** | 5 | **0.3286** | **0.0120** | 0.3119 | 0.3436 | **[0.3181, 0.3391]** |
 
-The 95 % CI[mean] on EXP-007's test AUROC is [0.9409, 0.9461] — narrower than the bootstrap CI of any single run and decisively above pixel L2's upper bound (0.606). The 95 % CI[mean] on EXP-008's test AUROC is [0.3181, 0.3391] — also narrow, decisively below random and below pixel L2.
+The 95 % CI[mean] on EXP-007's test AUROC is [0.9409, 0.9461] — narrower than the bootstrap CI of any single run and well above pixel L2's upper bound (0.606). The 95 % CI[mean] on EXP-008's test AUROC is [0.3181, 0.3391] — also narrow, below random, and below pixel L2.
 
 ---
 
@@ -68,7 +68,7 @@ Replacing the single-seed point estimates from EXP-006b / EXP-007 / EXP-008 with
 
 Web → general-medical step: **+0.04 AUROC** (single-seed CLIP vs 5-seed-mean BiomedCLIP).
 General-medical → dermoscopy step: **+0.62 AUROC** (5-seed-mean BiomedCLIP vs 5-seed-mean DermLIP).
-The 15× non-uniformity in the gradient — established by single-seed runs in EXP-008 §4.3 — is preserved with seed-mean point estimates and tighter than any individual seed's bootstrap CI on either side. The partition story holds.
+The non-uniformity in the gradient (~15× more lift in the dermoscopy step than in the medical-domain step), established by single-seed runs in EXP-008 §4.3, is preserved with seed-mean point estimates.
 
 ---
 
