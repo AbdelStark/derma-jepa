@@ -1,0 +1,92 @@
+# EXP-008 HAM10000 primary-tier config — BiomedCLIP backbone swap on
+# the EXP-004 proxy. Partition experiment for EXP-007: separates
+# "any medical-image pretraining unlocks the proxy" from "specifically
+# HAM10000-contaminated pretraining unlocks the proxy."
+#
+# Model: microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224 —
+# OpenAI CLIP ViT-B/16 architecture CLIP-trained on PMC-15M (~15M
+# PubMed Central figure-caption pairs spanning radiology, pathology,
+# microscopy, anatomy, surgical, and a long tail of clinical figures).
+# Dermatology / dermoscopy is a small fraction; the corpus does not
+# include HAM10000 / ISIC archive. Licence MIT.
+#
+# Same exact-architecture-match property as EXP-007 vs EXP-006b: this
+# is OpenAI CLIP ViT-B/16 with different CLIP-pretraining data, so
+# EXP-008 vs EXP-006b vs EXP-007 forms a three-way pretraining-data
+# ablation on identical ViT-B/16 weights and identical scaffold.
+#
+# Decision table for EXP-008 test AUROC on strong_held_out_2:
+#   ≥ 0.85       — any medical pretraining suffices; the EXP-007 win
+#                  generalises beyond HAM10000-contaminated weights.
+#                  Strongest paper outcome.
+#   0.30 – 0.50  — domain-distance gradient between web-scale (CLIP),
+#                  general medical (BiomedCLIP), and dermoscopy
+#                  (DermLIP). Nuanced paper claim.
+#   ≈ 0.25–0.29  — HAM10000-specific pretraining is doing the work in
+#                  EXP-007. Substantially weakens the paper headline;
+#                  EXP-009 would need to find a non-HAM10000 dermoscopy
+#                  backbone to disambiguate further.
+#
+# Differences from configs/data/ham10000_hf_mounted_exp007.yaml:
+#
+# - embeddings.models replaced with BiomedCLIP via open_clip
+#   (kind: open_clip, model_name: hf-hub:microsoft/
+#   BiomedCLIP-PubMedBERT_256-vit_base_patch16_224).
+# - training.embedding_model_id renamed for provenance.
+# - training.model_id renamed for provenance.
+
+run_id: ham10000-hf-biomedclip-primary-exp008-v1
+output_root: outputs/runs
+artifact_root: outputs/artifacts/demo
+seed: 20260422
+
+dataset:
+  kind: ham10000
+  name: ham10000
+  metadata_csv: /data/HAM10000_metadata.csv
+  image_roots:
+    - /data/HAM10000_images_part_1
+    - /data/HAM10000_images_part_2
+    - /data/images
+  image_extensions:
+    - jpg
+    - jpeg
+    - png
+  stable_pairs_per_split: 1000
+  changing_pairs_per_split: 1000
+  split:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+  max_records:
+  nuisance_severity: "strong,strong_held_out"
+  nuisance_severity_eval: strong_held_out_2
+  changing_pair_policy: strict_same_diagnosis_site
+
+preprocessing:
+  profile: ham10000_224_center_crop_v1
+  image_size: 224
+
+metrics:
+  bootstrap_samples: 1000
+  ci_level: 0.95
+  fixed_tpr: 0.80
+
+embeddings:
+  models:
+    - model_id: biomedclip_b16
+      kind: open_clip
+      model_name: hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224
+      batch_size: 16
+      device: auto
+
+training:
+  model_id: jepa_predictor_ham10000_exp008_v1
+  embedding_model_id: biomedclip_b16
+  epochs: 200
+  batch_size: 128
+  learning_rate: 0.03
+  weight_decay: 0.001
+  predictor: linear
+  hidden_dim: 512
+  optimizer: sgd
