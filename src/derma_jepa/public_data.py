@@ -88,9 +88,7 @@ def audit_public_dataset(config: PipelineConfig) -> Path:
                 metadata_rows=issues.metadata_row_count,
                 missing_images=len(issues.missing_image_ids),
             )
-            _write_normalized_metadata(
-                run_dir / "metadata_normalized.parquet", records
-            )
+            _write_normalized_metadata(run_dir / "metadata_normalized.parquet", records)
             payload = _audit_payload(
                 config=config,
                 records=records,
@@ -904,9 +902,7 @@ def _apply_strong_held_out_nuisance(
     variant = Image.open(buffer).convert("RGB").copy()
 
     recipe: dict[str, object] = {
-        "family": (
-            "hue_posterize_sharpen_motionblur_erase_lowq_jpeg"
-        ),
+        "family": ("hue_posterize_sharpen_motionblur_erase_lowq_jpeg"),
         "severity": "strong_held_out",
         "hue_shift_degrees": round(hue_shift_degrees, 4),
         "posterize_bits": posterize_bits,

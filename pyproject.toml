@@ -4,6 +4,15 @@ version = "0.1.0"
 description = "JEPA-style latent trajectory research tooling for lesion-monitoring proxy tasks."
 readme = "README.md"
 requires-python = ">=3.11"
+authors = [{ name = "AbdelStark" }]
+keywords = [
+  "dermatology",
+  "dermoscopy",
+  "ham10000",
+  "jepa",
+  "longitudinal-proxy",
+  "self-supervised-learning",
+]
 dependencies = [
   "numpy>=1.26",
   "pillow>=10.0",
@@ -13,6 +22,11 @@ dependencies = [
   "scikit-learn>=1.4",
   "typer>=0.12",
 ]
+
+[project.urls]
+Homepage = "https://github.com/AbdelStark/derma-jepa"
+Repository = "https://github.com/AbdelStark/derma-jepa"
+Issues = "https://github.com/AbdelStark/derma-jepa/issues"
 
 [project.optional-dependencies]
 model = [

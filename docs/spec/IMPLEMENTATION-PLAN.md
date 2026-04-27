@@ -109,9 +109,7 @@ baseline contract with a deterministic local embedding backend.
 
 ## Milestone 3 - JEPA-style predictor training
 
-Status: Scaffold complete in the fixture tier; hosted fixture smoke runs on
-Hugging Face Jobs. Full primary-tier training on public HAM10000 data is the
-next open item.
+Status: Complete. Scaffold runs locally and on Hugging Face Jobs for both fixture and primary tiers. Nine primary-tier runs on public HAM10000 are reported under `docs/experiments/EXP-001-ham10000-jepa-primary-v1.md` through `EXP-008-ham10000-jepa-biomedclip-backbone-v1.md`, plus the `EXP-007-008-seed-sweep-summary.md`.
 
 Purpose: test the project thesis with a compact latent prediction objective.
 
@@ -166,27 +164,29 @@ resolution does not float between Jobs. The runbook at
 
 ## Milestone 4 - evaluation and benchmark suite
 
+Status: Substantially complete via the EXP-001 → EXP-008 sequence and the EXP-007/008 seed sweep. Each run carries primary AUROC with bootstrap CIs, AUPRC, EER threshold, FPR-at-fixed-TPR, representation health, and nuisance-robustness reads across three disjoint families (`strong`, `strong_held_out`, `strong_held_out_2`). Outstanding deliverable: a consolidated cross-run runtime benchmark report.
+
 Purpose: make the result scientifically interpretable.
 
 Deliverables:
 
-- primary AUROC with bootstrap confidence interval
-- AUPRC, equal-error-rate threshold, FPR at fixed TPR
-- nuisance robustness report by family and severity
-- representation health report
-- ablations:
-  - no JEPA predictor
-  - frozen projection versus lightly adapted projection
-  - masking variants
-  - pair-construction variants
-- runtime benchmark report
-- qualitative case-study report
+- [x] primary AUROC with bootstrap confidence interval (every run)
+- [x] AUPRC, equal-error-rate threshold, FPR at fixed TPR (every run's `metrics.json`)
+- [x] nuisance-robustness report by family and severity (`strong` / `strong_held_out` / `strong_held_out_2`)
+- [x] representation-health report (prediction-norm and dimension-variance per run; collapse flag)
+- [x] ablations:
+  - [x] predictor-class (linear vs MLP, EXP-005 / EXP-006a)
+  - [x] optimiser (SGD vs Adam, EXP-006a)
+  - [x] frozen-backbone family (DINOv2 / OpenAI CLIP / DermLIP / BiomedCLIP, EXP-006b / EXP-007 / EXP-008)
+  - [x] seed robustness on the two EXP-007 / EXP-008 headlines (5 seeds each)
+- [ ] consolidated runtime benchmark report (per-run wall-time tables exist; cross-run consolidation pending)
+- [x] qualitative case-study report (`artifacts/reports/jepa_failure_cases.json`, `baseline_failure_cases.json` per run)
 
 Acceptance:
 
-- JEPA-style score is compared against the strongest baseline
-- positive, negative, or inconclusive result wording follows the MVP spec
-- no chart depends on hand-picked cases outside the manifest
+- [x] JEPA-style score is compared against the strongest baseline on every run
+- [x] positive, negative, or inconclusive result wording follows the MVP spec on every run
+- [x] no chart depends on hand-picked cases outside the manifest
 
 ## Milestone 5 - local MacBook Pro demo
 

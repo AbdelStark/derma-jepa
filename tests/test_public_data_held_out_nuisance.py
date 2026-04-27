@@ -36,12 +36,10 @@ def test_nuisance_severity_eval_splits_train_vs_eval(tmp_path: Path) -> None:
     assert eval_stables, "expected stable pairs in val/test"
 
     train_severities = {
-        json.loads(row.augmentation_recipe_json)["severity"]
-        for row in train_stables
+        json.loads(row.augmentation_recipe_json)["severity"] for row in train_stables
     }
     eval_severities = {
-        json.loads(row.augmentation_recipe_json)["severity"]
-        for row in eval_stables
+        json.loads(row.augmentation_recipe_json)["severity"] for row in eval_stables
     }
     assert train_severities == {"strong"}
     assert eval_severities == {"strong_held_out"}

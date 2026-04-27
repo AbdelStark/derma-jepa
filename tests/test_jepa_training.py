@@ -43,9 +43,7 @@ def test_jepa_predictor_trains_over_fixture_embeddings(tmp_path: Path) -> None:
     assert (
         run_dir / "artifacts" / "embeddings" / "jepa_predictor_latents.npz"
     ).exists()
-    assert (
-        run_dir / "artifacts" / "reports" / "jepa_training_report.json"
-    ).exists()
+    assert (run_dir / "artifacts" / "reports" / "jepa_training_report.json").exists()
     assert (run_dir / "artifacts" / "plots" / "jepa_score_histogram.png").exists()
 
     metrics = read_json(metrics_path)
@@ -53,8 +51,7 @@ def test_jepa_predictor_trains_over_fixture_embeddings(tmp_path: Path) -> None:
 
     assert metrics["status"] == "jepa_style_trained"
     assert (
-        metrics["result"]["jepa_style_model"]["name"]
-        == "jepa_predictor_fixture_test"
+        metrics["result"]["jepa_style_model"]["name"] == "jepa_predictor_fixture_test"
     )
     assert metrics["primary_score"] >= 0.9
     assert metrics["training"]["changing_pairs_used_for_training"] == 0

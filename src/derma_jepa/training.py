@@ -71,8 +71,7 @@ def train_jepa_predictor(config: PipelineConfig) -> Path:
         runtime_seconds = time.perf_counter() - start
 
         scores_by_split = {
-            split: _score_rows(rows, vectors, state)
-            for split, rows in manifest.items()
+            split: _score_rows(rows, vectors, state) for split, rows in manifest.items()
         }
         metrics_by_split = {
             split: _metric_payload(config, rows, scores_by_split[split], seed_offset)
@@ -185,8 +184,7 @@ def _ensure_prerequisites(config: PipelineConfig) -> None:
 
 def _read_split_manifest(run_dir: Path) -> dict[str, list[ManifestRow]]:
     return {
-        split: read_manifest(run_dir / f"manifest_{split}.parquet")
-        for split in SPLITS
+        split: read_manifest(run_dir / f"manifest_{split}.parquet") for split in SPLITS
     }
 
 
@@ -370,9 +368,7 @@ def _fit_mlp_predictor(
     }
 
 
-def _predict_matrix_unnormalised(
-    x: np.ndarray, state: dict[str, Any]
-) -> np.ndarray:
+def _predict_matrix_unnormalised(x: np.ndarray, state: dict[str, Any]) -> np.ndarray:
     if state["kind"] == "mlp":
         hidden = x @ state["w1"] + state["b1"]
         hidden = np.maximum(hidden, 0.0)
@@ -512,9 +508,7 @@ def _write_checkpoint(
     path.parent.mkdir(parents=True, exist_ok=True)
     payload: dict[str, np.ndarray] = {
         "model_id": np.asarray([config.training.model_id]),
-        "input_embedding_model_id": np.asarray(
-            [str(embedding_record["model_id"])]
-        ),
+        "input_embedding_model_id": np.asarray([str(embedding_record["model_id"])]),
         "feature_dim": np.asarray([feature_dim], dtype=np.int32),
         "predictor_kind": np.asarray([str(state["kind"])]),
     }
@@ -541,9 +535,9 @@ def _write_latent_artifacts(
 ) -> None:
     rows = [row for split in SPLITS for row in manifest[split]]
     scores = [score for split in SPLITS for score in scores_by_split[split]]
-    context = np.stack(
-        [vectors[row.context_image_id] for row in rows]
-    ).astype(np.float32)
+    context = np.stack([vectors[row.context_image_id] for row in rows]).astype(
+        np.float32
+    )
     predicted = _l2_normalise_rows(_predict_matrix_unnormalised(context, state))
     target = np.stack([vectors[row.target_image_id] for row in rows]).astype(np.float32)
     npz_path = run_dir / "artifacts" / "embeddings" / "jepa_predictor_latents.npz"
@@ -641,13 +635,11 @@ def _interpretation(delta_auroc: float, collapsed: bool) -> str:
         return "JEPA-style predictor trained but failed representation collapse checks."
     if delta_auroc >= 0.05:
         return (
-            "JEPA-style predictor improved over the strongest baseline on this "
-            "split."
+            "JEPA-style predictor improved over the strongest baseline on this split."
         )
     if delta_auroc >= 0:
         return (
-            "JEPA-style predictor matched or slightly exceeded the strongest "
-            "baseline."
+            "JEPA-style predictor matched or slightly exceeded the strongest baseline."
         )
     return (
         "JEPA-style predictor did not beat the strongest baseline on this split; "

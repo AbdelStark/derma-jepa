@@ -36,9 +36,10 @@ def test_log_event_writes_stdout_and_run_dir(tmp_path: Path) -> None:
 
 
 def test_stage_emits_start_and_end_with_duration(tmp_path: Path) -> None:
-    with redirect_stdout(io.StringIO()), stage(
-        "demo.stage", run_dir=tmp_path, extra="yes"
-    ) as ctx:
+    with (
+        redirect_stdout(io.StringIO()),
+        stage("demo.stage", run_dir=tmp_path, extra="yes") as ctx,
+    ):
         ctx.set(finished=True)
 
     jsonl_records = _parse_jsonl(progress_log_path(tmp_path))
@@ -51,8 +52,10 @@ def test_stage_emits_start_and_end_with_duration(tmp_path: Path) -> None:
 
 
 def test_stage_records_error_and_reraises(tmp_path: Path) -> None:
-    with redirect_stdout(io.StringIO()), pytest.raises(ValueError), stage(
-        "demo.stage", run_dir=tmp_path
+    with (
+        redirect_stdout(io.StringIO()),
+        pytest.raises(ValueError),
+        stage("demo.stage", run_dir=tmp_path),
     ):
         raise ValueError("nope")
 

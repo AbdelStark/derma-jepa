@@ -77,9 +77,7 @@ def test_mixed_family_training_rotates_by_pair_index(tmp_path: Path) -> None:
         recipe = json.loads(row.augmentation_recipe_json)
         families_seen[recipe["severity"]] += 1
         assert recipe.get("mixture") == "strong,strong_held_out"
-        assert row.pair_construction_reason == (
-            "same_image_post_split_mixed_nuisance"
-        )
+        assert row.pair_construction_reason == ("same_image_post_split_mixed_nuisance")
     assert families_seen["strong"] > 0
     assert families_seen["strong_held_out"] > 0
     # Deterministic 50/50 rotation by pair index.

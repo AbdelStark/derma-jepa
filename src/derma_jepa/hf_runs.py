@@ -61,9 +61,7 @@ class RunSummary:
         if self.model_id:
             lines.append(f"model_id: {self.model_id}")
         if self.primary_metric and self.primary_score is not None:
-            lines.append(
-                f"{self.primary_metric}: {self.primary_score:.4f}"
-            )
+            lines.append(f"{self.primary_metric}: {self.primary_score:.4f}")
         if (
             self.strongest_baseline_name is not None
             and self.strongest_baseline_score is not None
@@ -172,7 +170,9 @@ def summarize_run_dir(run_dir: Path) -> RunSummary:
         interpretation=_optional_str(result.get("interpretation")),
         collapsed=bool(health["collapsed"]) if "collapsed" in health else None,
         runtime_seconds=_optional_float(training.get("runtime_seconds")),
-        train_stable_pairs=_optional_int(training.get("stable_pairs_used_for_training")),
+        train_stable_pairs=_optional_int(
+            training.get("stable_pairs_used_for_training")
+        ),
         acceptance_gate_passed=acceptance_passed,
         acceptance_gate_criterion=acceptance_criterion,
         local_run_dir=run_dir,
