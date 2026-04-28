@@ -98,6 +98,53 @@ def check_run(name: str, entry: dict[str, Any], tol: float) -> int:
     return fails
 
 
+def check_test_score_structure(locked: dict[str, Any], tol: float) -> int:
+    """Check the locked stable/changing/gap means for the three CLIP-arch runs."""
+    fails = 0
+    block = locked.get("test_score_structure", {})
+    run_id_for = {
+        "exp006b_clip_linear": "ham10000-hf-clip-exp006b-v1",
+        "exp008_biomedclip_linear": "ham10000-hf-biomedclip-exp008-v1",
+        "exp007_dermlip_linear": "ham10000-hf-dermlip-exp007-v1",
+    }
+    try:
+        import numpy as np
+    except ImportError:
+        print("  SKIP  test_score_structure: numpy not available")
+        return 0
+    for run_key, run_id in run_id_for.items():
+        if run_key not in block:
+            continue
+        npz_path = (
+            MIRROR_ROOT / run_id
+            / "artifacts" / "embeddings" / "jepa_predictor_latents.npz"
+        )
+        if not npz_path.is_file():
+            print(f"  SKIP  {run_key} test_score_structure: latents missing")
+            continue
+        data = np.load(npz_path)
+        mask = data["split"] == "test"
+        score = data["score"][mask]
+        label = data["label"][mask]
+        stable_mean = float(score[label == "stable"].mean())
+        changing_mean = float(score[label == "changing"].mean())
+        gap = changing_mean - stable_mean
+        exp = block[run_key]
+        if not check_close(
+            f"{run_key} test stable mean", stable_mean, float(exp["stable_mean"]), tol
+        ):
+            fails += 1
+        if not check_close(
+            f"{run_key} test changing mean", changing_mean, float(exp["changing_mean"]), tol
+        ):
+            fails += 1
+        if not check_close(
+            f"{run_key} test stable/changing gap", gap, float(exp["gap"]), tol
+        ):
+            fails += 1
+    return fails
+
+
 def check_baseline(locked: dict[str, Any], tol: float) -> int:
     fails = 0
     expected = locked["baseline_strongest"]
@@ -131,6 +178,8 @@ def main() -> int:
     for name, entry in locked["runs"].items():
         print(f"[{name}]")
         total_fails += check_run(name, entry, tol)
+    print("[test_score_structure]")
+    total_fails += check_test_score_structure(locked, tol)
     print()
     if total_fails == 0:
         print("ALL CLAIMS VERIFIED ✓")

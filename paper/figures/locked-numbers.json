@@ -103,6 +103,24 @@
     "general_medical_to_dermoscopy_step": 0.62,
     "_doc": "Computed from seed-mean values where available. (BiomedCLIP 0.329 - OpenAI CLIP 0.286) and (DermLIP 0.944 - BiomedCLIP 0.329)."
   },
+  "test_score_structure": {
+    "_doc": "Mean cosine distance (predicted, target) on test pairs, broken out by stable vs changing. gap = mean(changing) - mean(stable); positive means correctly oriented. Computed by paper/figures/build_fig3.py from each run's jepa_predictor_latents.npz on the test split (n=1000 stable + 1000 changing).",
+    "exp006b_clip_linear": {
+      "stable_mean": 0.2812, "stable_std": 0.0687,
+      "changing_mean": 0.2325, "changing_std": 0.0537,
+      "gap": -0.0486
+    },
+    "exp008_biomedclip_linear": {
+      "stable_mean": 0.2862, "stable_std": 0.0582,
+      "changing_mean": 0.2527, "changing_std": 0.0655,
+      "gap": -0.0335
+    },
+    "exp007_dermlip_linear": {
+      "stable_mean": 0.2356, "stable_std": 0.0359,
+      "changing_mean": 0.3463, "changing_std": 0.0654,
+      "gap": 0.1107
+    }
+  },
   "tolerance": {
     "auroc": 0.001,
     "ci": 0.001

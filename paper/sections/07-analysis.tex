@@ -11,11 +11,14 @@ $\{\strongfam, \strongholdone\}$'' as small $\langle w, z_{t} - z_{c} \rangle$,
 and this direction extrapolates with the \emph{opposite} sign when the unseen
 family \strongholdtwo\ rotates the latent geometry the other way. Because the
 third family's nuisance is operation-disjoint from the training families, the
-rotation does not partially align --- it anti-aligns. Pair-score
-histograms on the test split (mirrored at \texttt{<run\_id>/figures/}
-under \runarchive\ for every run) show this directly: stable pairs
-receive higher predicted-target cosine distance than changing pairs,
-and the inversion is large enough that $\auroc$ sits in the
+rotation does not partially align --- it anti-aligns. Figure~\ref{fig:pair-score-histograms}
+shows this structure directly: under frozen OpenAI CLIP, the test-split
+stable-pair mean cosine distance ($0.281$) sits \emph{above} the
+changing-pair mean ($0.233$), a $-0.049$ inversion gap. Under
+BiomedCLIP, the gap narrows to $-0.034$. Under DermLIP, the ordering
+flips to the correct direction with a $+0.111$ gap (stable
+$0.236$, changing $0.346$). The natural-image inversion is large enough
+relative to the within-class spread that $\auroc$ sits in the
 $0.25$--$0.29$ band rather than at chance.
 
 \subsection{Why DermLIP transfers under this scaffold and BiomedCLIP doesn't}

@@ -18,7 +18,9 @@ PYTHON_FIG ?= uv run --with matplotlib python
 
 MAIN     := main
 SECTIONS := $(wildcard sections/*.tex)
-FIGURES  := figures/fig1-cross-backbone-gradient.pdf
+FIGURES  := figures/fig1-cross-backbone-gradient.pdf \
+            figures/fig2-train-vs-test-scatter.pdf \
+            figures/fig3-pair-score-histograms.pdf
 TABLES   := $(wildcard tables/*.tex)
 
 help:
@@ -40,6 +42,12 @@ figures: $(FIGURES)
 
 figures/fig1-cross-backbone-gradient.pdf: figures/build_fig1.py figures/locked-numbers.json
 	cd .. && $(PYTHON_FIG) paper/figures/build_fig1.py
+
+figures/fig2-train-vs-test-scatter.pdf: figures/build_fig2.py
+	cd .. && $(PYTHON_FIG) paper/figures/build_fig2.py
+
+figures/fig3-pair-score-histograms.pdf: figures/build_fig3.py
+	cd .. && $(PYTHON_FIG) paper/figures/build_fig3.py
 
 verify:
 	cd .. && $(PYTHON) paper/verify_claims.py

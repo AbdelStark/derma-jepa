@@ -19,10 +19,17 @@ BiomedCLIP \citep{zhang2023biomedclip} is a CLIP-style model trained on
 PMC-15M, $\sim$15 million figure--caption pairs from biomedical research
 articles. DermLIP \citep{yan2025derm1m} is a CLIP-style model trained on
 Derm1M, a $\sim$1 million dermatology image--text corpus that aggregates
-publicly available dermoscopy datasets and dermatology-website content. We use
-both as third-party frozen weights, not as artefacts to evaluate in their own
-right. The paper makes no claim about either model beyond the test $\auroc$
-each produces under our specific probe.
+publicly available dermoscopy datasets and dermatology-website content.
+A broader dermatology foundation-model line includes MONET
+\citep{kim2024monet} (image--text alignment over dermatology textbook
+figures and PubMed) and PanDerm \citep{yan2025panderm} (a multi-modal
+self-supervised model trained on $\sim$$2$M dermatology images);
+RETFound \citep{zhou2023retfound} is a comparable retinal foundation
+model whose evaluation protocol motivated some of our ablation
+choices. We use BiomedCLIP and DermLIP as third-party frozen weights,
+not as artefacts to evaluate in their own right; the paper makes no
+claim about either model beyond the test $\auroc$ each produces under
+our specific probe.
 
 \paragraph{Distribution-shift evaluation.}
 WILDS \citep{koh2021wilds} and the in-search-of-lost-DG framing
