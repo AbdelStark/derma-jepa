@@ -1,0 +1,76 @@
+{
+  "pass": 1,
+  "scope": "full_draft",
+  "scopes_touched": [
+    "00-abstract.tex", "01-introduction.tex", "02-related-work.tex",
+    "03-method.tex (§3.5)", "04-experimental-setup.tex (Table 4)",
+    "05-experimental-sequence.tex", "06-results.tex", "07-analysis.tex",
+    "F-compute-budget.tex", "G-reproducibility-checklist.tex",
+    "C-nuisance-operations.tex", "D-bootstrap-protocol.tex",
+    "E-representation-health.tex", "H-contamination-analysis.tex",
+    "tables/tab1-cross-run.tex", "tables/tab2-predictor-optimiser.tex",
+    "refs.bib", "figures/locked-numbers.json"
+  ],
+  "scores_before": {
+    "coverage": 68,
+    "relevance": 76,
+    "critical_analysis": 72,
+    "positioning": 70,
+    "organization": 74,
+    "citation_rigor": 64,
+    "overall": 71
+  },
+  "scores_after": {
+    "coverage": 68,
+    "relevance": 78,
+    "critical_analysis": 74,
+    "positioning": 70,
+    "organization": 78,
+    "citation_rigor": 74,
+    "overall": 75
+  },
+  "addressed_weaknesses": [
+    "W1: §6 / §G AUROC band scope reconciled with abstract / §7",
+    "W2: tab2 + §6 prose centre 0.255 → midpoint 0.259 with explicit interval [0.248, 0.270]",
+    "W3: §F en-dash ambiguity 'B/14--B/16' → 'B/14 and B/16'",
+    "W4: §3.5 expands AUROC, AUPRC, EER, FPR, TPR; §1 expands SSL and JEPA",
+    "W5: §C / §D / §E drop hard-coded source-file line numbers",
+    "W6: refs.bib yan2025derm1m title and authors corrected per arXiv 2503.14911",
+    "W7: refs.bib yan2025panderm → yan2024panderm with corrected title per arXiv 2410.15038",
+    "W8: image-text/figure-caption hyphens replaced with en-dash outside in-quote uses",
+    "W9: tab1 'std' → 'sd' for consistency with tab3",
+    "W10: §1 'clearly-scoped' → 'clearly scoped' (-ly adverb)",
+    "W11: tab2 'id.\\\\' → 'identity'",
+    "W12: refs.bib bommasani2021foundation orphan removed; bakhta2026dermajepa kept as preprint anchor",
+    "W13: §4 table caption defines 'Hugging Face (HF)' on first use",
+    "W14: §G 'NeurIPS / ML reproducibility template' → 'standard NeurIPS reproducibility template'",
+    "W15: tab1 EXP-001 train 0.999 → 1.000 (rounding consistency with test)",
+    "W16: tab1 EXP-007 Δ +0.364 → +0.363 (seed-mean basis, matching test cell); abstract and §1 updated; locked-numbers.json now has both delta_vs_strongest_seed_mean and delta_vs_strongest_single_seed"
+  ],
+  "deferred": [
+    "W17 (13% / 3.3% MSE deltas not in locked-numbers.json) — left as-is; the per-run training reports are on the run archive but not mirrored locally; would require a verifier extension and a re-upload of the per-run report file. Out of scope for this revision pass.",
+    "W18 (cosmetic line breaks across hyphenated compounds) — will move with any later text edit; no manual action."
+  ],
+  "actions_taken": [
+    "Rewrote §3.5 evaluation paragraph with full acronym expansions",
+    "Expanded SSL and JEPA on first use in §1",
+    "Reworded §6 figure-3 caption to clarify 0.25–0.33 spans natural-image and general-medical pretraining",
+    "Reworded §G reproducibility-checklist item likewise",
+    "Replaced §F ambiguous en-dash with explicit 'and'",
+    "Trimmed brittle source-file line numbers in §C, §D, §E",
+    "Corrected two bibliography titles + author lists, removed one orphan, updated cite key",
+    "Tightened tab2 row labels to keep the table within margin after the 'identity' expansion",
+    "Updated locked-numbers.json with separate seed-mean and single-seed delta fields",
+    "Re-ran verify_claims.py: 27/27 PASS at delta 0.0000",
+    "Rebuilt PDF: 22 pages, 573 KB, 0 overfull boxes, 0 errors, 0 undefined references"
+  ],
+  "failure_modes_checked": [
+    "mode_1_hallucinated_result (clean)",
+    "mode_4_methodology_fabrication (clean)",
+    "mode_5_frame_lock (clean)",
+    "mode_6_hallucinated_citation (W6 W7 fixed)"
+  ],
+  "axis_drop_check": "no axis dropped; citation_rigor +10, organization +4, critical_analysis +2, relevance +2; overall +4",
+  "accepted": true,
+  "post_revision_pdf": "paper/main.pdf (22 pp, 573 KB, commit pending)"
+}

@@ -5,8 +5,9 @@ Lesion monitoring is fundamentally a change-detection problem under heavy
 nuisance variation. Repeated photographs of the same skin lesion vary because
 of illumination, framing, hair occlusion, camera optics, and compression;
 clinically meaningful change is small relative to that nuisance envelope.
-Self-supervised representations are pitched as nuisance-invariant
-\citep{caron2021dino, oquab2024dinov2, radford2021clip}, with the JEPA family
+Self-supervised learning (SSL) representations are pitched as
+nuisance-invariant \citep{caron2021dino, oquab2024dinov2, radford2021clip},
+with the joint-embedding predictive architecture (JEPA) family
 \citep{lecun2022path, assran2023ijepa} explicitly framing prediction in
 representation space as the path to invariance. Our question is narrow:
 \emph{when a JEPA-style latent predictor over a frozen vision backbone is
@@ -62,7 +63,7 @@ with the contamination caveat marked on the right.
       Appendix~\ref{app:per-run}), test $\auroc$ on the held-out third
       family inverts below random.
 \item \textbf{Empirical (positive but unpartitioned).} Frozen DermLIP reaches
-      test $\auroc = 0.944 \pm 0.003$ across $5$ seeds, $+0.364$ above the
+      test $\auroc = 0.944 \pm 0.003$ across $5$ seeds, $+0.363$ above the
       strongest baseline. The win cannot yet be attributed to dermoscopy-
       domain transfer rather than HAM10000 image-level overlap;
       EXP-009 (\S\ref{sec:followup}) would be one way to close the
@@ -75,7 +76,7 @@ with the contamination caveat marked on the right.
       \runarchive\ with manifests, embeddings, metrics, model card, and logs.
       A single launcher script reproduces each run end-to-end on a free A10G
       via Hugging Face Jobs.
-\item \textbf{A clearly-scoped open question.} A candidate partition
+\item \textbf{A clearly scoped open question.} A candidate partition
       experiment (EXP-009) and the decision table that would attach to
       it are stated up front (\S\ref{sec:followup}) rather than treated
       as future work in passing.

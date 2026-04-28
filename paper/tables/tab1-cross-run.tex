@@ -8,7 +8,7 @@
 \toprule
 Run & Backbone & Predictor & Opt. & Train $\auroc$ & Test $\auroc$ & $\Delta$ \\
 \midrule
-EXP-001  & DINOv2 ViT-B/14    & linear  & SGD  & $0.999$ & $1.000$            & $0.000$ \\
+EXP-001  & DINOv2 ViT-B/14    & linear  & SGD  & $1.000$ & $1.000$            & $0.000$ \\
 EXP-002  & DINOv2 ViT-B/14    & linear  & SGD  & $0.953$ & $0.920$            & $+0.269$ \\
 EXP-003  & DINOv2 ViT-B/14    & linear  & SGD  & $0.953$ & $0.680$            & $-0.281$ \\
 EXP-004  & DINOv2 ViT-B/14    & linear  & SGD  & $0.900$ & $0.249$            & $-0.331$ \\
@@ -16,7 +16,7 @@ EXP-005  & DINOv2 ViT-B/14    & MLP     & SGD  & $0.572$ & $0.270$            & 
 EXP-006a & DINOv2 ViT-B/14    & MLP     & Adam & $0.893$ & $0.248$            & $-0.332$ \\
 EXP-006b & OpenAI CLIP B/16   & linear  & SGD  & $0.986$ & $0.286$            & $-0.294$ \\
 EXP-008  & BiomedCLIP B/16    & linear  & SGD  & $0.912$\textsuperscript{\dag} & $\mathbf{0.329 \pm 0.012}$\textsuperscript{\ddag} & $-0.252$ \\
-EXP-007  & DermLIP B/16\textsuperscript{$\star$}    & linear  & SGD  & $1.000$ & $\mathbf{0.944 \pm 0.003}$\textsuperscript{\ddag} & $\mathbf{+0.364}$ \\
+EXP-007  & DermLIP B/16\textsuperscript{$\star$}    & linear  & SGD  & $1.000$ & $\mathbf{0.944 \pm 0.003}$\textsuperscript{\ddag} & $\mathbf{+0.363}$ \\
 \bottomrule
 \end{tabular}
 \caption{Cross-run results on the EXP-004 proxy (HAM10000,
@@ -25,7 +25,7 @@ per split). Test column is $\auroc$ on \strongholdtwo; $\Delta$ is
 versus the strongest cheap baseline on each split (pixel L2 $= 0.580$
 for EXP-004 onward; SSIM or DINOv2-S cosine in earlier runs).
 \textsuperscript{\dag} Seed-mean of the BiomedCLIP train $\auroc$ across
-five seeds. \textsuperscript{\ddag} Mean $\pm$ std across five seeds.
+five seeds. \textsuperscript{\ddag} Mean $\pm$ sd across five seeds.
 \textsuperscript{$\star$} Derm1M almost certainly contains HAM10000 raw
 images; the resulting positive cannot be attributed to dermoscopy-domain
 transfer with the experiments reported here (\S\ref{sec:followup}).}

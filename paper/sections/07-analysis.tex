@@ -28,7 +28,7 @@ The $+0.66$ $\auroc$ swing from EXP-006b (OpenAI CLIP) to EXP-007 (DermLIP)
 cannot be explained by architecture, scaffold, or optimiser: all three are
 held byte-identical. The plausible mechanistic accounts are
 \begin{enumerate}[label=(\roman*)]
-\item DermLIP's CLIP loss over $\sim$1\,M dermatology image-text pairs has
+\item DermLIP's CLIP loss over $\sim$1\,M dermatology image--text pairs has
       organised the embedding space such that a single linear direction
       captures stable-pair similarity across all three nuisance families
       uniformly, including \strongholdtwo; or
@@ -37,7 +37,7 @@ held byte-identical. The plausible mechanistic accounts are
       survives the synthetic post-hoc nuisance.
 \end{enumerate}
 EXP-008 rules out a third candidate --- ``any medical-image pretraining'' ---
-by showing that BiomedCLIP, trained on $\sim$15\,M PMC-15M figure-caption
+by showing that BiomedCLIP, trained on $\sim$15\,M PMC-15M figure--caption
 pairs without HAM10000, lifts test $\auroc$ by only $+0.04$ over web CLIP.
 EXP-008 cannot, however, choose between (i) and (ii). EXP-009 (a
 non-HAM10000 dermoscopy SSL pretrain, \S\ref{sec:followup}) is the

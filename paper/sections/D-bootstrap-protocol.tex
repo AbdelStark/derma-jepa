@@ -3,10 +3,9 @@
 
 Every $\auroc$ in the paper is reported with a $1{,}000$-sample
 percentile bootstrap $95\%$ confidence interval. The implementation is
-at \path{src/derma_jepa/metrics.py:66}
-(\path{bootstrap_auroc_ci}); the unit tests at
-\path{tests/test_metrics.py} cover the AUROC point estimate, the
-bootstrap CI shape, the equal-error-rate threshold, and the
+\path{bootstrap_auroc_ci} in \path{src/derma_jepa/metrics.py}; the
+unit tests at \path{tests/test_metrics.py} cover the AUROC point
+estimate, the bootstrap CI shape, the EER threshold, and the
 FPR-at-fixed-TPR computation.
 
 \paragraph{Resampling unit.} The resampling unit is the pair: each

@@ -27,9 +27,9 @@ image-level overlap (\S\ref{sec:followup}).}
 Table~\ref{tab:predictor-optimiser} isolates the predictor $\times$
 optimiser axis under frozen DINOv2 ViT-B/14: across linear and MLP
 predictors, under SGD and Adam, with train $\auroc$ ranging from
-$0.572$ to $0.900$, test $\auroc$ on \strongholdtwo\ stays in a
-$\pm 0.011$ band around $0.255$. Scaffold capacity is not the
-bottleneck.
+$0.572$ to $0.900$, test $\auroc$ on \strongholdtwo\ stays in
+$[0.248, 0.270]$ (a $\pm 0.011$ half-range around the midpoint
+$0.259$). Scaffold capacity is not the bottleneck.
 
 \input{tables/tab2-predictor-optimiser}
 
@@ -66,8 +66,9 @@ and the observed target, so a correctly oriented predictor places
 BiomedCLIP exhibit the inverted ordering --- stable mean above changing
 mean by $0.049$ and $0.034$ respectively --- while DermLIP separates
 them by $+0.111$ in the correct direction. The structural inversion
-visible here is the mechanism that pushes test $\auroc$ to
-$0.25$--$0.33$ rather than to chance.
+visible here is the mechanism that holds test $\auroc$ to
+$0.25$--$0.33$ across natural-image and general-medical pretraining
+rather than at chance.
 
 \begin{figure}[h]
 \centering

@@ -45,14 +45,14 @@ DINOv2-specific.
 
 \paragraph{EXP-007 --- pretraining-domain ablation.} Replacing OpenAI CLIP
 with DermLIP --- the same ViT-B/16 architecture CLIP-trained on Derm1M
-dermatology image-text pairs instead of OpenAI WIT web image-text pairs ---
+dermatology image--text pairs instead of OpenAI WIT web image--text pairs ---
 produces test $\auroc = 0.945$ (single seed). The train$\to$test drop
 collapses from $-0.70$ (EXP-006b) to $-0.05$. \emph{This is the only
 above-random result on \strongholdtwo\ across the nine runs.} We
 introduce the contamination caveat here and pursue it in EXP-008.
 
 \paragraph{EXP-008 --- pretraining-domain partition.} Replacing DermLIP
-with BiomedCLIP --- ViT-B/16 CLIP-trained on PMC-15M biomedical figure-caption
+with BiomedCLIP --- ViT-B/16 CLIP-trained on PMC-15M biomedical figure--caption
 pairs, which do \emph{not} include HAM10000 --- produces test
 $\auroc = 0.325$ (single seed). The web $\to$ general-medical step adds
 $+0.04$ $\auroc$; the general-medical $\to$ dermoscopy step adds $+0.62$.

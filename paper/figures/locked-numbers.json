@@ -77,7 +77,8 @@
       "single_seed_test_auroc": 0.9447,
       "raw_cosine_auroc": 0.1090,
       "n_seeds": 5,
-      "delta_vs_strongest": 0.3645
+      "delta_vs_strongest_seed_mean": 0.3633,
+      "delta_vs_strongest_single_seed": 0.3645
     },
     "exp008_biomedclip_linear": {
       "run_id": "ham10000-hf-biomedclip-exp008-v1",
@@ -95,7 +96,8 @@
       "single_seed_test_auroc": 0.3247,
       "raw_cosine_auroc": 0.0472,
       "n_seeds": 5,
-      "delta_vs_strongest": -0.2556
+      "delta_vs_strongest_seed_mean": -0.2516,
+      "delta_vs_strongest_single_seed": -0.2556
     }
   },
   "gradient": {

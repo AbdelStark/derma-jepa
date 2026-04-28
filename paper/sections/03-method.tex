@@ -108,10 +108,13 @@ and test stable pairs use \strongholdtwo\ exclusively.
 \subsection{Evaluation protocol}
 \label{sec:method:eval}
 
-We report $\auroc$ as the primary metric, with $1{,}000$-sample bootstrap
-$95\%$ confidence intervals computed by per-pair resampling. AUPRC, equal-
-error-rate threshold, and FPR at fixed TPR $= 0.8$ accompany every run, as do
-three representation-health checks: prediction-norm mean and minimum,
-dimension-variance mean and minimum, and a binary \texttt{collapsed} flag
-triggered when either falls below $10^{-8}$. None of the nine reported runs
-is flagged as collapsed.
+We report the area under the receiver-operating-characteristic curve
+($\auroc$) as the primary metric, with $1{,}000$-sample bootstrap
+$95\%$ confidence intervals computed by per-pair resampling. The area
+under the precision--recall curve (AUPRC), the equal-error-rate (EER)
+threshold, and the false-positive rate (FPR) at fixed true-positive
+rate (TPR) $= 0.8$ accompany every run, as do three representation-
+health checks: prediction-norm mean and minimum, dimension-variance
+mean and minimum, and a binary \texttt{collapsed} flag triggered when
+either falls below $10^{-8}$. None of the nine reported runs is
+flagged as collapsed.

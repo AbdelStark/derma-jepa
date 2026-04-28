@@ -1,0 +1,223 @@
+% DermaJEPA preprint — pre-publication peer review
+% Three-agent parallel audit: citations, numbers/notation, editorial
+% Date: 2026-04-28 12:54 UTC. Reviewer: paper-review skill.
+
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{enumitem}
+\setlist{noitemsep, topsep=2pt}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\title{Pre-publication peer review of \emph{Frozen-backbone JEPA-style probes
+       on HAM10000} (commit \texttt{ae4bc79})}
+\author{Three-agent audit (citations $\parallel$ numbers $\parallel$ editorial)}
+\date{2026-04-28}
+
+\begin{document}
+\maketitle
+
+\section*{Overall assessment}
+
+The manuscript is a credible, careful preliminary report. The
+nine-experiment arc is internally coherent; the contamination caveat is
+front-loaded; the numbers verify (27/27 against \texttt{verify\_claims.py}
+at delta $0.0000$); the layout is now clean (zero overfull boxes). The
+review surfaces \textbf{zero blockers}, \textbf{seven major}, and
+\textbf{eleven minor} issues, summarised below. Recommended action
+before publication: \textbf{minor revision} with the major issues fixed
+in-line.
+
+\section{Major findings}
+
+\subsection*{M1 (numerics) --- inconsistent scope on the natural-image
+            AUROC band}
+\textbf{Location.} \texttt{00-abstract.tex:11} and
+\texttt{07-analysis.tex:22} say ``$0.25$--$0.29$''.
+\texttt{06-results.tex:70} and
+\texttt{G-reproducibility-checklist.tex:41} say ``$0.25$--$0.33$''.\\
+\textbf{Problem.} The two ranges describe \emph{different config sets}
+(natural-image vs natural-image $+$ general-medical). A reader sees
+inconsistent numbers without scope qualifier.\\
+\textbf{Fix.} Re-anchor \texttt{06-results.tex:70} and \texttt{G-...:41}
+to ``$0.25$--$0.33$ across natural-image and general-medical
+pretraining'', or unify on ``$0.25$--$0.29$'' for the natural-image
+band only.
+
+\subsection*{M2 (numerics) --- Table 2 ``$\pm 0.011$ band around
+            $0.255$'' has the wrong centre}
+\textbf{Location.} \texttt{tab2-predictor-optimiser.tex:20}, mirrored at
+\texttt{06-results.tex:31}.\\
+\textbf{Problem.} Tests are $0.249, 0.270, 0.248$. Min/max are
+$0.248, 0.270$; midpoint $= 0.259$, half-range $= 0.011$. The paper
+states ``$\pm 0.011$ band around $0.255$''. The half-range is right;
+the centre is off by $+0.004$.\\
+\textbf{Fix.} ``$\pm 0.011$ band around $0.259$'' or, more precisely,
+``in $[0.248, 0.270]$''.
+
+\subsection*{M3 (editorial) --- ambiguous en-dash in
+            \texttt{F-compute-budget.tex:11}}
+\textbf{Location.} \texttt{F-compute-budget.tex:11}: ``$\sim$10~min for
+ViT-B/14--B/16 backbones.''\\
+\textbf{Problem.} The en-dash reads as a range (``B/14 \emph{to}
+B/16''); intended reading is ``B/14 \emph{and} B/16''.\\
+\textbf{Fix.} Replace with ``ViT-B/14 and ViT-B/16''.
+
+\subsection*{M4 (editorial) --- five undefined or under-defined
+            acronyms}
+\textbf{Location.} Throughout. AUROC (used via \texttt{\textbackslash auroc}
+macro), AUPRC, FPR, TPR, SSL.\\
+\textbf{Problem.} Academic publishing convention requires expansion on
+first use. None of the five is currently expanded.\\
+\textbf{Fix.} Expand at the natural anchor, \texttt{03-method.tex} \S3.5
+(``Evaluation protocol''):
+\begin{quote}\small
+We report \emph{area under the receiver-operating-characteristic curve}
+(\textsc{auroc}) as the primary metric, with $1{,}000$-sample bootstrap
+$95\%$ confidence intervals computed by per-pair resampling. AUPRC
+(area under the precision--recall curve), the equal-error-rate (EER)
+threshold, and the false-positive rate (FPR) at fixed true-positive
+rate (TPR) $= 0.8$ accompany every run\dots
+\end{quote}
+SSL (self-supervised learning) should be expanded on first use in
+\S\ref{sec:followup} or \texttt{01-introduction.tex:9} (paragraph
+``Self-supervised representations\dots'').
+
+\subsection*{M5 (editorial) --- brittle source-file line numbers}
+\textbf{Location.} \texttt{C-nuisance-operations.tex:6--8} (``line 751'',
+``line 829'', ``line 494''),
+\texttt{D-bootstrap-protocol.tex:6} (``\texttt{src/derma\_jepa/metrics.py:66}''),
+\texttt{E-representation-health.tex:5}
+(``\texttt{src/derma\_jepa/training.py:479}'').\\
+\textbf{Problem.} Hard-coded source-file line numbers in published
+prose silently rot when the source evolves. They are not part of any
+verification harness.\\
+\textbf{Fix.} Drop the explicit line numbers; keep the function names.
+The reader can navigate via the function name.
+
+\subsection*{M6 (citations) --- \texttt{yan2025derm1m} title and authors}
+\textbf{Location.} \texttt{refs.bib:65--71}.\\
+\textbf{Problem.} Bib title is \emph{Derm1M: A Million-scale
+Vision-Language Dataset for Dermatology Foundation Models}. The arXiv
+title (verified at \href{https://arxiv.org/abs/2503.14911}{2503.14911})
+is \emph{Derm1M: A Million-scale Vision-Language Dataset Aligned with
+Clinical Ontology Knowledge for Dermatology}.\\
+\textbf{Fix.} Replace with the verified title; expand the author list
+(at minimum first three): Yan, Hu, Jiang.
+
+\subsection*{M7 (citations) --- \texttt{yan2025panderm} title and year}
+\textbf{Location.} \texttt{refs.bib:141--148}.\\
+\textbf{Problem.} Bib title says \emph{PanDerm: a multimodal dermatology
+foundation model trained on a million dermatology images}. The arXiv
+title (verified at
+\href{https://arxiv.org/abs/2410.15038}{2410.15038}) is
+\emph{A Multimodal Vision Foundation Model for Clinical Dermatology}.
+The cite key encodes year 2025; first arXiv submission is October 2024.\\
+\textbf{Fix.} Replace title with the verified one. Either keep the
+\texttt{yan2025panderm} key with year $= 2024$ (acknowledging the v3
+was 2025) or rename to \texttt{yan2024panderm}.
+
+\section{Minor findings}
+
+\begin{enumerate}[leftmargin=2em]
+\item \textbf{en-dash for compound nouns.} \texttt{05-experimental-sequence.tex:48,55};
+      \texttt{07-analysis.tex:31,40};
+      \texttt{H-contamination-analysis.tex:52} use hyphen ``image-text''
+      and ``figure-caption''; \S2 and \S H quotes use the en-dash form
+      ``image--text'' / ``figure--caption''. Replace hyphens with
+      \texttt{--} for consistency (skip the in-quote occurrence).
+\item \textbf{std vs sd.} \texttt{tab1-cross-run.tex:28} caption uses
+      ``std''; \texttt{tab3-seed-sweep.tex:9} column header uses ``sd''.
+      Pick one; recommend ``sd''.
+\item \textbf{\texttt{clearly-scoped} unhyphenated.}
+      \texttt{01-introduction.tex:78}: ``\texttt{\textbackslash textbf\{A
+      clearly-scoped open question.\}}''. The \texttt{-ly}-adverb plus
+      adjective takes no hyphen. Fix to ``A clearly scoped\dots''.
+\item \textbf{\texttt{id.\textbackslash} abbreviation.}
+      \texttt{tab2-predictor-optimiser.tex:11}: ``linear (id.\textbackslash\
+      warm-start)''. Spell out: ``linear (identity warm-start)''.
+\item \textbf{Orphan bib entries.} \texttt{bommasani2021foundation} and
+      \texttt{bakhta2026dermajepa} are in \texttt{refs.bib} but never
+      \texttt{\textbackslash cite}'d. Remove or use them.
+\item \textbf{Undefined ``HF'' acronym.}
+      \texttt{04-experimental-setup.tex} (Table~\ref{tab:backbones}
+      header) and \texttt{G-reproducibility-checklist.tex:14} use ``HF
+      Hub'' before ``Hugging Face'' is defined as an acronym. Either
+      expand to ``Hugging Face Hub'' or define ``Hugging Face (HF)''
+      on first use.
+\item \textbf{ML acronym in \S G.}
+      \texttt{G-reproducibility-checklist.tex:4}: ``the standard NeurIPS /
+      ML reproducibility template''. Spell ``ML'' out, or drop it
+      (``the standard NeurIPS reproducibility template'').
+\item \textbf{Tab 1 EXP-001 train rounding.}
+      \texttt{tab1-cross-run.tex:11}: train $= 0.999$, test $= 1.000$
+      from raw $0.99985 / 0.99981$. Both round to $1.000$. The current
+      asymmetric truncation reads as if the model was a hair below
+      ceiling on training; harmless but inconsistent.
+      Fix: train $= 1.000$.
+\item \textbf{Tab 1 $\Delta$ basis for EXP-007.}
+      \texttt{tab1-cross-run.tex:19}: ``$+0.364$''. The seed-mean
+      $\Delta$ is $0.9435 - 0.5802 = +0.3633 \to +0.363$; the
+      single-seed $\Delta$ is $0.9447 - 0.5802 = +0.3645 \to +0.364$.
+      The test cell uses seed-mean; the $\Delta$ should be computed on
+      the same basis. Fix: $+0.364 \to +0.363$. (EXP-008 row already
+      uses the seed-mean basis at $-0.252$.)
+\item \textbf{Caption parallelism.} \texttt{07-analysis.tex:51--52}:
+      ``Reporting both metrics is essential, and headline-AUROC
+      comparisons should not be replaced by loss-only comparisons''
+      reads as a normative statement; consider ``We therefore report
+      both''.
+\item \textbf{Reflow cosmetic.} A handful of hyphenated compounds
+      (\texttt{deterministic-augmentation}, \texttt{dermoscopy-domain},
+      \texttt{general-medical}) line-break across the hyphen. Cosmetic
+      only; will move with any later text edit.
+\end{enumerate}
+
+\section{Devil's-advocate sweep (bounded)}
+
+We probed the manuscript for load-bearing claims that are not robustly
+supported by the reported evidence.
+
+\begin{itemize}[leftmargin=2em]
+\item \textbf{Foundation Collapse} --- not detected. The headline claim
+      is conditional and explicitly caveated: ``\$\$0.944 \pm 0.003\$\$
+      under the protocol of \S\ref{sec:method}, with HAM10000
+      contamination unpartitioned'' is a defensible, narrowly-scoped
+      assertion.
+\item \textbf{Logic Chain Break} --- not detected. The chain
+      ``natural-image inversion $\to$ general-medical doesn't lift
+      $\to$ dermoscopy lifts $\to$ but only with HAM10000-likely
+      contamination'' is internally consistent.
+\item \textbf{Data--Conclusion Mismatch} --- one minor: the abstract's
+      ``$+0.66$ end-to-end swing concentrated in the dermoscopy step
+      ($+0.62$ of $+0.66$)'' implies a clean three-point gradient. The
+      DINOv2 ViT-B/14 cell at $0.249$ is in the aggregate but not on
+      the architecture-held-constant ladder (DINOv2 is ViT-B/14, the
+      ladder is ViT-B/16). The abstract already qualifies this with
+      ``Holding architecture (ViT-B/16) and predictor (linear)
+      constant'', so the data does support the claim. No change
+      recommended; flagged only for transparency.
+\item \textbf{Stronger Counter-Narrative} --- the central
+      counter-narrative (HAM10000 image-level overlap drives the
+      DermLIP positive entirely) is the manuscript's own contamination
+      caveat, with EXP-009 sketched as the partition. The paper handles
+      this honestly.
+\end{itemize}
+
+The adversarial pass therefore lowers no score.
+
+\section{Highest-priority fixes (top 7)}
+
+\begin{enumerate}[leftmargin=2em]
+\item M1 --- reconcile $0.25$--$0.29$ vs $0.25$--$0.33$ scope.
+\item M2 --- correct ``$\pm 0.011$ band around $0.255$'' to $0.259$
+      (or use $[0.248, 0.270]$).
+\item M3 --- replace ambiguous \texttt{ViT-B/14--B/16} with ``and''.
+\item M4 --- expand AUROC, AUPRC, FPR, TPR, SSL on first use.
+\item M5 --- drop hard-coded source-file line numbers in \S C, \S D, \S E.
+\item M6, M7 --- correct DermLIP and PanDerm bib entries.
+\item Minor 8--9 --- consistent en-dash for ``image--text'' /
+      ``figure--caption''; pick std xor sd.
+\end{enumerate}
+
+\end{document}
