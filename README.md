@@ -358,8 +358,8 @@ This is a research artefact, not diagnostic, not medical advice, and not validat
 If you use this code or the run archive, please cite:
 
 ```bibtex
-@misc{derma-jepa-2026,
-  author = {AbdelStark},
+@misc{bakhta2026dermajepa,
+  author = {Bakhta, Abdelhamid},
   title  = {DermaJEPA: Frozen-backbone JEPA-style probes for dermoscopic
             longitudinal-proxy generalisation on HAM10000},
   year   = {2026},
@@ -380,4 +380,4 @@ This project depends on weights and datasets released by Meta AI Research (DINOv
 
 ## License
 
-This repository is released under the [MIT License](LICENSE). Copyright © 2026 AbdelStark. Third-party model weights and datasets retain their own licences (CC-BY-NC 4.0 for DermLIP; MIT for BiomedCLIP; the HAM10000 dataset terms; the DINOv2 and OpenAI CLIP weight licences). Verify each upstream licence before downstream use.
+This repository is released under the [MIT License](LICENSE). Copyright © 2026 Abdelhamid Bakhta. Third-party model weights and datasets retain their own licences (CC-BY-NC 4.0 for DermLIP; MIT for BiomedCLIP; the HAM10000 dataset terms; the DINOv2 and OpenAI CLIP weight licences). Verify each upstream licence before downstream use.

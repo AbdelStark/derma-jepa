@@ -353,4 +353,4 @@ The next step after EXP-006a is a medical-domain backbone (§7).
 
 | Date (UTC) | Author | Change |
 |---|---|---|
-| 2026-04-24 | AbdelStark + Claude Code | Initial report; run completed on commit `bc414c6` after a transformers-5.x CLIP API fix. |
+| 2026-04-24 | Abdelhamid Bakhta | Initial report; run completed on commit `bc414c6` after a transformers-5.x CLIP API fix. |

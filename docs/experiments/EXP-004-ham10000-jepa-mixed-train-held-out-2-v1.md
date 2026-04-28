@@ -488,4 +488,4 @@ concretely scoped next experiment rather than a vague gesture.
 
 | Date (UTC) | Author | Change |
 |---|---|---|
-| 2026-04-23 | AbdelStark + Claude Code | Initial report; run completed on `3b1e6ec`, bottleneck identified as linear-over-frozen-DINOv2, EXP-005 scope locked. |
+| 2026-04-23 | Abdelhamid Bakhta | Initial report; run completed on `3b1e6ec`, bottleneck identified as linear-over-frozen-DINOv2, EXP-005 scope locked. |

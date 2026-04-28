@@ -564,4 +564,4 @@ faithful to `docs/spec/MVP-SPEC.md`:
 
 | Date (UTC) | Author | Change |
 |---|---|---|
-| 2026-04-22 | AbdelStark + Claude Code | Initial report; run completed and analyzed. |
+| 2026-04-22 | Abdelhamid Bakhta | Initial report; run completed and analyzed. |

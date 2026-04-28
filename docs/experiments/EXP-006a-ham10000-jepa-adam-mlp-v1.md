@@ -323,4 +323,4 @@ Expected top line: `auroc: 0.2480`, `strongest_baseline: pixel_l2 = 0.5802`, `de
 
 | Date (UTC) | Author | Change |
 |---|---|---|
-| 2026-04-24 | AbdelStark + Claude Code | Initial report. Run completed on commit `bc414c6`, launched in parallel with EXP-006b. EXP-007 scope locked to medical-domain backbone or domain-adaptation pretrain. |
+| 2026-04-24 | Abdelhamid Bakhta | Initial report. Run completed on commit `bc414c6`, launched in parallel with EXP-006b. EXP-007 scope locked to medical-domain backbone or domain-adaptation pretrain. |

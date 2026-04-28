@@ -363,4 +363,4 @@ EXP-008 partitions the EXP-007 win between "any medical pretraining" and "this-d
 
 | Date (UTC) | Author | Change |
 |---|---|---|
-| 2026-04-27 | AbdelStark + Claude Code | Initial report. Run completed on commit `ba3afce` after open_clip integration. First above-random `strong_held_out_2` result since EXP-002. EXP-008 scope locked to BiomedCLIP partition experiment. |
+| 2026-04-27 | Abdelhamid Bakhta | Initial report. Run completed on commit `ba3afce` after open_clip integration. First above-random `strong_held_out_2` result since EXP-002. EXP-008 scope locked to BiomedCLIP partition experiment. |

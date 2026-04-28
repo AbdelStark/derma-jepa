@@ -506,4 +506,4 @@ caveats get addressed by the next experiment rather than hidden.
 
 | Date (UTC) | Author | Change |
 |---|---|---|
-| 2026-04-24 | AbdelStark + Claude Code | Initial report; run completed on `47cbafe`. EXP-006 scope locked: Adam-tuned MLP + DINOv2→OpenCLIP backbone swap. |
+| 2026-04-24 | Abdelhamid Bakhta | Initial report; run completed on `47cbafe`. EXP-006 scope locked: Adam-tuned MLP + DINOv2→OpenCLIP backbone swap. |

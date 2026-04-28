@@ -137,4 +137,4 @@ A seed sweep on EXP-009 itself (matching this protocol — 5 seeds, parallel) sh
 
 | Date (UTC) | Author | Change |
 |---|---|---|
-| 2026-04-27 | AbdelStark + Claude Code | Initial summary. 5 seeds per configuration, 10 runs total. Both headlines and the partition gradient survive seed variance with std 0.003 (EXP-007) / 0.012 (EXP-008). EXP-009 (non-HAM10000 dermoscopy SSL pretrain) unblocked. |
+| 2026-04-27 | Abdelhamid Bakhta | Initial summary. 5 seeds per configuration, 10 runs total. Both headlines and the partition gradient survive seed variance with std 0.003 (EXP-007) / 0.012 (EXP-008). EXP-009 (non-HAM10000 dermoscopy SSL pretrain) unblocked. |

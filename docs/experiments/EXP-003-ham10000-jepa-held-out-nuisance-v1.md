@@ -503,4 +503,4 @@ any single positive result would be.
 
 | Date (UTC) | Author | Change |
 |---|---|---|
-| 2026-04-23 | AbdelStark + Claude Code | Initial report; run completed on `c34c398`, analysis written, joint-reading with EXP-002 scoped. |
+| 2026-04-23 | Abdelhamid Bakhta | Initial report; run completed on `c34c398`, analysis written, joint-reading with EXP-002 scoped. |

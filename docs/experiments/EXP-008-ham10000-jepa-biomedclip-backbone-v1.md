@@ -340,4 +340,4 @@ EXP-009 partitions dermoscopy-domain transfer from HAM10000 contamination.
 
 | Date (UTC) | Author | Change |
 |---|---|---|
-| 2026-04-27 | AbdelStark + Claude Code | Initial report. Run completed on commit `c741632`. Three-way pretraining-data ablation (web / general-medical / dermoscopy) closed; gradient monotone but non-uniform. EXP-007 claim narrowed from "domain-aligned medical pretraining unlocks JEPA" to "dermoscopy-specific pretraining unlocks JEPA, with HAM10000 contamination unpartitioned." EXP-009 scope locked to a non-HAM10000 dermoscopy SSL pretrain. |
+| 2026-04-27 | Abdelhamid Bakhta | Initial report. Run completed on commit `c741632`. Three-way pretraining-data ablation (web / general-medical / dermoscopy) closed; gradient monotone but non-uniform. EXP-007 claim narrowed from "domain-aligned medical pretraining unlocks JEPA" to "dermoscopy-specific pretraining unlocks JEPA, with HAM10000 contamination unpartitioned." EXP-009 scope locked to a non-HAM10000 dermoscopy SSL pretrain. |
