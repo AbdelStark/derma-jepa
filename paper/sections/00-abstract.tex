@@ -4,18 +4,21 @@ probe this on a leakage-controlled HAM10000 longitudinal proxy with three
 disjoint synthetic nuisance families --- partitioned along the deterministic-
 augmentation axis --- training a JEPA-style latent predictor on stable pairs
 from two of three families and evaluating on the third unseen family. We report
-a preliminary nine-experiment arc. Across two frozen natural-image backbones
-(DINOv2 ViT-B/14, OpenAI CLIP ViT-B/16), three predictor scaffolds (linear,
-underfit MLP, fit MLP under Adam), and two optimisers (SGD, Adam), test
-$\auroc$ on the held-out family is $0.25$--$0.29$ --- below random and below
-cheap baselines (pixel L2, SSIM, raw embedding cosine). A frozen general-medical
+a preliminary nine-experiment arc. Across four frozen-natural-image
+configurations spanning two backbones (DINOv2 ViT-B/14, OpenAI CLIP
+ViT-B/16), two predictor scaffolds (linear with identity warm-start,
+2-layer identity-residual MLP), and two optimisers (SGD, Adam), test
+$\auroc$ on the held-out family lands in $0.25$--$0.29$ --- below random
+and below cheap baselines (pixel L2, SSIM, raw embedding cosine). A frozen general-medical
 backbone (BiomedCLIP, PMC-15M, no HAM10000) lifts test $\auroc$ by only $+0.04$
 to $0.329 \pm 0.012$ across $5$ seeds. A frozen dermoscopy-pretrained backbone
 (DermLIP, Derm1M) lifts test $\auroc$ to $\mathbf{0.944 \pm 0.003}$ across $5$
 seeds, $+0.364$ above the strongest baseline and the only above-random result on
 the held-out family across nine runs. Holding architecture (ViT-B/16) and
-predictor (linear) constant, varying only the pretraining-data domain produces a
-$+0.66$ $\auroc$ swing localised to the dermoscopy-specific step.
+predictor (linear) constant, varying only the pretraining-data domain
+produces a $+0.66$ end-to-end $\auroc$ swing (web $\to$ dermoscopy)
+that is concentrated in the dermoscopy-specific step ($+0.62$ of $+0.66$,
+with the residual $+0.04$ at the web $\to$ general-medical step).
 \textbf{We explicitly do not claim that this swing is dermoscopy-domain
 transfer}: DermLIP's Derm1M corpus almost certainly contains HAM10000, and the
 experiments reported here cannot separate dermoscopy-domain transfer from

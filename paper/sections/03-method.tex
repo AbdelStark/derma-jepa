@@ -19,18 +19,27 @@ A \emph{changing} pair pairs two distinct lesions $u_{1}, u_{2}$ matched on
 diagnosis $\mathrm{dx}(u_{1}) = \mathrm{dx}(u_{2})$ and anatomical site
 $\mathrm{site}(u_{1}) = \mathrm{site}(u_{2})$; each side receives an
 independent nuisance draw. The predictor $g_{\theta} : \mathbb{R}^{d} \to
-\mathbb{R}^{d}$ minimises the L2-MSE objective on stable training pairs, with
-a soft \texttt{weight $-$ I} regulariser holding the function near the
-identity at initialisation:
+\mathbb{R}^{d}$ minimises the L2-MSE objective on stable training pairs:
 \begin{equation}
   \mathcal{L}(\theta) \;=\; \frac{1}{|\mathcal{D}_{\mathrm{train}}^{\mathrm{stable}}|}\!\!
   \sum_{(x_{c}, x_{t}) \in \mathcal{D}_{\mathrm{train}}^{\mathrm{stable}}}
   \lVert g_{\theta}(z(x_{c})) - z(x_{t}) \rVert_{2}^{2}
-  \;+\; \lambda \, \lVert W - I \rVert_{F}^{2},
+  \;+\; \mathcal{R}(\theta),
   \label{eq:loss}
 \end{equation}
-where $\lambda$ is the configured weight decay and $W$ is the linear weight
-(or, for the MLP, the residual weight). At evaluation time, the score for a
+where $\mathcal{R}$ is a predictor-specific regulariser. For the linear
+predictor we use a soft \texttt{weight $-$ I} penalty,
+$\mathcal{R}(\theta) = \lambda \, \lVert W - I \rVert_{F}^{2}$, which, in
+combination with the identity warm-start ($W \approx I$ at step zero,
+\S\ref{sec:method:predictor}), holds the function near the identity at
+initialisation. For the 2-layer identity-residual MLP, the residual
+weight $W_{2}$ is zero-initialised so the predictor is identity at step
+zero by construction, and $\mathcal{R}$ is standard $L^{2}$ weight decay
+on the predictor weights (decoupled, in the Adam configuration);
+applying a $\lVert W_{2} - I \rVert_{F}^{2}$ penalty here would
+contradict the zero-init identity warm-start. Per-variant values of
+$\lambda$ are listed in Appendix~\ref{app:hyperparameters}. At
+evaluation time, the score for a
 pair is the cosine \emph{distance} between the L2-normalised prediction and
 the L2-normalised target:
 \begin{equation}

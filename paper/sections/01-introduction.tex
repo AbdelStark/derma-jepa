@@ -42,11 +42,12 @@ share the methodology and the nine-run arc at this stage to validate the proxy
 design and to invite feedback on the partition before committing to it.
 
 Figure~\ref{fig:cross-backbone-gradient} previews the headline. Test $\auroc$
-on $\strongholdtwo$ is below random for every frozen natural-image backbone
-across two architectures and three predictor scaffolds; barely lifts under a
-frozen general-medical backbone (BiomedCLIP, $0.329 \pm 0.012$); and reaches
-$0.944 \pm 0.003$ under a frozen dermoscopy-specific backbone (DermLIP), with
-the contamination caveat marked on the right.
+on $\strongholdtwo$ is below random for every frozen natural-image
+configuration we ran (four cells spanning two backbones, two predictor
+scaffolds, and two optimisers); barely lifts under a frozen general-
+medical backbone (BiomedCLIP, $0.329 \pm 0.012$); and reaches
+$0.944 \pm 0.003$ under a frozen dermoscopy-specific backbone (DermLIP),
+with the contamination caveat marked on the right.
 
 \paragraph{Contributions.}
 \begin{itemize}
@@ -54,10 +55,11 @@ the contamination caveat marked on the right.
       task with three disjoint synthetic nuisance families and a
       \texttt{train-on-two/evaluate-on-third} protocol, released as code,
       configurations, and reproduction launchers.
-\item \textbf{Empirical (negative).} Across two architectures, three
-      predictor scaffolds, and two optimisers, frozen natural-image backbones
-      produce below-random inverted test $\auroc$ on the held-out third
-      family.
+\item \textbf{Empirical (negative).} Across four frozen-natural-image
+      configurations (DINOv2 / CLIP $\times$ linear / MLP $\times$ SGD
+      / Adam, with the four cells listed in
+      Appendix~\ref{app:per-run}), test $\auroc$ on the held-out third
+      family inverts below random.
 \item \textbf{Empirical (positive but unpartitioned).} Frozen DermLIP reaches
       test $\auroc = 0.944 \pm 0.003$ across $5$ seeds, $+0.364$ above the
       strongest baseline. The win cannot yet be attributed to dermoscopy-

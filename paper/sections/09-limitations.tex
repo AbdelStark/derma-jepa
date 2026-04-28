@@ -14,12 +14,13 @@
       operations on PIL images. Real-world dermoscopic acquisition
       variability is more complex; the proxy is methodological and is
       identified as such.
-\item \textbf{Single-architecture comparison.} All four backbones in the
-      cross-backbone gradient are ViT-B/16-class (CLIP-architecture for the
-      three CLIP-based ones, ViT-B/14 for DINOv2). Other architectures ---
-      DINOv2 self-distillation on different capacity tiers, SigLIP,
-      transformer-only image backbones --- are unprobed. Future work should
-      vary architecture-class as a separate axis.
+\item \textbf{Single-architecture-class comparison.} All four backbones
+      in the cross-backbone gradient are ViT-B-class (CLIP architecture
+      at patch size $16$ for OpenAI CLIP, DermLIP, and BiomedCLIP;
+      DINOv2 architecture at patch size $14$ for DINOv2). Other
+      architecture classes --- different capacity tiers, SigLIP,
+      hierarchical or convolutional backbones --- are unprobed. Future
+      work should vary architecture class as a separate axis.
 \item \textbf{Single dataset.} HAM10000 is the only evaluation corpus.
       ISIC archive components and PAD-UFES-20 are unprobed in this work
       and are candidates for v2 experiments and for the EXP-009 corpus.

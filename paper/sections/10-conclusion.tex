@@ -3,9 +3,9 @@
 
 We have characterised when frozen-backbone JEPA-style probes fail and when
 they succeed under a leakage-controlled, three-family-disjoint nuisance
-design on HAM10000. Across two architectures, three predictor scaffolds, and
-two optimisers, frozen natural-image backbones invert below random on the
-held-out third nuisance family. Frozen general-medical pretraining
+design on HAM10000. Across four frozen-natural-image configurations
+(two backbones, two predictor scaffolds, two optimisers), test $\auroc$
+on the held-out third nuisance family inverts below random. Frozen general-medical pretraining
 (BiomedCLIP, PMC-15M, no HAM10000) lifts test $\auroc$ by only $+0.04$.
 Frozen dermoscopy-pretrained DermLIP reaches test $\auroc = 0.944 \pm 0.003$
 across $5$ seeds --- the only above-random result in nine runs --- but under
