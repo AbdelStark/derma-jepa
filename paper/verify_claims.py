@@ -98,6 +98,50 @@ def check_run(name: str, entry: dict[str, Any], tol: float) -> int:
     return fails
 
 
+def check_training_loss_dynamics(locked: dict[str, Any], tol: float) -> int:
+    """Verify §7.3 MSE loss-reduction numbers against the source experiment reports."""
+    fails = 0
+    block = locked.get("training_loss_dynamics", {})
+    for run_key, entry in block.items():
+        if run_key.startswith("_"):
+            continue
+        report = REPO_ROOT / entry["report_path"]
+        if not report.is_file():
+            print(f"  SKIP  {run_key} loss dynamics: report missing at {report}")
+            continue
+        text = report.read_text()
+        e1 = float(entry["train_loss_epoch_1"])
+        e200 = float(entry["train_loss_epoch_200"])
+        e1_str = f"{e1:.6f}".rstrip("0").rstrip(".") if "." in f"{e1:.6f}" else f"{e1:.6f}"
+        e200_str = f"{e200:.6f}".rstrip("0").rstrip(".") if "." in f"{e200:.6f}" else f"{e200:.6f}"
+        # Check the literal anchors appear in the report markdown.
+        if e1_str not in text:
+            print(f"  FAIL  {run_key} loss anchor epoch-1 ({e1_str}) not in {entry['report_path']}")
+            fails += 1
+        else:
+            print(f"  PASS  {run_key} loss anchor epoch-1                  obs={e1_str}  in report")
+        if e200_str not in text:
+            print(f"  FAIL  {run_key} loss anchor epoch-200 ({e200_str}) not in {entry['report_path']}")
+            fails += 1
+        else:
+            print(f"  PASS  {run_key} loss anchor epoch-200                obs={e200_str}  in report")
+        # Recompute reduction and check against quoted %.
+        reduction = 100.0 * (e1 - e200) / e1
+        quoted = float(entry["reduction_pct_quoted"])
+        delta = abs(reduction - quoted)
+        # Tolerance for rounding to whole % or 1 dp.
+        if delta > 0.5:
+            print(
+                f"  FAIL  {run_key} reduction%  obs={reduction:.2f}  quoted={quoted}  delta={delta:.2f}"
+            )
+            fails += 1
+        else:
+            print(
+                f"  PASS  {run_key} reduction%                              obs={reduction:.2f}  quoted={quoted}"
+            )
+    return fails
+
+
 def check_test_score_structure(locked: dict[str, Any], tol: float) -> int:
     """Check the locked stable/changing/gap means for the three CLIP-arch runs."""
     fails = 0
@@ -180,6 +224,8 @@ def main() -> int:
         total_fails += check_run(name, entry, tol)
     print("[test_score_structure]")
     total_fails += check_test_score_structure(locked, tol)
+    print("[training_loss_dynamics]")
+    total_fails += check_training_loss_dynamics(locked, tol)
     print()
     if total_fails == 0:
         print("ALL CLAIMS VERIFIED ✓")

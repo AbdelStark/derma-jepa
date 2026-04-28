@@ -46,15 +46,17 @@ experiment that would.
 \subsection{Loss versus AUROC}
 \label{sec:analysis:loss-vs-auroc}
 
-MSE loss delta does not predict train $\auroc$ across optimisers. From
-the per-run training reports
-(\texttt{<run\_id>/artifacts/reports/jepa\_training\_report.json} on the
-run archive), EXP-006a (Adam, MLP) reduces train MSE by $\sim$$3.3\%$
-and reaches train $\auroc = 0.893$, while EXP-004 (SGD, linear) reduces
-train MSE by $\sim$$13\%$ and reaches train $\auroc = 0.900$. The
+MSE loss delta does not predict train $\auroc$ across optimisers.
+From the per-run training-dynamics tables in the experiment reports
+(\path{docs/experiments/EXP-{004,006a}-...md} \S4.3), EXP-006a (Adam,
+MLP) reduces train MSE by $3.3\%$ over $200$ epochs (epoch-$1$ loss
+$6.94 \!\times\! 10^{-4}$ $\to$ epoch-$200$ loss $6.71 \!\times\!
+10^{-4}$) and reaches train $\auroc = 0.893$. EXP-004 (SGD, linear)
+reduces train MSE by $12.6\%$ ($7.87 \!\times\! 10^{-4}$ $\to$
+$6.88 \!\times\! 10^{-4}$) and reaches train $\auroc = 0.900$. The
 optimisers move the predictor's function very differently per unit of
-L2-loss reduction in $768$-d normalised space. Reporting both metrics is
-essential, and headline-$\auroc$ comparisons should not be replaced by
+L2-loss reduction in $768$-d normalised space. We therefore report
+both metrics; headline-$\auroc$ comparisons should not be replaced by
 loss-only comparisons.
 
 \subsection{What is not yet claimed}

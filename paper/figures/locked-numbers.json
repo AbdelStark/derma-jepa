@@ -105,6 +105,21 @@
     "general_medical_to_dermoscopy_step": 0.62,
     "_doc": "Computed from seed-mean values where available. (BiomedCLIP 0.329 - OpenAI CLIP 0.286) and (DermLIP 0.944 - BiomedCLIP 0.329)."
   },
+  "training_loss_dynamics": {
+    "_doc": "Training MSE-loss trajectory anchors, sourced from per-run experiment reports (docs/experiments/EXP-NNN-...md §4.3 'Training dynamics' tables) since per-run progress.jsonl does not log epoch-level loss. verify_claims.py greps the markdown for the epoch-1 / epoch-200 values and recomputes the reduction percentage. Cited in §7.3.",
+    "exp004_dinov2_linear": {
+      "report_path": "docs/experiments/EXP-004-ham10000-jepa-mixed-train-held-out-2-v1.md",
+      "train_loss_epoch_1": 0.000787,
+      "train_loss_epoch_200": 0.000688,
+      "reduction_pct_quoted": 13
+    },
+    "exp006a_dinov2_mlp_adam": {
+      "report_path": "docs/experiments/EXP-006a-ham10000-jepa-adam-mlp-v1.md",
+      "train_loss_epoch_1": 0.000694,
+      "train_loss_epoch_200": 0.000671,
+      "reduction_pct_quoted": 3.3
+    }
+  },
   "test_score_structure": {
     "_doc": "Mean cosine distance (predicted, target) on test pairs, broken out by stable vs changing. gap = mean(changing) - mean(stable); positive means correctly oriented. Computed by paper/figures/build_fig3.py from each run's jepa_predictor_latents.npz on the test split (n=1000 stable + 1000 changing).",
     "exp006b_clip_linear": {

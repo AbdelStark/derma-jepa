@@ -53,7 +53,11 @@ verify:
 	cd .. && $(PYTHON) paper/verify_claims.py
 
 arxiv: pdf
-	tar czf arxiv.tar.gz $(MAIN).tex $(SECTIONS) refs.bib $(FIGURES) $(TABLES)
+	# arXiv compiles without bibtex; include main.bbl so cross-refs resolve.
+	tar czf arxiv.tar.gz $(MAIN).tex $(MAIN).bbl $(SECTIONS) refs.bib \
+	                     $(FIGURES) $(TABLES)
+	@echo "arxiv.tar.gz contents:"
+	@tar tzf arxiv.tar.gz | sort
 
 clean:
 	rm -f $(MAIN).aux $(MAIN).bbl $(MAIN).blg $(MAIN).log $(MAIN).out $(MAIN).toc
