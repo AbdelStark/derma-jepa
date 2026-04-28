@@ -6,17 +6,17 @@ mapped to specific repository assets.
 
 \begin{enumerate}[leftmargin=2em]
 \item \textbf{Code.} Public at
-      \href{https://github.com/AbdelStark/derma-jepa}{\texttt{github.com/AbdelStark/derma-jepa}}.
-      Pinned dependency manifest at \texttt{pyproject.toml} and
-      \texttt{uv.lock}; hosted-environment pins at
-      \texttt{scripts/hf\_jobs\_constraints.txt}.
+      \url{https://github.com/AbdelStark/derma-jepa}.
+      Pinned dependency manifests at \path{pyproject.toml} and
+      \path{uv.lock}; hosted-environment pins at
+      \path{scripts/hf_jobs_constraints.txt}.
 \item \textbf{Data.} HAM10000 \citep{tschandl2018ham10000} via the
-      \texttt{abdelstark/ham10000} HF dataset mirror; the source manifest
-      and download path live at \texttt{src/derma\_jepa/public\_data.py}.
+      \path{abdelstark/ham10000} HF dataset mirror; the source manifest
+      and download path live at \path{src/derma_jepa/public_data.py}.
 \item \textbf{Configurations.} One YAML per primary-tier run under
-      \texttt{configs/data/}; every run mirrors its exact
-      \texttt{config.yaml} alongside \texttt{metrics.json} and
-      \texttt{baseline\_metrics.json} at \texttt{<run\_id>/} on the run
+      \path{configs/data/}; every run mirrors its exact
+      \path{config.yaml} alongside \path{metrics.json} and
+      \path{baseline_metrics.json} at \texttt{<run\_id>/} on the run
       archive (\runarchive).
 \item \textbf{Seeds and determinism.} Default seed $20260422$. Seed
       controls split assignment, pair generation, augmentation
@@ -27,14 +27,14 @@ mapped to specific repository assets.
       (Appendix~\ref{app:compute-budget}).
 \item \textbf{Hyperparameters.} Listed in
       Appendix~\ref{app:hyperparameters}.
-\item \textbf{Metrics and uncertainty.} Primary $\auroc$ with $1{,}000$-sample
-      pair-level percentile bootstrap $95\%$ CIs; companion AUPRC, EER,
-      and FPR-at-fixed-TPR. Implementation:
-      \texttt{src/derma\_jepa/metrics.py}; tests:
-      \texttt{tests/test\_metrics.py}.
-\item \textbf{Numbers.} Every quantitative claim in the paper traces to
-      \texttt{paper/figures/locked-numbers.json} and is verified at
-      build time by \texttt{paper/verify\_claims.py} against the
+\item \textbf{Metrics and uncertainty.} Primary $\auroc$ with
+      $1{,}000$-sample pair-level percentile bootstrap $95\%$ CIs;
+      companion AUPRC, EER, and FPR-at-fixed-TPR. Implementation:
+      \path{src/derma_jepa/metrics.py}; tests:
+      \path{tests/test_metrics.py}.
+\item \textbf{Numbers.} Every quantitative claim in the paper traces
+      to \path{paper/figures/locked-numbers.json} and is verified at
+      build time by \path{paper/verify_claims.py} against the
       run-archive mirror.
 \item \textbf{Negative results and ablations.} The full nine-run
       sequence is reported, including the seven runs whose test $\auroc$

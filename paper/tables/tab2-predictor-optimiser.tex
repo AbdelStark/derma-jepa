@@ -3,21 +3,21 @@
 \begin{table}[h]
 \centering
 \small
-\setlength{\tabcolsep}{6pt}
-\begin{tabular}{@{}llrrrr@{}}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}llcrrc@{}}
 \toprule
-Run & Predictor & Optimiser & Train $\auroc$ & Test $\auroc$ & 95\% CI \\
+Run & Predictor & Opt. & Train $\auroc$ & Test $\auroc$ & 95\% CI \\
 \midrule
-EXP-004  & linear (identity warm-start)        & SGD  & $0.900$ & $0.249$ & $[0.230, 0.270]$ \\
+EXP-004  & linear (id.\ warm-start)            & SGD  & $0.900$ & $0.249$ & $[0.230, 0.270]$ \\
 EXP-005  & 2-layer ID-residual MLP (under-fit) & SGD  & $0.572$ & $0.270$ & $[0.249, 0.293]$ \\
 EXP-006a & 2-layer ID-residual MLP (fit)       & Adam & $0.893$ & $0.248$ & $[0.228, 0.269]$ \\
 \bottomrule
 \end{tabular}
 \caption{Predictor $\times$ optimiser ablation under frozen DINOv2
-ViT-B/14 on the EXP-004 proxy. Across two predictor classes (linear vs
-MLP) and two optimisers (SGD vs Adam), train $\auroc$ ranges from
-$0.572$ (under-fit MLP) to $0.900$ (linear) but test $\auroc$ on
-\strongholdtwo\ stays in a $\pm 0.011$ band around $0.255$. Scaffold
-capacity does not move the held-out-family floor.}
+ViT-B/14 on the EXP-004 proxy. Across two predictor classes and two
+optimisers, train $\auroc$ ranges from $0.572$ (under-fit MLP) to
+$0.900$ (linear) but test $\auroc$ on \strongholdtwo\ stays in a
+$\pm 0.011$ band around $0.255$. Scaffold capacity does not move the
+held-out-family floor.}
 \label{tab:predictor-optimiser}
 \end{table}

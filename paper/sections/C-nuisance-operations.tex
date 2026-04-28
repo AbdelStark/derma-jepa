@@ -1,13 +1,13 @@
 \section{Nuisance-family operation specifications}
 \label{app:nuisance-operations}
 
-The three nuisance families in \S\ref{sec:method:nuisance} are implemented
-in \texttt{src/derma\_jepa/public\_data.py}: \strongfam\ at line 751
-(\texttt{\_apply\_strong\_nuisance}), \strongholdone\ at line 829
-(\texttt{\_apply\_strong\_held\_out\_nuisance}), and \strongholdtwo\ at
-line 494 (\texttt{\_apply\_strong\_held\_out\_2\_nuisance}). Each function
-takes a PIL image, a per-pair index, and a NumPy \texttt{Generator},
-applies the operations below in the listed order, and returns the
+The three nuisance families in \S\ref{sec:method:nuisance} are
+implemented in \path{src/derma_jepa/public_data.py}: \strongfam\ at
+line 751 (\path{_apply_strong_nuisance}), \strongholdone\ at line 829
+(\path{_apply_strong_held_out_nuisance}), and \strongholdtwo\ at line
+494 (\path{_apply_strong_held_out_2_nuisance}). Each function takes a
+PIL image, a per-pair index, and a NumPy \texttt{Generator}, applies
+the operations below in the listed order, and returns the
 nuisance-perturbed image alongside a recipe dictionary recording the
 sampled parameter values.
 

@@ -3,21 +3,21 @@
 \begin{table}[h]
 \centering
 \small
-\setlength{\tabcolsep}{6pt}
-\begin{tabular}{@{}llrrrr@{}}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}llcrcc@{}}
 \toprule
-Configuration & Backbone & Seeds & Test $\auroc$ (mean $\pm$ sd) & Range & 95\% CI[mean] \\
+Run & Backbone & $n$ seeds & Test $\auroc$ (mean $\pm$ sd) & Range & 95\% CI[mean] \\
 \midrule
-EXP-007 & DermLIP ViT-B/16    & $5$ & $0.9435 \pm 0.0029$ & $[0.9392, 0.9470]$ & $[0.9409, 0.9461]$ \\
-EXP-008 & BiomedCLIP ViT-B/16 & $5$ & $0.3286 \pm 0.0120$ & $[0.3119, 0.3436]$ & $[0.3181, 0.3391]$ \\
+EXP-007 & DermLIP B/16    & $5$ & $0.9435 \pm 0.0029$ & $[0.939, 0.947]$ & $[0.941, 0.946]$ \\
+EXP-008 & BiomedCLIP B/16 & $5$ & $0.3286 \pm 0.0120$ & $[0.312, 0.344]$ & $[0.318, 0.339]$ \\
 \bottomrule
 \end{tabular}
 \caption{Seed sweep on EXP-007 and EXP-008. Five seeds per
 configuration. Both headlines are seed-stable; the seed-mean
 pretraining-data gradient (web $0.286 <$ general-medical $0.329 <$
-dermoscopy $0.944$) survives. The $\sim$$4\times$ ratio between the
-two seed standard deviations is consistent with the high-$\auroc$
-DermLIP regime saturating predictor parameters more reproducibly than
-the partial-fit BiomedCLIP regime.}
+dermoscopy $0.944$) survives. The $\sim$$4\times$ ratio between the two
+seed standard deviations is consistent with the high-$\auroc$ DermLIP
+regime saturating predictor parameters more reproducibly than the
+partial-fit BiomedCLIP regime.}
 \label{tab:seed-sweep}
 \end{table}

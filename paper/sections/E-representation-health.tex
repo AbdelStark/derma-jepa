@@ -1,9 +1,10 @@
 \section{Representation-health checks}
 \label{app:representation-health}
 
-Three representation-health diagnostics accompany every run, computed by
-\texttt{src/derma\_jepa/training.py:479} (\texttt{\_collapse\_checks}) on
-the $L^{2}$-normalised predictor outputs over the test split. The
+Three representation-health diagnostics accompany every run, computed
+by \path{src/derma_jepa/training.py:479}
+(\texttt{\_collapse\_checks}) on the $L^{2}$-normalised predictor
+outputs over the test split. The
 \texttt{collapsed} flag triggers if either the prediction-norm minimum
 or the dimension-variance minimum falls below $10^{-8}$ --- a
 representation collapse would render the cosine-distance score
@@ -34,5 +35,5 @@ hard collapse rather than soft anisotropy.
 \paragraph{Where the values live.} Each run's
 \texttt{metrics.json}\,$\to$\,\texttt{representation\_health} block
 records the four numerical diagnostics and the binary flag. The
-aggregator \texttt{scripts/aggregate\_seed\_sweep.py} pulls these
-fields when computing seed-sweep summaries.
+aggregator \path{scripts/aggregate_seed_sweep.py} pulls these fields
+when computing seed-sweep summaries.

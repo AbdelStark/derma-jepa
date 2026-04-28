@@ -1,5 +1,11 @@
-\section{Required follow-up work --- EXP-009}
+\section{Candidate follow-up: EXP-009}
 \label{sec:followup}
+
+We sketch one natural candidate experiment that, if eventually run,
+would partition the two hypotheses behind the DermLIP positive. We
+present the design now to invite feedback on whether this is the right
+follow-up before we (or anyone else) invests the engineering effort
+required to run it.
 
 \subsection{The partition question}
 The DermLIP positive in EXP-007 ($\auroc = 0.944 \pm 0.003$) is consistent
@@ -28,29 +34,32 @@ revision of the paper's claim.
 \begin{table}[h]
 \centering
 \small
-\begin{tabular}{@{}lll@{}}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lp{0.32\linewidth}p{0.40\linewidth}@{}}
 \toprule
-EXP-009 test $\auroc$ on \strongholdtwo & Interpretation & Effect on the paper claim \\
+EXP-009 test $\auroc$ & Interpretation & Effect on the paper claim \\
 \midrule
-$\geq 0.85$       & Dermoscopy-domain transfer is sufficient. & Headline survives; caveat downgrades to ``verified.'' \\
-$0.50$--$0.80$    & Partial transfer; mixed contribution. & Claim becomes ``domain helps, dataset overlap helps more.'' \\
-$0.30$--$0.50$    & HAM10000 overlap drove EXP-007. & Claim narrows to ``frozen-backbone JEPA unlocks when the backbone has seen the eval dataset.'' \\
+$\geq 0.85$    & Dermoscopy-domain transfer is sufficient. & Headline survives; caveat downgrades to ``verified.'' \\
+$0.50$--$0.80$ & Partial transfer; mixed contribution. & Claim becomes ``domain helps, dataset overlap helps more.'' \\
+$0.30$--$0.50$ & HAM10000 overlap drove EXP-007. & Claim narrows to ``frozen-backbone JEPA unlocks when the backbone has seen the eval dataset.'' \\
 \bottomrule
 \end{tabular}
-\caption{Three EXP-009 outcome bands and the corresponding revision of the
-paper's claim. The decision is committed up front so the experiment cannot
-be re-interpreted post-hoc.}
+\caption{Three EXP-009 outcome bands on \strongholdtwo\ and the
+corresponding revision of the paper's claim. Committing this mapping up
+front would prevent post-hoc re-interpretation of the experiment.}
 \label{tab:exp009-decision}
 \end{table}
 
-\subsection{Why we did not run EXP-009 before submission}
-Corpus assembly is multi-week: provenance audit on every ISIC component to
-confirm HAM10000 exclusion, SSL pretrain compute on a non-trivial GPU budget,
-and a pretrain-quality check on a held-out HAM10000 split. Releasing the
-methodology and the nine-run arc at this stage is intentional --- the paper
-seeks community feedback on the proxy-task design and on whether the proposed
-partition is the right one before committing to the build. A v2 with EXP-009
-results is on the roadmap.
+\subsection{Why we share the design before running it}
+Corpus assembly is multi-week: provenance audit on every ISIC component
+to confirm HAM10000 exclusion, SSL pretrain compute on a non-trivial
+GPU budget, and a pretrain-quality check on a held-out HAM10000 split.
+Releasing the methodology and the nine-run arc at this stage is
+intentional --- the paper seeks community feedback on the proxy-task
+design and on whether this partition is the right follow-up before
+anyone (including us) commits to the build. Whether EXP-009, a
+different partition, or no follow-up at all is the right next step
+depends on that feedback.
 
 \subsection{Feedback we are seeking}
 \begin{enumerate}[leftmargin=2em]

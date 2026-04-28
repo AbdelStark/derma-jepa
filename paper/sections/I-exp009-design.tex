@@ -1,11 +1,15 @@
-\section{EXP-009 design (planned)}
+\section{EXP-009 design (candidate)}
 \label{app:exp009-design}
 
-This appendix expands the EXP-009 sketch in \S\ref{sec:followup} into the
-operational details required to launch the experiment. The design is
-committed in advance --- including the decision table mapping outcome
-bands to claim revisions --- so the experiment cannot be re-interpreted
-post-hoc.
+This appendix expands the EXP-009 sketch in \S\ref{sec:followup} into
+the operational detail required to evaluate the proposal. We commit
+the design --- including the decision table mapping outcome bands to
+claim revisions --- in advance so that, should we (or anyone else)
+choose to run it, the result cannot be re-interpreted post-hoc. We do
+not commit at this stage to running it ourselves; whether to invest the
+effort, alter the design, or pursue a different follow-up entirely is a
+decision we are deferring until after community feedback on this
+preliminary release.
 
 \subsection{Goal}
 Self-pretrain a vision encoder on a non-HAM10000 dermoscopy corpus, then
@@ -66,8 +70,8 @@ Outcome bands and claim revisions:
       domain.''
 \end{itemize}
 
-\subsection{Why not run before this preprint}
-Three concrete costs gate the launch:
+\subsection{Why we share the design before running it}
+Three concrete costs would gate any launch:
 \begin{enumerate}[label=(\arabic*), leftmargin=2em]
 \item \emph{Provenance audit.} Confirming HAM10000 exclusion on every
       ISIC component requires a per-image hash check against the
@@ -78,10 +82,11 @@ Three concrete costs gate the launch:
       not in the free-tier envelope used for the other nine runs.
 \item \emph{Pretrain-quality validation.} A weak pretraining run that
       never learns dermoscopy structure would produce a low test
-      $\auroc$ that the decision table would mis-attribute to (ii) or
-      (iii) when the actual cause is pretrain failure. We need a
-      held-out diagnostic to disambiguate.
+      $\auroc$ that the decision table would mis-attribute to the
+      lower bands when the actual cause is pretrain failure. A held-out
+      diagnostic would be needed to disambiguate.
 \end{enumerate}
 We share the methodology and the nine-run arc at this stage to invite
-feedback on the proxy-task design and on whether the proposed partition
-is the right one before committing to the build.
+feedback on the proxy-task design and on whether this partition is the
+right next step. Whether to ultimately run EXP-009, modify it, or
+pursue a different follow-up depends on that feedback.

@@ -19,8 +19,14 @@
 \usepackage{xcolor}
 \usepackage{enumitem}
 \setlist{noitemsep, topsep=2pt}
-\usepackage[colorlinks=true, urlcolor=blue, citecolor=blue, linkcolor=black]{hyperref}
-\usepackage{url}
+\PassOptionsToPackage{hyphens}{url}
+\usepackage[colorlinks=true, urlcolor=blue, citecolor=blue,
+            linkcolor=black, breaklinks=true]{hyperref}
+% Allow URLs to break at any character if no nicer break exists.
+\def\UrlBreaks{\do\/\do\-\do\.\do\_\do\?\do\&\do\=\do\#\do\:}
+\Urlmuskip=0mu plus 1mu
+% Allow TeX to stretch lines slightly before declaring an overfull box.
+\emergencystretch=3em
 \usepackage{geometry}
 \geometry{margin=2.5cm}
 \usepackage{authblk}
@@ -42,7 +48,7 @@
 \newcommand{\strongfam}{\texttt{strong}}
 \newcommand{\strongholdone}{\texttt{strong\_held\_out}}
 \newcommand{\strongholdtwo}{\texttt{strong\_held\_out\_2}}
-\newcommand{\runarchive}{\href{https://huggingface.co/datasets/abdelstark/derma-jepa-runs}{\texttt{abdelstark/derma-jepa-runs}}}
+\newcommand{\runarchive}{\href{https://huggingface.co/datasets/abdelstark/derma-jepa-runs}{\path{abdelstark/derma-jepa-runs}}}
 
 % --- document -----------------------------------------------------------------
 \begin{document}

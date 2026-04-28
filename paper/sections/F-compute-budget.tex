@@ -18,21 +18,21 @@ the canonical EXP-004 recipe ($\sim$85~min end-to-end) is approximately:
       run-archive upload: $\sim$10~min.
 \end{itemize}
 
-The MLP-on-DINOv2 runs (EXP-005 and EXP-006a) take $\sim$105~min because
-the MLP forward/backward is approximately twice the linear predictor's.
-The DermLIP and BiomedCLIP runs sit in the same $\sim$85~min envelope as
-the linear DINOv2 and CLIP runs: backbone forward dominates only the
-embedding-export phase, and once embeddings are cached, the predictor
-training is backbone-independent.
+The MLP-on-DINOv2 runs (EXP-005 and EXP-006a) take $\sim$105~min
+because the MLP forward/backward is approximately twice the linear
+predictor's. The DermLIP and BiomedCLIP runs sit in the same
+$\sim$85-minute envelope as the linear DINOv2 and CLIP runs: backbone
+forward dominates only the embedding-export phase, and once
+embeddings are cached, predictor training is backbone-independent.
 
 \paragraph{Total for the paper.} Nine primary-tier runs at $\sim$85--105
 min each plus eight additional seed-sweep runs at $\sim$85~min each
 totals approximately $25$ A10G-hours of compute, plus an additional
 $\sim$3~A10G-hours absorbed by two infrastructure-flake re-launches
 during the seed-sweep cohort. All accumulated at Hugging Face Jobs
-free-tier rates; the launchers are committed under \texttt{scripts/}
+free-tier rates; the launchers are committed under \path{scripts/}
 and the pinned dependency versions for the hosted environment are at
-\texttt{scripts/hf\_jobs\_constraints.txt}.
+\path{scripts/hf_jobs_constraints.txt}.
 
 \paragraph{Reproducibility cost.} Reproducing the entire nine-run arc
 plus the seed sweep from a clean checkout requires the same $\sim$28

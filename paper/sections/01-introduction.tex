@@ -35,11 +35,12 @@ observe (frozen DermLIP at $0.944 \pm 0.003$ test $\auroc$ across $5$ seeds)
 reported here.} DermLIP's pretraining corpus, Derm1M
 \citep{yan2025derm1m}, almost certainly contains HAM10000 raw images, and the
 BiomedCLIP partition we report rules out only the broader ``any medical-image
-pretraining is sufficient'' alternative. EXP-009 (a self-pretrained DINOv2 on a
-non-HAM10000 dermoscopy corpus, see \S\ref{sec:followup}) is the experiment
-that would close the partition. Building that corpus is multi-week work; we
-share the methodology and the nine-run arc at this stage to validate the proxy
-design and to invite feedback on the partition before committing to it.
+pretraining is sufficient'' alternative. A natural follow-up experiment
+we sketch as EXP-009 (a self-pretrained DINOv2 on a non-HAM10000
+dermoscopy corpus, \S\ref{sec:followup}) would aim to close the
+partition; we deliberately publish at this stage --- before committing
+to that build --- to gather community feedback on the methodology and
+the partition design.
 
 Figure~\ref{fig:cross-backbone-gradient} previews the headline. Test $\auroc$
 on $\strongholdtwo$ is below random for every frozen natural-image
@@ -63,8 +64,9 @@ with the contamination caveat marked on the right.
 \item \textbf{Empirical (positive but unpartitioned).} Frozen DermLIP reaches
       test $\auroc = 0.944 \pm 0.003$ across $5$ seeds, $+0.364$ above the
       strongest baseline. The win cannot yet be attributed to dermoscopy-
-      domain transfer rather than HAM10000 image-level overlap; EXP-009
-      (\S\ref{sec:followup}) is the open partition.
+      domain transfer rather than HAM10000 image-level overlap;
+      EXP-009 (\S\ref{sec:followup}) would be one way to close the
+      partition.
 \item \textbf{Empirical (negative-as-partition).} Frozen BiomedCLIP --- the
       cleanest publicly available ``general medical pretraining without
       HAM10000'' backbone --- lifts only $+0.04$ over web CLIP, ruling out
@@ -73,7 +75,8 @@ with the contamination caveat marked on the right.
       \runarchive\ with manifests, embeddings, metrics, model card, and logs.
       A single launcher script reproduces each run end-to-end on a free A10G
       via Hugging Face Jobs.
-\item \textbf{A clearly-scoped open question.} The EXP-009 design and decision
-      table are stated up front (\S\ref{sec:followup}) rather than treated as
-      future work in passing.
+\item \textbf{A clearly-scoped open question.} A candidate partition
+      experiment (EXP-009) and the decision table that would attach to
+      it are stated up front (\S\ref{sec:followup}) rather than treated
+      as future work in passing.
 \end{itemize}
