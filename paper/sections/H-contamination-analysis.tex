@@ -1,4 +1,84 @@
-% Appendix stub --- draft from docs/paper/OUTLINE.md \S8 and the per-run reports.
 \section{Pretraining contamination analysis}
-\label{app:contamination-analysis}
-\todo[inline]{Draft from the corresponding OUTLINE \S8 pointer plus the relevant sources under \texttt{docs/experiments/} or \texttt{src/derma\_jepa/}.}
+\label{app:contamination}
+
+This appendix is load-bearing for the paper's central claim. It states
+the contamination question precisely, lays out the available evidence,
+and identifies what EXP-007 / EXP-008 can and cannot conclude from that
+evidence.
+
+\subsection{The question}
+The EXP-007 result --- frozen DermLIP plus a linear scaffold reaches
+test $\auroc = 0.944 \pm 0.003$ on \strongholdtwo\ --- is consistent with
+two distinct hypotheses:
+\begin{enumerate}[label=(\roman*), leftmargin=2em]
+\item \emph{Dermoscopy-domain transfer.} Pretraining on dermatology image-
+      text pairs (Derm1M) organises the embedding space such that a
+      single linear direction captures stable-pair similarity uniformly
+      across the three nuisance families, including the unseen
+      \strongholdtwo.
+\item \emph{HAM10000 image-level overlap.} Derm1M contains HAM10000 raw
+      images, so DermLIP's embedding space is well-fit to HAM10000
+      lesion identity in a way that survives our synthetic post-hoc
+      nuisance.
+\end{enumerate}
+Hypotheses (i) and (ii) are not mutually exclusive: a positive
+EXP-009 outcome (\S\ref{sec:followup}) would support (i) being load-bearing;
+a low EXP-009 outcome would push the explanation toward (ii).
+
+\subsection{Why HAM10000 is almost certainly in Derm1M}
+The Derm1M data card describes its corpus as ``approximately one million
+publicly-available dermatology image-text pairs aggregated from
+dermoscopy datasets and dermatology-related web sources''
+\citep{yan2025derm1m}. The card does not publish a per-source breakdown.
+HAM10000 \citep{tschandl2018ham10000} is the largest publicly available
+dermoscopy dataset by image count; ISIC-archive aggregations
+\citep{codella2018isic} that virtually all public dermoscopy corpora
+draw from include the HAM10000 split by default. Excluding HAM10000
+from a million-scale dermatology corpus would require an explicit and
+documented filter; no such filter is documented in the Derm1M
+description. We therefore proceed under the assumption that DermLIP
+saw HAM10000 raw images during pretraining.
+
+\subsection{What EXP-007 alone can conclude}
+EXP-007 demonstrates a $+0.66$ test $\auroc$ swing relative to
+EXP-006b (OpenAI CLIP) when the only varied axis is the pretraining
+data. EXP-007 alone cannot distinguish (i) from (ii), and the paper
+explicitly does not attribute the swing to dermoscopy-domain transfer
+on the basis of EXP-007 alone.
+
+\subsection{What EXP-008 adds and what it does not}
+EXP-008 introduces a third pretraining-data point: BiomedCLIP's PMC-15M,
+which is approximately $15\times$ larger than Derm1M but is composed of
+biomedical figure-caption pairs with a very low fraction of
+dermoscopy and zero documented HAM10000 overlap. The result --- test
+$\auroc = 0.329 \pm 0.012$ --- contributes three readings:
+\begin{itemize}
+\item \textbf{Scale alone is not the explanation.} Fifteen million
+      biomedical pairs (no HAM10000) do not unlock the proxy, so the
+      EXP-007 win is not attributable to ``more pretraining data,''
+      ``more medical pretraining data,'' or any monotonic function of
+      pretraining-corpus size.
+\item \textbf{General medical pretraining is not the explanation.} The
+      $+0.04$ web $\to$ general-medical step is small relative to the
+      $+0.62$ general-medical $\to$ dermoscopy step. The unlock is
+      localised at the dermoscopy-specific corpus boundary.
+\item \textbf{Dermoscopy-vs-HAM10000 remains unresolved.} EXP-008's
+      pretraining corpus differs from EXP-007's in two ways
+      simultaneously --- domain narrowness and (likely) HAM10000
+      inclusion --- so EXP-008 cannot separate the two factors. EXP-009
+      (\S\ref{sec:followup}) is designed precisely to break this
+      confound by holding ``HAM10000 absent'' constant while varying
+      the pretraining-domain narrowness from PMC-15M to dermoscopy.
+\end{itemize}
+
+\subsection{Boundary of inference}
+The strongest claim the paper makes about the EXP-007 swing is the
+following: \emph{under the protocol of \S\ref{sec:method}, varying only
+the pretraining-data domain among DermLIP, BiomedCLIP, and OpenAI
+CLIP --- holding architecture, predictor, optimiser, hyperparameters,
+and data pipeline constant --- produces a $+0.66$ $\auroc$ swing
+localised to the dermoscopy-specific corpus.} The claim is a
+characterisation of the empirical gradient, not an attribution to
+domain transfer. The corresponding negative claim --- ``DermLIP
+generalises to \strongholdtwo\ because dermoscopy pretraining unlocks
+nuisance invariance'' --- is not made anywhere in the paper.

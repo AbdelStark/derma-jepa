@@ -1,4 +1,54 @@
-% Appendix stub --- draft from docs/paper/OUTLINE.md \S8 and the per-run reports.
 \section{Hyperparameters}
 \label{app:hyperparameters}
-\todo[inline]{Draft from the corresponding OUTLINE \S8 pointer plus the relevant sources under \texttt{docs/experiments/} or \texttt{src/derma\_jepa/}.}
+
+Table~\ref{tab:hyperparameters} lists the predictor hyperparameters used
+in every primary-tier run. Values are stable across all nine runs (and
+the ten seed-sweep runs); only the predictor type, the optimiser, and
+the backbone are varied between runs. The full per-run configurations
+are committed under \texttt{configs/data/} and mirrored alongside every
+run as \texttt{<run\_id>/config.yaml}.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Setting & Linear predictor & 2-layer identity-residual MLP \\
+\midrule
+Architecture        & $g_{\theta}(z) = Wz + b$ & $g_{\theta}(z) = z + W_{2}\,\mathrm{ReLU}(W_{1}z + b_{1}) + b_{2}$ \\
+Hidden dim          & ---       & $512$ \\
+Init $W$ / $W_{1}$  & $I + \epsilon$, $\epsilon_{ij} \sim \mathcal{N}(0, 0.005^{2})$ & Kaiming-uniform \\
+Init $W_{2}$        & ---       & zero (so $g_{\theta} = $ identity at step zero) \\
+Init biases         & zero      & zero \\
+Optimiser           & SGD       & SGD (EXP-005) \,$\vert$\, Adam (EXP-006a) \\
+Learning rate       & $3\!\times\!10^{-2}$ & $3\!\times\!10^{-2}$ \,$\vert$\, $10^{-3}$ \\
+Weight decay        & $10^{-3}$ on $(W - I)$ & $10^{-3}$ on $(W_{1}, W_{2})$ \,$\vert$\, $10^{-4}$ (decoupled) \\
+Batch size          & $128$     & $128$ \\
+Epochs              & $200$     & $200$ \\
+Gradient clipping   & none      & none \\
+LR schedule         & constant  & constant \\
+Loss                & L2-MSE on stable pairs (eq.~\ref{eq:loss}) & L2-MSE on stable pairs \\
+Bootstrap resamples & $1{,}000$ & $1{,}000$ \\
+Bootstrap level     & per-pair  & per-pair \\
+Seed (default)      & $20260422$ & $20260422$ \\
+\bottomrule
+\end{tabular}
+\caption{Predictor hyperparameters. Every other knob (split fractions,
+seed, pair counts, augmentation parameters) is held constant across all
+nine primary-tier runs and across the ten seed-sweep runs.}
+\label{tab:hyperparameters}
+\end{table}
+
+\paragraph{Embedding precondition.} Backbone outputs are L2-normalised
+before entering the predictor (eq.~\ref{eq:loss}). Predictor outputs are
+L2-normalised before the cosine-distance score
+(eq.~\ref{eq:score}). No batch normalisation, dropout, or stochastic
+depth is used inside the predictor.
+
+\paragraph{Backbone configurations.} All backbones run in inference mode
+(\texttt{eval()}, no gradient). Embedding dimensions: DINOv2 ViT-B/14
+$d = 768$; OpenAI CLIP ViT-B/16 $d = 512$; DermLIP ViT-B/16 $d = 512$;
+BiomedCLIP ViT-B/16 $d = 512$. The predictor input/output dimensionality
+matches the backbone output and is set automatically from each backbone's
+configured embedding size.

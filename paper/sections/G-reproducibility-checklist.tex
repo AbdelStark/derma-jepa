@@ -1,4 +1,50 @@
-% Appendix stub --- draft from docs/paper/OUTLINE.md \S8 and the per-run reports.
 \section{Reproducibility checklist}
 \label{app:reproducibility-checklist}
-\todo[inline]{Draft from the corresponding OUTLINE \S8 pointer plus the relevant sources under \texttt{docs/experiments/} or \texttt{src/derma\_jepa/}.}
+
+The checklist follows the standard NeurIPS / ML reproducibility template,
+mapped to specific repository assets.
+
+\begin{enumerate}[leftmargin=2em]
+\item \textbf{Code.} Public at
+      \href{https://github.com/AbdelStark/derma-jepa}{\texttt{github.com/AbdelStark/derma-jepa}}.
+      Pinned dependency manifest at \texttt{pyproject.toml} and
+      \texttt{uv.lock}; hosted-environment pins at
+      \texttt{scripts/hf\_jobs\_constraints.txt}.
+\item \textbf{Data.} HAM10000 \citep{tschandl2018ham10000} via the
+      \texttt{abdelstark/ham10000} HF dataset mirror; the source manifest
+      and download path live at \texttt{src/derma\_jepa/public\_data.py}.
+\item \textbf{Configurations.} One YAML per primary-tier run under
+      \texttt{configs/data/}; every run mirrors its exact
+      \texttt{config.yaml} alongside \texttt{metrics.json} and
+      \texttt{baseline\_metrics.json} at \texttt{<run\_id>/} on the run
+      archive (\runarchive).
+\item \textbf{Seeds and determinism.} Default seed $20260422$. Seed
+      controls split assignment, pair generation, augmentation
+      sampling, predictor initialisation, and bootstrap resampling.
+\item \textbf{Hardware.} Single NVIDIA A10G 24~GB via Hugging Face Jobs
+      (\texttt{a10g-large}). Reproduction cost is $\sim$25 A10G-hours
+      for the nine runs plus the seed sweep
+      (Appendix~\ref{app:compute-budget}).
+\item \textbf{Hyperparameters.} Listed in
+      Appendix~\ref{app:hyperparameters}.
+\item \textbf{Metrics and uncertainty.} Primary $\auroc$ with $1{,}000$-sample
+      pair-level percentile bootstrap $95\%$ CIs; companion AUPRC, EER,
+      and FPR-at-fixed-TPR. Implementation:
+      \texttt{src/derma\_jepa/metrics.py}; tests:
+      \texttt{tests/test\_metrics.py}.
+\item \textbf{Numbers.} Every quantitative claim in the paper traces to
+      \texttt{paper/figures/locked-numbers.json} and is verified at
+      build time by \texttt{paper/verify\_claims.py} against the
+      run-archive mirror.
+\item \textbf{Negative results and ablations.} The full nine-run
+      sequence is reported, including the seven runs whose test $\auroc$
+      lands in the $0.25$--$0.33$ band.
+\item \textbf{Compute budget.} Reported in
+      Appendix~\ref{app:compute-budget}.
+\item \textbf{Licence.} Source code under MIT (see \texttt{LICENSE});
+      run-archive artefacts inherit the HF dataset licence.
+\item \textbf{Intended use.} The methodology and the run archive are
+      research artefacts. The paper makes no clinical or diagnostic
+      claim; the proxy is synthetic and the contamination caveat is
+      explicit (\S\ref{sec:limitations}).
+\end{enumerate}

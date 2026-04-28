@@ -1,4 +1,101 @@
-% Appendix stub --- draft from docs/paper/OUTLINE.md \S8 and the per-run reports.
 \section{Per-run details}
 \label{app:per-run}
-\todo[inline]{Draft from the corresponding OUTLINE \S8 pointer plus the relevant sources under \texttt{docs/experiments/} or \texttt{src/derma\_jepa/}.}
+
+This appendix summarises the nine primary-tier runs and the subsequent
+ten-run seed sweep. Every run has a self-contained report at
+\texttt{docs/experiments/EXP-NNN-...md} in the source repository, and
+every run's \texttt{manifest.json}, \texttt{embeddings/}, \texttt{metrics.json},
+\texttt{baseline\_metrics.json}, \texttt{config.yaml}, \texttt{model\_card.md},
+and \texttt{logs/} subtree are mirrored under \runarchive\ at
+\texttt{<run\_id>/}.
+
+\subsection{EXP-001 --- ceiling sanity}
+\label{app:per-run:exp001}
+\texttt{ham10000-hf-dinov2-primary-v1}. DINOv2 ViT-B/14, linear, SGD;
+mild matched-family nuisance. Train/val/test $\auroc \approx 1.000$ across
+every dense baseline and the predictor. Diagnoses the proxy as too easy
+and motivates the harder constructions in EXP-002 onward.
+
+\subsection{EXP-002 --- hardened proxy, matched evaluation}
+\label{app:per-run:exp002}
+\texttt{ham10000-hf-dinov2-exp002-v1}. \strongfam\ on both train and test
+splits. Linear-on-DINOv2 reaches test $\auroc = 0.920$, $+0.269$ above
+DINOv2 ViT-S/14 raw cosine ($0.652$) with non-overlapping bootstrap CIs.
+The ``predict-in-latent-space beats cheap baselines'' claim holds when
+the test nuisance distribution matches training.
+
+\subsection{EXP-003 --- one-family-held-out evaluation}
+\label{app:per-run:exp003}
+\texttt{ham10000-hf-dinov2-exp003-v1}. Train on \strongfam, evaluate on
+\strongholdone. Test $\auroc$ falls to $0.680$; SSIM distance becomes the
+strongest baseline at $0.961$. The matched-eval delta does not transfer to
+a single disjoint nuisance family.
+
+\subsection{EXP-004 --- mixed-family training, third-family evaluation}
+\label{app:per-run:exp004}
+\texttt{ham10000-hf-dinov2-exp004-v1}. Train stable pairs rotate between
+\strongfam\ and \strongholdone; evaluation on \strongholdtwo. Test
+$\auroc = 0.249$ [$0.230, 0.270$]; below-random inversion. Pixel L2
+($0.580$) is the strongest baseline. This run defines the canonical
+``EXP-004 proxy'' used by every subsequent backbone-ablation run.
+
+\subsection{EXP-005 --- 2-layer identity-residual MLP under SGD}
+\label{app:per-run:exp005}
+\texttt{ham10000-hf-dinov2-exp005-v1}. Same proxy as EXP-004; replace the
+linear predictor with the MLP variant under EXP-002's SGD recipe (LR
+$3\!\times\!10^{-2}$, weight decay $10^{-3}$). Train $\auroc = 0.572$
+(under-fit; the MLP departs only mildly from identity), test
+$\auroc = 0.270$. The scaffold-capacity hypothesis is partially tested
+but the MLP has barely moved off the identity init.
+
+\subsection{EXP-006a --- MLP under Adam}
+\label{app:per-run:exp006a}
+\texttt{ham10000-hf-dinov2-exp006a-v1}. Same MLP as EXP-005 but Adam at
+LR $10^{-3}$, decoupled weight decay $10^{-4}$. The optimiser change lets
+the MLP fit: train $\auroc = 0.893$, close to EXP-004 linear's $0.900$.
+Test $\auroc = 0.248$ [$0.228, 0.269$] --- within a single bootstrap CI of
+EXP-004 linear's $0.249$ and below the raw DINOv2 ViT-B/14 cosine baseline
+of $0.274$. The properly-fit MLP does not move the held-out-family test
+$\auroc$ off the linear-predictor value.
+
+\subsection{EXP-006b --- OpenAI CLIP ViT-B/16}
+\label{app:per-run:exp006b}
+\texttt{ham10000-hf-clip-exp006b-v1}. EXP-004 recipe with the backbone
+swapped from DINOv2 ViT-B/14 to OpenAI CLIP ViT-B/16. Test $\auroc =
+0.286$ [$0.265, 0.310$], overlapping bootstrap CIs with EXP-004's $0.249$.
+The below-random inversion is not DINOv2-specific. Train $\auroc = 0.986$;
+the train$\to$test drop is $-0.70$.
+
+\subsection{EXP-007 --- DermLIP ViT-B/16}
+\label{app:per-run:exp007}
+\texttt{ham10000-hf-dermlip-exp007-v1}. EXP-004 recipe with the backbone
+swapped from OpenAI CLIP to DermLIP. Test $\auroc = 0.945$ [$0.935, 0.954$]
+on the original seed; first above-random result on \strongholdtwo\ since
+EXP-002 (and the only one across nine primary-tier runs). The
+contamination caveat is introduced here: Derm1M's data card does not
+publish a per-source breakdown, but HAM10000 raw images are almost
+certainly included (Appendix~\ref{app:contamination}).
+
+\subsection{EXP-008 --- BiomedCLIP ViT-B/16}
+\label{app:per-run:exp008}
+\texttt{ham10000-hf-biomedclip-exp008-v1}. EXP-004 recipe with the
+backbone swapped to BiomedCLIP (PMC-15M, no HAM10000). Test $\auroc =
+0.325$ [$0.303, 0.349$]. The web $\to$ general-medical step contributes
+$+0.04$; the general-medical $\to$ dermoscopy step contributes $+0.62$.
+EXP-008 rules out ``any medical-image pretraining'' as sufficient but
+does not partition dermoscopy-domain transfer from HAM10000 image-level
+overlap.
+
+\subsection{Seed sweep on EXP-007 and EXP-008}
+\label{app:per-run:seed-sweep}
+Five seeds per configuration, ten runs total.
+\texttt{...-dermlip-exp007-seed-\{1,2,3,4\}-v1} and
+\texttt{...-biomedclip-exp008-seed-\{1,2,3,4\}-v1} alongside the
+canonical seed-$20260422$ runs. DermLIP test $\auroc = 0.9435 \pm 0.0029$
+(range $0.9392$--$0.9470$, $95\%$ CI[mean] $[0.9409, 0.9461]$); BiomedCLIP
+test $\auroc = 0.3286 \pm 0.0120$ (range $0.3119$--$0.3436$, $95\%$
+CI[mean] $[0.3181, 0.3391]$). The seed-to-seed std ratio
+($0.012 / 0.003 \approx 4\times$) is consistent with the high-$\auroc$
+DermLIP regime saturating predictor parameters more reproducibly than the
+partial-fit BiomedCLIP regime. The pretraining-data gradient (web $0.286$
+$<$ general-medical $0.329$ $<$ dermoscopy $0.944$) survives seed variance.

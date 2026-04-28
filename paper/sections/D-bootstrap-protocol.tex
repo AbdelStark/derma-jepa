@@ -1,4 +1,41 @@
-% Appendix stub --- draft from docs/paper/OUTLINE.md \S8 and the per-run reports.
 \section{Bootstrap CI protocol}
 \label{app:bootstrap-protocol}
-\todo[inline]{Draft from the corresponding OUTLINE \S8 pointer plus the relevant sources under \texttt{docs/experiments/} or \texttt{src/derma\_jepa/}.}
+
+Every $\auroc$ in the paper is reported with a $1{,}000$-sample
+percentile bootstrap $95\%$ confidence interval. The implementation is at
+\texttt{src/derma\_jepa/metrics.py:66} (\texttt{bootstrap\_auroc\_ci}); the
+unit tests at \texttt{tests/test\_metrics.py} cover the AUROC point
+estimate, the bootstrap CI shape, the equal-error-rate threshold, and the
+FPR-at-fixed-TPR computation.
+
+\paragraph{Resampling unit.} The resampling unit is the pair: each
+bootstrap sample draws $N$ stable--changing pair indices with
+replacement from the $N = 2{,}000$ pairs in a split, recomputes
+$\auroc$ on the resampled set, and records the value. The $2.5\%$ and
+$97.5\%$ percentiles of the $1{,}000$ resampled $\auroc$ values define
+the reported CI. Pair-level resampling matches the unit at which the
+score $s$ is computed (eq.~\ref{eq:score}); it does not stratify by
+diagnosis or by anatomical site.
+
+\paragraph{Determinism.} The bootstrap RNG is seeded from the same
+project seed used for split assignment, predictor initialisation, and
+pair generation. Re-running a configuration with the same seed
+reproduces byte-identical CIs.
+
+\paragraph{Seed-mean CIs.} For the EXP-007 and EXP-008 seed sweeps
+(\S\ref{app:per-run:seed-sweep}), the reported $\pm$ values are
+unbiased standard deviations across the five seed-mean $\auroc$
+estimates; the reported ``$95\%$ CI[mean]'' is the seed-mean point
+estimate plus and minus $1.96$ times the seed-mean standard error
+($\sigma / \sqrt{n}$ with $n = 5$). These intervals quantify seed
+variance and are distinct from the per-pair bootstrap CIs reported on a
+single seed.
+
+\paragraph{Companion metrics.} Alongside $\auroc$, every run reports
+AUPRC, the equal-error-rate threshold, and the false-positive rate at a
+fixed true-positive rate of $0.8$. Each is bootstrapped under the same
+protocol. AUPRC tracks $\auroc$ rank-monotonically across the nine runs;
+EER and FPR-at-TPR add operating-point information that is sensitive to
+the train$\to$test score-distribution shift discussed in
+\S\ref{sec:analysis:inversion}. Per-run values are mirrored at
+\texttt{<run\_id>/metrics.json} under \runarchive.

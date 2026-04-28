@@ -24,8 +24,17 @@ image-level overlap (\S\ref{sec:followup}).}
 \label{fig:cross-backbone-gradient}
 \end{figure}
 
-\todo[inline]{Figure 2 (train-vs-test scatter) and Figure 3 (3-panel pair-
-score histograms): build scripts in \texttt{paper/figures/}.}
+Table~\ref{tab:predictor-optimiser} isolates the predictor $\times$
+optimiser axis under frozen DINOv2 ViT-B/14: across linear and MLP
+predictors, under SGD and Adam, with train $\auroc$ ranging from
+$0.572$ to $0.900$, test $\auroc$ on \strongholdtwo\ stays in a
+$\pm 0.011$ band around $0.255$. Scaffold capacity is not the
+bottleneck.
 
-\todo[inline]{Table 2 (predictor $\times$ optimiser ablation) and Table 3
-(seed sweep): hand-write \texttt{paper/tables/tab2-*.tex} and \texttt{tab3-*.tex}.}
+\input{tables/tab2-predictor-optimiser}
+
+Table~\ref{tab:seed-sweep} reports the seed sweep on the two
+contamination-relevant configurations. Both headline numbers are
+seed-stable; the partition gradient is robust to seed variance.
+
+\input{tables/tab3-seed-sweep}

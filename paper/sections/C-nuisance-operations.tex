@@ -1,4 +1,73 @@
-% Appendix stub --- draft from docs/paper/OUTLINE.md \S8 and the per-run reports.
 \section{Nuisance-family operation specifications}
 \label{app:nuisance-operations}
-\todo[inline]{Draft from the corresponding OUTLINE \S8 pointer plus the relevant sources under \texttt{docs/experiments/} or \texttt{src/derma\_jepa/}.}
+
+The three nuisance families in \S\ref{sec:method:nuisance} are implemented
+in \texttt{src/derma\_jepa/public\_data.py}: \strongfam\ at line 751
+(\texttt{\_apply\_strong\_nuisance}), \strongholdone\ at line 829
+(\texttt{\_apply\_strong\_held\_out\_nuisance}), and \strongholdtwo\ at
+line 494 (\texttt{\_apply\_strong\_held\_out\_2\_nuisance}). Each function
+takes a PIL image, a per-pair index, and a NumPy \texttt{Generator},
+applies the operations below in the listed order, and returns the
+nuisance-perturbed image alongside a recipe dictionary recording the
+sampled parameter values.
+
+\subsection*{\strongfam}
+Photometric, geometric, and sensor-noise perturbations that model
+ordinary acquisition variability.
+\begin{itemize}
+\item Brightness, contrast, and saturation jitter applied independently:
+      each scaled by $u \sim \mathrm{Uniform}(0.6, 1.4)$ via PIL
+      \texttt{ImageEnhance}.
+\item Affine transform: rotation $\theta \sim \mathrm{Uniform}(-15^{\circ}, 15^{\circ})$,
+      isotropic scale $s \sim \mathrm{Uniform}(0.82, 1.00)$, translation
+      $(t_{x}, t_{y}) \sim \mathrm{Uniform}(-0.05, 0.05)^{2}$ in image-fraction units.
+\item Horizontal flip with probability $0.5$.
+\item Gaussian blur with radius $r \sim \mathrm{Uniform}(0.5, 1.5)$\,px.
+\item Additive Gaussian noise with $\sigma \sim \mathrm{Uniform}(0, 8)$
+      on the $0$--$255$ scale.
+\item JPEG round-trip at quality $q \sim \mathrm{Uniform}\{45, \dots, 70\}$.
+\end{itemize}
+
+\subsection*{\strongholdone}
+Disjoint operation set: HSV colour rotation, posterisation, sharpening,
+motion blur, occlusion, and aggressive JPEG compression. No transform
+type overlaps with \strongfam.
+\begin{itemize}
+\item HSV hue rotation by $\Delta h \sim \mathrm{Uniform}(-12^{\circ}, 12^{\circ})$.
+\item Posterise to $b \sim \mathrm{Uniform}\{4, 5, 6\}$ bits per channel.
+\item Unsharp-mask sharpen with PIL \texttt{ImageFilter.UnsharpMask}
+      (radius $2$, percent $\sim \mathrm{Uniform}(120, 200)$, threshold $3$).
+\item Motion blur with a linear kernel of length $k \sim \mathrm{Uniform}\{5, \dots, 15\}$\,px,
+      orientation chosen uniformly from \{vertical, horizontal\}.
+\item Random rectangular erasing covering
+      $\alpha \sim \mathrm{Uniform}(0.06, 0.18)$ of the image area, fill
+      colour sampled per call from $\{0, 128, 255\}$.
+\item JPEG round-trip at quality $q \sim \mathrm{Uniform}\{20, \dots, 40\}$.
+\end{itemize}
+
+\subsection*{\strongholdtwo}
+Disjoint operation set: gamma, colour-temperature, vignette,
+salt-and-pepper noise, and high-quality JPEG. No transform type overlaps
+with \strongfam\ or \strongholdone.
+\begin{itemize}
+\item Gamma correction with $\gamma \sim \mathrm{Uniform}(0.6, 1.6)$
+      (non-linear, distinct from contrast).
+\item Colour-temperature shift: scale R by
+      $T \sim \mathrm{Uniform}(0.85, 1.15)$ and divide B by $T$.
+\item Radial vignette with cos$^{2}$ falloff at strength
+      $v \sim \mathrm{Uniform}(0.25, 0.55)$ from image centre.
+\item Salt-and-pepper impulse noise covering
+      $\rho \sim \mathrm{Uniform}(0.005, 0.025)$ of pixels with value
+      drawn uniformly from $\{0, 255\}$.
+\item JPEG round-trip at quality $q \sim \mathrm{Uniform}\{80, \dots, 95\}$
+      (distinct from \strongfam's $45$--$70$ and \strongholdone's $20$--$40$).
+\end{itemize}
+
+\paragraph{Disjointness.} The three operation sets share no transform
+type --- a property enforced by inspection of the function bodies and
+re-checked in the code review for every new family proposed. JPEG
+quality ranges are chosen non-overlapping so that the post-pipeline
+compression artefact is family-distinguishable. The composite
+augmentation pipeline is deterministic in the per-pair seed: the same
+seed reproduces byte-identical perturbed images, which is exploited by
+the verification harness in \texttt{tests/test\_public\_data\_pipeline.py}.

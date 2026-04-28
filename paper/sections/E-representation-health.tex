@@ -1,4 +1,38 @@
-% Appendix stub --- draft from docs/paper/OUTLINE.md \S8 and the per-run reports.
 \section{Representation-health checks}
 \label{app:representation-health}
-\todo[inline]{Draft from the corresponding OUTLINE \S8 pointer plus the relevant sources under \texttt{docs/experiments/} or \texttt{src/derma\_jepa/}.}
+
+Three representation-health diagnostics accompany every run, computed by
+\texttt{src/derma\_jepa/training.py:479} (\texttt{\_collapse\_checks}) on
+the $L^{2}$-normalised predictor outputs over the test split. The
+\texttt{collapsed} flag triggers if either the prediction-norm minimum
+or the dimension-variance minimum falls below $10^{-8}$ --- a
+representation collapse would render the cosine-distance score
+ill-defined. None of the nine primary-tier runs trips the flag.
+
+\paragraph{Prediction-norm mean and minimum.} The mean and minimum
+$L^{2}$ norm of the un-normalised predictor outputs across the test
+pairs. A close-to-zero minimum would signal a collapsed direction; a
+close-to-one mean confirms that L2-normalisation is acting on
+non-degenerate vectors. All nine runs report mean $\geq 0.97$ and
+minimum $\geq 0.83$.
+
+\paragraph{Dimension-variance mean and minimum.} The mean and minimum
+of the per-dimension variances of the predictor output across the test
+pairs. A near-zero minimum-variance dimension would signal that the
+predictor has effectively dropped a coordinate. All nine runs report a
+minimum of order $10^{-3}$ or larger; the natural-image-backbone runs
+(EXP-004 / EXP-005 / EXP-006a / EXP-006b) sit one order of magnitude
+above the DermLIP and BiomedCLIP runs, consistent with the fit-quality
+gap and not with collapse.
+
+\paragraph{Collapse flag.} Binary; $\mathrm{true}$ if either of the two
+minima above falls below $10^{-8}$. None of the nine reported runs is
+flagged. The threshold is conservative: $10^{-8}$ corresponds to roughly
+single-precision noise on a unit-norm vector and is intended to catch
+hard collapse rather than soft anisotropy.
+
+\paragraph{Where the values live.} Each run's
+\texttt{metrics.json}\,$\to$\,\texttt{representation\_health} block
+records the four numerical diagnostics and the binary flag. The
+aggregator \texttt{scripts/aggregate\_seed\_sweep.py} pulls these
+fields when computing seed-sweep summaries.

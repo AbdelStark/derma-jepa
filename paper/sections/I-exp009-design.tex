@@ -1,4 +1,87 @@
-% Appendix stub --- draft from docs/paper/OUTLINE.md \S8 and the per-run reports.
 \section{EXP-009 design (planned)}
 \label{app:exp009-design}
-\todo[inline]{Draft from the corresponding OUTLINE \S8 pointer plus the relevant sources under \texttt{docs/experiments/} or \texttt{src/derma\_jepa/}.}
+
+This appendix expands the EXP-009 sketch in \S\ref{sec:followup} into the
+operational details required to launch the experiment. The design is
+committed in advance --- including the decision table mapping outcome
+bands to claim revisions --- so the experiment cannot be re-interpreted
+post-hoc.
+
+\subsection{Goal}
+Self-pretrain a vision encoder on a non-HAM10000 dermoscopy corpus, then
+re-run the EXP-004 recipe on top with the linear predictor. The encoder
+sees no HAM10000 image during pretraining, so the EXP-007-style positive
+on \strongholdtwo\ --- if it appears --- can no longer be attributed to
+HAM10000 image-level overlap and must reflect dermoscopy-domain transfer.
+
+\subsection{Pretraining corpus}
+Assemble from publicly available dermoscopy / clinical-skin sources, with
+provenance audit on every component to confirm HAM10000 exclusion:
+\begin{itemize}
+\item ISIC archive components other than HAM10000 (BCN20000
+      \citep{combalia2019bcn20000}, MSK-1 through MSK-5, UDA, Mednode,
+      and similar legacy archives).
+\item DermNet NZ and DermQuest-derived public images (clinical, not
+      dermoscopic; included to broaden the visual distribution).
+\item PAD-UFES-20 and 7-point checklist datasets (each cross-checked
+      for HAM10000 overlap by lesion-ID and SHA-256 hash).
+\end{itemize}
+Provenance audit: every image must carry a source attribution and a
+SHA-256 hash. The HAM10000 image-hash set is computed from the source
+manifest and excluded by hash; any image whose source attribution is
+ambiguous is excluded by default.
+
+\subsection{Pretraining objective}
+DINOv2 ViT-B/14 architecture (i.e.\ the same family as the EXP-004
+backbone, so any test-$\auroc$ change is attributable to pretraining
+data, not architecture), trained for $\sim$20 epochs with a JEPA-style
+or masked-image-modelling objective. Hyperparameters target a
+$\sim$$200{,}000$-step regime on a $\sim$$8\times$~A10G or
+$1\times$~A100 budget. Pretrain-quality is checked by linear-probing on
+a held-out HAM10000 split for diagnosis classification --- a sanity
+check that the encoder has not overfit to its training distribution.
+
+\subsection{Probe}
+After pretraining, the encoder is frozen and the EXP-004 recipe runs on
+top: linear predictor with identity warm-start, SGD, weight-decay-on-$(W-I)$,
+$200$ epochs, the same lesion-ID splits, the same $1{,}000 + 1{,}000$
+pairs per split, the same three-family augmentation pipeline, the same
+seed. The only varied axis relative to EXP-004 is the pretraining
+data; the only varied axis relative to EXP-007 is HAM10000 inclusion in
+that pretraining data.
+
+\subsection{Decision table}
+Identical to Table~\ref{tab:exp009-decision} in \S\ref{sec:followup}.
+Outcome bands and claim revisions:
+\begin{itemize}
+\item Test $\auroc \geq 0.85$: dermoscopy-domain transfer is sufficient
+      under this scaffold. Headline survives; contamination caveat
+      downgrades from ``unpartitioned'' to ``ruled out.''
+\item Test $\auroc$ in $[0.50, 0.80]$: partial transfer; both factors
+      contribute. Claim becomes ``dermoscopy-domain pretraining helps,
+      HAM10000 image overlap helps more.''
+\item Test $\auroc$ in $[0.30, 0.50]$: HAM10000 overlap drove EXP-007.
+      Claim narrows to ``frozen-backbone JEPA unlocks when the backbone
+      has seen the eval dataset, not when it has seen the eval
+      domain.''
+\end{itemize}
+
+\subsection{Why not run before this preprint}
+Three concrete costs gate the launch:
+\begin{enumerate}[label=(\arabic*), leftmargin=2em]
+\item \emph{Provenance audit.} Confirming HAM10000 exclusion on every
+      ISIC component requires a per-image hash check against the
+      HAM10000 manifest --- the audit is straightforward but is itself
+      a multi-day engineering task before any GPU is spent.
+\item \emph{Pretrain compute.} DINOv2 ViT-B/14 pretraining on
+      $\sim$$200{,}000$ steps requires a non-trivial GPU budget that is
+      not in the free-tier envelope used for the other nine runs.
+\item \emph{Pretrain-quality validation.} A weak pretraining run that
+      never learns dermoscopy structure would produce a low test
+      $\auroc$ that the decision table would mis-attribute to (ii) or
+      (iii) when the actual cause is pretrain failure. We need a
+      held-out diagnostic to disambiguate.
+\end{enumerate}
+We share the methodology and the nine-run arc at this stage to invite
+feedback on the proxy-task design and on whether the proposed partition
+is the right one before committing to the build.
