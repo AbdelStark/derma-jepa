@@ -5,6 +5,8 @@ description = "JEPA-style latent trajectory research tooling for lesion-monitori
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "AbdelStark" }]
+license = "MIT"
+license-files = ["LICENSE"]
 keywords = [
   "dermatology",
   "dermoscopy",
