@@ -56,8 +56,11 @@ with BiomedCLIP --- ViT-B/16 CLIP-trained on PMC-15M biomedical figure--caption
 pairs, which do \emph{not} include HAM10000 --- produces test
 $\auroc = 0.325$ (single seed). The web $\to$ general-medical step adds
 $+0.04$ $\auroc$; the general-medical $\to$ dermoscopy step adds $+0.62$.
-EXP-008 rules out ``any medical-image pretraining'' as sufficient but does
-not separate dermoscopy-domain transfer from HAM10000 image-level overlap.
+EXP-008 rules out ``PMC-15M-style biomedical-figure pretraining at the
+dermatology fraction PMC-15M happens to contain'' as sufficient
+(PMC-15M's per-source breakdown is not published, so we do not
+generalise beyond the PMC-15M-shaped point) but does not separate
+dermoscopy-domain transfer from HAM10000 image-level overlap.
 
 \paragraph{Seed sweep on EXP-007 and EXP-008.} Five seeds per
 configuration. DermLIP test $\auroc = 0.944 \pm 0.003$ (range $0.939$--$0.947$,

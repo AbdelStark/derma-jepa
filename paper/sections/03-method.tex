@@ -4,8 +4,10 @@
 \subsection{Notation and probe}
 \label{sec:method:notation}
 
-Let $f : \mathcal{X} \to \mathbb{R}^{d}$ be a frozen vision encoder with
-output dimension $d$, and define the L2-normalised representation
+Let $\mathcal{X} \subset [0,1]^{3 \times H \times W}$ denote RGB images
+at the backbone's native input resolution, and let $f : \mathcal{X}
+\to \mathbb{R}^{d}$ be a frozen vision encoder with output dimension
+$d$. Define the L2-normalised representation
 \begin{equation}
   z(x) \;=\; \frac{f(x)}{\lVert f(x) \rVert_{2}} \;\in\; \mathbb{S}^{d-1}.
 \end{equation}
@@ -18,8 +20,12 @@ $\nu \sim \mathcal{N}_{F}$ from family $F$:
 A \emph{changing} pair pairs two distinct lesions $u_{1}, u_{2}$ matched on
 diagnosis $\mathrm{dx}(u_{1}) = \mathrm{dx}(u_{2})$ and anatomical site
 $\mathrm{site}(u_{1}) = \mathrm{site}(u_{2})$; each side receives an
-independent nuisance draw. The predictor $g_{\theta} : \mathbb{R}^{d} \to
-\mathbb{R}^{d}$ minimises the L2-MSE objective on stable training pairs:
+independent nuisance draw. The predictor
+$g_{\theta} : \mathbb{S}^{d-1} \to \mathbb{R}^{d}$ takes a unit-norm
+backbone representation as input and produces an unconstrained
+$d$-vector as output; predictor outputs are L2-normalised only at
+scoring time (eq.~\ref{eq:score}). It minimises the L2-MSE objective on
+stable training pairs:
 \begin{equation}
   \mathcal{L}(\theta) \;=\; \frac{1}{|\mathcal{D}_{\mathrm{train}}^{\mathrm{stable}}|}\!\!
   \sum_{(x_{c}, x_{t}) \in \mathcal{D}_{\mathrm{train}}^{\mathrm{stable}}}
@@ -38,18 +44,41 @@ zero by construction, and $\mathcal{R}$ is standard $L^{2}$ weight decay
 on the predictor weights (decoupled, in the Adam configuration);
 applying a $\lVert W_{2} - I \rVert_{F}^{2}$ penalty here would
 contradict the zero-init identity warm-start. Per-variant values of
-$\lambda$ are listed in Appendix~\ref{app:hyperparameters}. At
-evaluation time, the score for a
-pair is the cosine \emph{distance} between the L2-normalised prediction and
-the L2-normalised target:
+$\lambda$ are listed in Appendix~\ref{app:hyperparameters}.
+
+We do not L2-project predictions during training: expanding the loss,
+$\lVert g_{\theta}(z(x_{c})) - z(x_{t}) \rVert_{2}^{2}
+= \lVert g_{\theta}(z(x_{c})) \rVert_{2}^{2}
+- 2\,\langle g_{\theta}(z(x_{c})), z(x_{t}) \rangle + 1$,
+so the loss simultaneously drives the prediction direction toward
+$z(x_{t})$ and the prediction norm toward $1$. Empirically the
+prediction-norm mean is $\geq 0.97$ in every reported run
+(Appendix~\ref{app:representation-health}). The
+$\lVert W - I \rVert_{F}^{2}$ penalty is soft, not constraining: at
+equilibrium $\lVert W - I \rVert_{F}$ is set by the balance between
+the data gradient and $\lambda$, not pinned at zero.
+
+At evaluation time, the score for a pair is the cosine
+\emph{distance} between the L2-normalised prediction and the
+L2-normalised target:
 \begin{equation}
-  s(x_{c}, x_{t}) \;=\; 1 \;-\; \langle \tilde{g}_{\theta}(z(x_{c})), z(x_{t}) \rangle, \qquad
-  \tilde{g}_{\theta}(\cdot) := \frac{g_{\theta}(\cdot)}{\lVert g_{\theta}(\cdot) \rVert_{2}}.
+  \tilde{g}_{\theta}(z) \;:=\; \frac{g_{\theta}(z)}{\lVert g_{\theta}(z) \rVert_{2}},
+  \label{eq:gtilde}
+\end{equation}
+\begin{equation}
+  s(x_{c}, x_{t}) \;=\; 1 \;-\; \langle \tilde{g}_{\theta}(z(x_{c})), z(x_{t}) \rangle.
   \label{eq:score}
 \end{equation}
-A correctly oriented predictor produces $s(x_{c}, x_{t}) < s(x_{c}', x_{t}')$
-whenever $(x_{c}, x_{t})$ is stable and $(x_{c}', x_{t}')$ is changing;
-$\auroc$ quantifies this ranking.
+We adopt $y = 1$ for changing and $y = 0$ for stable, and use $s$
+directly (no sign flip) as the score input to $\auroc$, so that a
+correctly oriented predictor produces
+$s(x_{c}, x_{t}) < s(x_{c}', x_{t}')$ whenever $(x_{c}, x_{t})$ is
+stable and $(x_{c}', x_{t}')$ is changing, and $\auroc > 0.5$. Under
+this fixed convention, $\auroc < 0.5$ is a structurally inverted
+predictor, not a sign-convention free parameter:\ in deployment the
+predictor cannot flip its output without an oracle that already knows
+which class is which, so the directional $\auroc$ is the relevant
+quantity.
 
 \subsection{Predictor variants}
 \label{sec:method:predictor}
@@ -69,9 +98,13 @@ $g_{\theta} = \mathrm{identity}$. Hidden dimension $512$.
 \label{sec:method:nuisance}
 
 The augmentation suite specifies three deterministic synthetic nuisance
-families, summarised in Table~\ref{tab:nuisance-families}. The disjointness
-rule is operation-level: no transform type is shared between any two
-families. The exact operation parameters are listed in
+families, summarised in Table~\ref{tab:nuisance-families}. No
+operation--parameter-band combination is shared between any two
+families; JPEG compression is the one operation that recurs across
+all three, with disjoint quality bands ($45$--$70$ for \strongfam,
+$20$--$40$ for \strongholdone, $80$--$95$ for \strongholdtwo) chosen
+so the resulting compression artefact is perceptually distinct per
+family. The exact operation parameters are listed in
 Appendix~\ref{app:nuisance-operations}.
 
 \begin{table}[h]

@@ -28,6 +28,16 @@ for EXP-004 onward; SSIM or DINOv2-S cosine in earlier runs).
 five seeds. \textsuperscript{\ddag} Mean $\pm$ sd across five seeds.
 \textsuperscript{$\star$} Derm1M almost certainly contains HAM10000 raw
 images; the resulting positive cannot be attributed to dermoscopy-domain
-transfer with the experiments reported here (\S\ref{sec:followup}).}
+transfer with the experiments reported here (\S\ref{sec:followup}).
+$\auroc$ is reported under the directional convention of
+\S\ref{sec:method:eval} ($y = 1$ for changing, no sign flip); the
+sign-symmetric equivalent for raw embedding cosine baselines (whose
+discriminative information survives a sign flip but is not usable in
+deployment without an oracle that already labels the pair) is
+$1 - \auroc$, e.g.\ symmetric raw DermLIP cosine $= 0.891$, raw
+OpenAI CLIP cosine $= 0.964$, raw BiomedCLIP cosine $= 0.953$, raw
+DINOv2 ViT-B/14 cosine $= 0.726$. The directional comparison is the
+operative one because the predictor must learn the correct orientation
+under the fixed train/test convention.}
 \label{tab:cross-run}
 \end{table}

@@ -35,8 +35,11 @@ observe (frozen DermLIP at $0.944 \pm 0.003$ test $\auroc$ across $5$ seeds)
 \emph{cannot be attributed to dermoscopy-domain transfer with the experiments
 reported here.} DermLIP's pretraining corpus, Derm1M
 \citep{yan2025derm1m}, almost certainly contains HAM10000 raw images, and the
-BiomedCLIP partition we report rules out only the broader ``any medical-image
-pretraining is sufficient'' alternative. A natural follow-up experiment
+BiomedCLIP partition we report rules out only the narrower
+``PMC-15M-style biomedical-figure pretraining (with PMC-15M's
+undocumented dermatology fraction) is sufficient'' alternative; it
+does not preclude other medical pretraining corpora with substantial
+dermatology content. A natural follow-up experiment
 we sketch as EXP-009 (a self-pretrained DINOv2 on a non-HAM10000
 dermoscopy corpus, \S\ref{sec:followup}) would aim to close the
 partition; we deliberately publish at this stage --- before committing
@@ -68,10 +71,11 @@ with the contamination caveat marked on the right.
       domain transfer rather than HAM10000 image-level overlap;
       EXP-009 (\S\ref{sec:followup}) would be one way to close the
       partition.
-\item \textbf{Empirical (negative-as-partition).} Frozen BiomedCLIP --- the
-      cleanest publicly available ``general medical pretraining without
-      HAM10000'' backbone --- lifts only $+0.04$ over web CLIP, ruling out
-      ``any medical-image pretraining'' as sufficient.
+\item \textbf{Empirical (negative-as-partition).} Frozen BiomedCLIP ---
+      a ``biomedical-figure pretraining without HAM10000'' backbone
+      whose dermatology fraction is undocumented but plausibly small
+      --- lifts only $+0.04$ over web CLIP, narrowing the open question
+      to dermoscopy-rich pretraining.
 \item \textbf{Reproducibility.} Every primary-tier run is archived publicly at
       \runarchive\ with manifests, embeddings, metrics, model card, and logs.
       A single launcher script reproduces each run end-to-end on a free A10G

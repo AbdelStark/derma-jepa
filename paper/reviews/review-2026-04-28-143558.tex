@@ -1,0 +1,182 @@
+% DermaJEPA preprint — pass-2 strict pre-publication review
+% Three-agent parallel deep audit: zero-context claim re-derivation,
+% adversarial / counter-narrative, mathematical formalism rigor.
+% Date: 2026-04-28 14:36 UTC. Reviewer: paper-review skill.
+
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{enumitem}
+\setlist{noitemsep, topsep=2pt}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\title{Pre-publication review (pass 2) of \emph{Frozen-backbone JEPA-style
+       probes on HAM10000} (commit \texttt{365b641})}
+\author{Three-agent deep audit (zero-context $\parallel$ adversarial $\parallel$ formalism)}
+\date{2026-04-28}
+
+\begin{document}
+\maketitle
+
+\section*{Headline}
+
+Twelve headline numbers re-derived independently from the raw evidence
+without paper-side context: \textbf{all verified}. The pass surfaces
+\textbf{zero blockers}, \textbf{five major}, and \textbf{seven minor}
+issues. The major issues are reviewer-anticipation defences and
+exposition gaps, not factual errors. The math and the implementation
+agree on every checkable point. Recommendation: \textbf{minor revision}
+with the following inserted before submission.
+
+\section{Major findings}
+
+\subsection*{B1 (transparency) --- AUROC convention is sign-locked;
+            symmetric-reading defence is missing}
+
+\textbf{Location.} Abstract; \S5; Table~1; \texttt{baselines.py:44}
+(\texttt{max(...,~key=auroc)}).\\
+\textbf{Problem.} Under the paper's stated convention (label
+\texttt{changing}~$=1$, score~$=$~cosine distance, no sign flip), raw
+DermLIP cosine has $\auroc = 0.109$. A reviewer will note that
+$1 - 0.109 = 0.891$ is the symmetric-AUROC equivalent and ask why
+pixel-L2 ($0.580$) is the ``strongest baseline'' rather than
+sign-corrected raw DermLIP cosine. Under that reading the JEPA scaffold
+contributes only $+0.053$ on top of raw cosine, not $+0.363$.\\
+\textbf{Why it matters.} The defence is real: under fixed train/test
+convention the predictor must \emph{learn the correct sign}, which
+cannot be flipped in deployment. But the paper never states this. A
+TMLR / MIDL reviewer will treat the comparison as ill-posed without
+the explicit clarification.\\
+\textbf{Fix.} Add to \S3.5 (Evaluation protocol) a sentence stating
+that $\auroc$ is computed directionally under the fixed convention; in
+\S5 (or as a footnote on Table 1) report the symmetric-equivalent raw
+embedding cosine $\auroc$ alongside the directional value, and a one-
+sentence justification of the directional comparison: \emph{the JEPA
+predictor's job includes learning the correct orientation; a baseline
+that requires an a-priori sign flip is not a usable reference for our
+probe.}
+
+\subsection*{C-F2 (DE) --- predictor domain mismatch}
+
+\textbf{Location.} \texttt{03-method.tex:21}.\\
+\textbf{Problem.} $g_\theta : \mathbb{R}^d \to \mathbb{R}^d$, but the
+input is always $z(x) \in \mathbb{S}^{d-1}$.\\
+\textbf{Fix.} Replace with $g_\theta : \mathbb{S}^{d-1} \to \mathbb{R}^d$.
+The codomain stays $\mathbb{R}^d$ (output is L2-normalised only at
+scoring time, eq.~3).
+
+\subsection*{C-F5 (DE) --- AUROC label convention never stated}
+
+\textbf{Location.} \texttt{03-method.tex:50--52}.\\
+\textbf{Problem.} The paper says ``a correctly oriented predictor
+produces $s(x_c, x_t) < s(x_c', x_t')$ whenever $(x_c, x_t)$ is
+stable'' but never states which class is positive in the AUROC
+calculation. Verified via \texttt{contracts.py:44--45} and
+\texttt{training.py:448}: positive class is \texttt{changing}~$=1$;
+score is the raw cosine distance (no sign flip).\\
+\textbf{Fix.} Insert after eq.~3: ``We adopt $y = 1$ for changing and
+$y = 0$ for stable; $s$ is used directly (no sign flip) as the AUROC
+score, so a correctly oriented predictor yields $\auroc > 0.5$.''
+
+\subsection*{C-F8 (UC) --- ``no transform type shared'' is false read
+            literally}
+
+\textbf{Location.} \texttt{03-method.tex:71--93} and Appendix~C.\\
+\textbf{Problem.} JPEG compression appears in all three families
+($q \in \{45\text{--}70, 20\text{--}40, 80\text{--}95\}$). The
+``operation-level disjointness'' claim is not literal disjointness of
+operation \emph{types}; it is disjointness of operation--parameter-band
+\emph{combinations}.\\
+\textbf{Fix.} ``no operation--parameter-band combination is shared
+between any two families; JPEG is the one operation that recurs across
+all three, with disjoint quality bands $\{20\text{--}40,
+45\text{--}70, 80\text{--}95\}$, chosen so the resulting compression
+artefact is perceptually distinct per family.''
+
+\subsection*{B2 / B3 (scope softening) --- ``any medical-image
+            pretraining'' and ``two architectures''}
+
+\textbf{Location.} Abstract, \S1, \S5, \S7.\\
+\textbf{Problem.} (a) ``Rules out any medical-image pretraining'' is
+stronger than EXP-008 supports: PMC-15M's dermatology fraction is
+undocumented in the paper, so the partition really only rules out
+``PMC-15M-style biomedical-figure pretraining at the dermatology
+fraction PMC-15M happens to contain''. (b) ``Two architectures''
+overstates a comparison that mixes a DINOv2-pretrained ViT-B/14 with
+three CLIP-pretrained ViT-B/16 backbones; better phrasing is ``two
+pretraining paradigms within the ViT-B class.''\\
+\textbf{Fix.} Reword in abstract / \S1 / \S5 / \S7 conclusions to the
+narrower scope.
+
+\section{Minor findings}
+
+\begin{enumerate}[leftmargin=2em]
+\item \textbf{C-F1.} $\mathcal{X}$ undefined. Add ``\,$\mathcal{X}
+      \subset [0, 1]^{3 \times H \times W}$ denotes RGB images at the
+      backbone's native input resolution''.
+\item \textbf{C-F3.} Train/eval normalisation asymmetry is intentional
+      but unstated. Add: ``We do not L2-project predictions during
+      training; the loss
+      $\|g_\theta(z(x_c)) - z(x_t)\|_2^2 = \|g_\theta(z(x_c))\|_2^2 -
+      2\langle g_\theta(z(x_c)), z(x_t)\rangle + 1$ jointly drives the
+      prediction direction toward $z(x_t)$ and the prediction norm
+      toward $1$. Appendix~E reports prediction-norm mean $\geq 0.97$
+      in every run.''
+\item \textbf{C-F4.} ``Soft regulariser'' equilibrium argument missing.
+      Add: ``$\mathcal{R}$ is soft, not constraining: at equilibrium
+      $\|W - I\|_F$ is set by the balance between data gradient and
+      $\lambda$, not pinned at zero.''
+\item \textbf{C-F6.} Bootstrap is not label-stratified; the
+      stable/changing balance per resample drifts $\sim \pm 22$. Add a
+      sentence to Appendix~D acknowledging this and stating the CI is
+      marginal over the empirical class balance.
+\item \textbf{C-F7.} ``Collapse'' minima not specified. In Appendix~E
+      define: ``prediction-norm minimum $\equiv \min_{x \in
+      \mathcal{D}_{\mathrm{test}}} \|g_\theta(z(x))\|_2$;
+      dimension-variance minimum $\equiv \min_{j} \mathrm{Var}_{x \in
+      \mathcal{D}_{\mathrm{test}}}(g_\theta(z(x))_j)$''.
+\item \textbf{C-F10.} $\tilde g_\theta$ should be defined in a numbered
+      display rather than inline so \S7 can reference it.
+\item \textbf{(Agent-A observation, not a defect.)} The
+      general-medical-to-dermoscopy step is more precisely $+0.6149$
+      (rounded to $+0.62$). The abstract's $+0.62$ rounds in the
+      conventional direction; consider quoting $+0.61$ in any future
+      precision-sensitive context.
+\end{enumerate}
+
+\section{Findings B could not break}
+
+\begin{itemize}[leftmargin=2em]
+\item Predictor near-identity vs train $\auroc = 0.953$: weights from
+      \texttt{jepa\_predictor.npz} show $\|W - I\|_F = 2.33$ for
+      EXP-007 and $3.49$ for EXP-004 with bias norm $\approx 0.44$.
+      With the soft regulariser and the empirical loss gradient, this
+      departure is compatible with the data; not a paradox.
+\item EXP-002 (train $\auroc 0.953$) vs EXP-004 (train $\auroc 0.900$):
+      different proxies (matched-eval vs mixed-family training); not a
+      contradiction.
+\item Seed-std ratio (DermLIP $0.0029$ vs BiomedCLIP $0.0120$):
+      $F = 16.72$, $\mathrm{df}(4,4)$, two-sided $p = 0.018$. The
+      $4\times$ ratio is statistically significant at $\alpha = 0.05$
+      even with $n = 5$.
+\item Lesion-ID-aware leakage probe: existing probe in Appendix~H is
+      honestly scoped; Agent~B did not test diagnosis-correlation or
+      photographer-identity leakage but did not invalidate the existing
+      probe either.
+\end{itemize}
+
+\section{Top-priority fixes (top 5)}
+
+\begin{enumerate}[leftmargin=2em]
+\item B1 --- explicit AUROC-convention statement plus symmetric-equivalent
+      raw-cosine row in Table~1 caption.
+\item C-F2 --- correct $g_\theta$ domain to $\mathbb{S}^{d-1}$.
+\item C-F5 --- state the label convention ($y = 1$ for changing,
+      $y = 0$ for stable; no sign flip).
+\item C-F8 --- soften ``no transform type shared'' to
+      ``no operation--parameter-band combination shared''.
+\item B2 / B3 --- scope softening on ``any medical-image pretraining''
+      and ``two architectures''.
+\end{enumerate}
+
+\end{document}

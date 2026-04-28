@@ -9,13 +9,18 @@ estimate, the bootstrap CI shape, the EER threshold, and the
 FPR-at-fixed-TPR computation.
 
 \paragraph{Resampling unit.} The resampling unit is the pair: each
-bootstrap sample draws $N$ stable--changing pair indices with
-replacement from the $N = 2{,}000$ pairs in a split, recomputes
-$\auroc$ on the resampled set, and records the value. The $2.5\%$ and
-$97.5\%$ percentiles of the $1{,}000$ resampled $\auroc$ values define
-the reported CI. Pair-level resampling matches the unit at which the
-score $s$ is computed (eq.~\ref{eq:score}); it does not stratify by
-diagnosis or by anatomical site.
+bootstrap sample draws $N = 2{,}000$ pair indices with replacement from
+the $N$ stable--changing pairs in a split, recomputes $\auroc$ on the
+resampled set, and records the value. The $2.5\%$ and $97.5\%$
+percentiles of the $1{,}000$ resampled $\auroc$ values define the
+reported CI. Pair-level resampling matches the unit at which the score
+$s$ is computed (eq.~\ref{eq:score}); the resampling is
+\emph{not} stratified by label, so the per-resample stable/changing
+balance varies (one standard deviation $\sim$$\sqrt{N/4} \approx 22$
+pairs around the $1{,}000{:}1{,}000$ mean). The reported CI is
+therefore marginal over the empirical class balance; we did not
+observe class-balance-driven CI inflation in spot checks.
+Resampling is also not stratified by diagnosis or by anatomical site.
 
 \paragraph{Determinism.} The bootstrap RNG is seeded from the same
 project seed used for split assignment, predictor initialisation, and

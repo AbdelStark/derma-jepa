@@ -9,21 +9,24 @@ or the dimension-variance minimum falls below $10^{-8}$ --- a
 representation collapse would render the cosine-distance score
 ill-defined. None of the nine primary-tier runs trips the flag.
 
-\paragraph{Prediction-norm mean and minimum.} The mean and minimum
-$L^{2}$ norm of the un-normalised predictor outputs across the test
-pairs. A close-to-zero minimum would signal a collapsed direction; a
-close-to-one mean confirms that L2-normalisation is acting on
-non-degenerate vectors. All nine runs report mean $\geq 0.97$ and
-minimum $\geq 0.83$.
+\paragraph{Prediction-norm mean and minimum.} The mean and minimum of
+$\lVert g_{\theta}(z(x)) \rVert_{2}$ across the test-split context
+inputs $x \in \mathcal{D}_{\mathrm{test}}^{\mathrm{stable}} \cup
+\mathcal{D}_{\mathrm{test}}^{\mathrm{changing}}$ (un-normalised
+predictor outputs). A close-to-zero minimum would signal a collapsed
+direction; a close-to-one mean confirms that L2-normalisation is
+acting on non-degenerate vectors. All nine runs report mean
+$\geq 0.97$ and minimum $\geq 0.83$.
 
-\paragraph{Dimension-variance mean and minimum.} The mean and minimum
-of the per-dimension variances of the predictor output across the test
-pairs. A near-zero minimum-variance dimension would signal that the
-predictor has effectively dropped a coordinate. All nine runs report a
-minimum of order $10^{-3}$ or larger; the natural-image-backbone runs
-(EXP-004 / EXP-005 / EXP-006a / EXP-006b) sit one order of magnitude
-above the DermLIP and BiomedCLIP runs, consistent with the fit-quality
-gap and not with collapse.
+\paragraph{Dimension-variance mean and minimum.}
+$\min_{j} \mathrm{Var}_{x \in \mathcal{D}_{\mathrm{test}}}\!\bigl(
+g_{\theta}(z(x))_{j}\bigr)$ and the analogous mean across the $d$
+output dimensions. A near-zero minimum-variance dimension would signal
+that the predictor has effectively dropped a coordinate. All nine
+runs report a minimum of order $10^{-3}$ or larger; the natural-image-
+backbone runs (EXP-004 / EXP-005 / EXP-006a / EXP-006b) sit one order
+of magnitude above the DermLIP and BiomedCLIP runs, consistent with
+the fit-quality gap and not with collapse.
 
 \paragraph{Collapse flag.} Binary; $\mathrm{true}$ if either of the two
 minima above falls below $10^{-8}$. None of the nine reported runs is
