@@ -170,26 +170,159 @@ After v0.1 is complete:
 
 ## Phase 5 — references and bibliography
 
-`paper/refs.bib` should include, at minimum:
+Drop the entries below into `paper/refs.bib`. Cite keys are paper-conventional `lastnameYEARkeyword`.
 
-- I-JEPA — `@inproceedings{assran2023ijepa, ... arxiv = {2301.08243}}`
-- JEPA position paper — LeCun 2022 OpenReview ID.
-- DINO — `@inproceedings{caron2021dino, ... arxiv = {2104.14294}}`
-- DINOv2 — `@article{oquab2024dinov2, ... arxiv = {2304.07193}}`
-- CLIP — `@inproceedings{radford2021clip, ... arxiv = {2103.00020}}`
-- OpenCLIP — `@inproceedings{cherti2023openclip, ... arxiv = {2212.07143}}`
-- HAM10000 — `@article{tschandl2018ham10000, doi = {10.1038/sdata.2018.161}}`
-- DermLIP / Derm1M — `@misc{yan2025derm1m, ... arxiv = {2503.14911}}`
-- BiomedCLIP — `@misc{zhang2023biomedclip, ... arxiv = {2303.00915}}`
-- MAE — `@inproceedings{he2022mae, ... arxiv = {2111.06377}}`
-- VICReg — `@inproceedings{bardes2022vicreg, ... arxiv = {2105.04906}}`
-- WILDS — `@inproceedings{koh2021wilds, ... arxiv = {2012.07421}}`
-- DG search — `@inproceedings{gulrajani2021dg, ... arxiv = {2007.01434}}`
-- BCN20000 — `@misc{combalia2019bcn20000, ... arxiv = {1908.02288}}`
-- Foundation models — `@misc{bommasani2021foundation, ... arxiv = {2108.07258}}`
-- ISIC challenge papers (2017, 2018, 2019) — three entries.
+```bibtex
+@inproceedings{assran2023ijepa,
+  author    = {Assran, Mahmoud and Duval, Quentin and Misra, Ishan and Bojanowski, Piotr and Vincent, Pascal and Rabbat, Michael and LeCun, Yann and Ballas, Nicolas},
+  title     = {Self-Supervised Learning from Images with a Joint-Embedding Predictive Architecture},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year      = {2023},
+  eprint    = {2301.08243},
+  archivePrefix = {arXiv},
+}
 
-Each `bib` entry should have at minimum: `author`, `title`, `year`, and one of `arxiv` / `doi` / `url`. Run `bibtex` warnings to zero before submission.
+@misc{lecun2022path,
+  author = {LeCun, Yann},
+  title  = {A Path Towards Autonomous Machine Intelligence},
+  year   = {2022},
+  url    = {https://openreview.net/pdf?id=BZ5a1r-kVsf},
+  note   = {Position paper},
+}
+
+@inproceedings{caron2021dino,
+  author    = {Caron, Mathilde and Touvron, Hugo and Misra, Ishan and J{\'e}gou, Herv{\'e} and Mairal, Julien and Bojanowski, Piotr and Joulin, Armand},
+  title     = {Emerging Properties in Self-Supervised Vision Transformers},
+  booktitle = {Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
+  year      = {2021},
+  eprint    = {2104.14294},
+  archivePrefix = {arXiv},
+}
+
+@article{oquab2024dinov2,
+  author    = {Oquab, Maxime and Darcet, Timoth{\'e}e and Moutakanni, Th{\'e}o and Vo, Huy and Szafraniec, Marc and Khalidov, Vasil and Fernandez, Pierre and Haziza, Daniel and Massa, Francisco and El-Nouby, Alaaeldin and Howes, Russell and Huang, Po-Yao and Xu, Hu and Sharma, Vasu and Li, Shang-Wen and Galuba, Wojciech and Rabbat, Mike and Assran, Mido and Ballas, Nicolas and Synnaeve, Gabriel and Misra, Ishan and J{\'e}gou, Herv{\'e} and Mairal, Julien and Labatut, Patrick and Joulin, Armand and Bojanowski, Piotr},
+  title     = {{DINOv2}: Learning Robust Visual Features without Supervision},
+  journal   = {Transactions on Machine Learning Research (TMLR)},
+  year      = {2024},
+  eprint    = {2304.07193},
+  archivePrefix = {arXiv},
+}
+
+@inproceedings{radford2021clip,
+  author    = {Radford, Alec and Kim, Jong Wook and Hallacy, Chris and Ramesh, Aditya and Goh, Gabriel and Agarwal, Sandhini and Sastry, Girish and Askell, Amanda and Mishkin, Pamela and Clark, Jack and Krueger, Gretchen and Sutskever, Ilya},
+  title     = {Learning Transferable Visual Models from Natural Language Supervision},
+  booktitle = {Proceedings of the International Conference on Machine Learning (ICML)},
+  year      = {2021},
+  eprint    = {2103.00020},
+  archivePrefix = {arXiv},
+}
+
+@inproceedings{cherti2023openclip,
+  author    = {Cherti, Mehdi and Beaumont, Romain and Wightman, Ross and Wortsman, Mitchell and Ilharco, Gabriel and Gordon, Cade and Schuhmann, Christoph and Schmidt, Ludwig and Jitsev, Jenia},
+  title     = {Reproducible scaling laws for contrastive language-image learning},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year      = {2023},
+  eprint    = {2212.07143},
+  archivePrefix = {arXiv},
+}
+
+@article{tschandl2018ham10000,
+  author  = {Tschandl, Philipp and Rosendahl, Cliff and Kittler, Harald},
+  title   = {The {HAM10000} dataset, a large collection of multi-source dermatoscopic images of common pigmented skin lesions},
+  journal = {Scientific Data},
+  volume  = {5},
+  number  = {1},
+  pages   = {180161},
+  year    = {2018},
+  doi     = {10.1038/sdata.2018.161},
+}
+
+@misc{yan2025derm1m,
+  author = {Yan, Siyuan and others},
+  title  = {{Derm1M}: A Million-scale Vision-Language Dataset for Dermatology Foundation Models},
+  year   = {2025},
+  eprint = {2503.14911},
+  archivePrefix = {arXiv},
+}
+
+@misc{zhang2023biomedclip,
+  author = {Zhang, Sheng and Xu, Yanbo and Usuyama, Naoto and Bagga, Jaspreet and Tinn, Robert and Preston, Sam and Rao, Rajesh and Wei, Mu and Valluri, Naveen and Wong, Cliff and Lungren, Matthew and Naumann, Tristan and Poon, Hoifung},
+  title  = {{BiomedCLIP}: a multimodal biomedical foundation model pretrained from fifteen million scientific image-text pairs},
+  year   = {2023},
+  eprint = {2303.00915},
+  archivePrefix = {arXiv},
+}
+
+@inproceedings{he2022mae,
+  author    = {He, Kaiming and Chen, Xinlei and Xie, Saining and Li, Yanghao and Doll{\'a}r, Piotr and Girshick, Ross},
+  title     = {Masked Autoencoders Are Scalable Vision Learners},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year      = {2022},
+  eprint    = {2111.06377},
+  archivePrefix = {arXiv},
+}
+
+@inproceedings{bardes2022vicreg,
+  author    = {Bardes, Adrien and Ponce, Jean and LeCun, Yann},
+  title     = {{VICReg}: Variance-Invariance-Covariance Regularization for Self-Supervised Learning},
+  booktitle = {Proceedings of the International Conference on Learning Representations (ICLR)},
+  year      = {2022},
+  eprint    = {2105.04906},
+  archivePrefix = {arXiv},
+}
+
+@inproceedings{koh2021wilds,
+  author    = {Koh, Pang Wei and Sagawa, Shiori and Marklund, Henrik and Xie, Sang Michael and Zhang, Marvin and Balsubramani, Akshay and Hu, Weihua and Yasunaga, Michihiro and Phillips, Richard Lanas and Gao, Irena and Lee, Tony and David, Etienne and Stavness, Ian and Guo, Wei and Earnshaw, Berton and Haque, Imran and Beery, Sara M. and Leskovec, Jure and Kundaje, Anshul and Pierson, Emma and Wang, Sergey and Mostafavi, Sara and Liang, Percy},
+  title     = {{WILDS}: A Benchmark of in-the-Wild Distribution Shifts},
+  booktitle = {Proceedings of the International Conference on Machine Learning (ICML)},
+  year      = {2021},
+  eprint    = {2012.07421},
+  archivePrefix = {arXiv},
+}
+
+@inproceedings{gulrajani2021dg,
+  author    = {Gulrajani, Ishaan and Lopez-Paz, David},
+  title     = {In Search of Lost Domain Generalization},
+  booktitle = {Proceedings of the International Conference on Learning Representations (ICLR)},
+  year      = {2021},
+  eprint    = {2007.01434},
+  archivePrefix = {arXiv},
+}
+
+@misc{combalia2019bcn20000,
+  author = {Combalia, Marc and Codella, Noel C. F. and Rotemberg, Veronica and Helba, Brian and Vilaplana, Veronica and Reiter, Ofer and Halpern, Allan C. and Puig, Susana and Malvehy, Josep},
+  title  = {{BCN20000}: Dermoscopic Lesions in the Wild},
+  year   = {2019},
+  eprint = {1908.02288},
+  archivePrefix = {arXiv},
+}
+
+@misc{bommasani2021foundation,
+  author = {Bommasani, Rishi and others},
+  title  = {On the Opportunities and Risks of Foundation Models},
+  year   = {2021},
+  eprint = {2108.07258},
+  archivePrefix = {arXiv},
+}
+
+@misc{codella2018isic,
+  author = {Codella, Noel and Rotemberg, Veronica and Tschandl, Philipp and Celebi, M. Emre and Dusza, Stephen and Gutman, David and Helba, Brian and Kalloo, Aadi and Liopyris, Konstantinos and Marchetti, Michael and Kittler, Harald and Halpern, Allan},
+  title  = {Skin Lesion Analysis Toward Melanoma Detection 2018: A Challenge Hosted by the International Skin Imaging Collaboration ({ISIC})},
+  year   = {2019},
+  eprint = {1902.03368},
+  archivePrefix = {arXiv},
+}
+
+@misc{bakhta2026dermajepa,
+  author = {Bakhta, Abdelhamid},
+  title  = {{DermaJEPA}: Frozen-backbone {JEPA}-style probes for dermoscopic longitudinal-proxy generalisation on {HAM10000}},
+  year   = {2026},
+  url    = {https://github.com/AbdelStark/derma-jepa},
+  note   = {Run archive: \url{https://huggingface.co/datasets/abdelstark/derma-jepa-runs}},
+}
+```
+
+Run `bibtex` warnings to zero before submission. Each entry has at minimum `author`, `title`, `year`, and one of `arxiv` / `doi` / `url`.
 
 ---
 
