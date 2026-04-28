@@ -19,3 +19,14 @@ outputs/
 .claude/tsc-cache/
 .tldr/
 .tldrignore
+
+# LaTeX build intermediates and generated figures
+paper/main.aux
+paper/main.bbl
+paper/main.blg
+paper/main.log
+paper/main.out
+paper/main.toc
+paper/main.pdf
+paper/sections/*.aux
+paper/arxiv.tar.gz

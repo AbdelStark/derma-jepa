@@ -1,0 +1,79 @@
+% DermaJEPA — preliminary report (v0.1 draft)
+% Author: Abdelhamid Bakhta
+% Build: make pdf
+% Companion docs: ../docs/paper/{OUTLINE.md, WRITING-PLAN.md, REVIEWER-QA.md}
+
+\documentclass[11pt,a4paper]{article}
+
+% --- packages -----------------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\sisetup{detect-all=true, group-separator={,}, group-minimum-digits=4}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\setlist{noitemsep, topsep=2pt}
+\usepackage[colorlinks=true, urlcolor=blue, citecolor=blue, linkcolor=black]{hyperref}
+\usepackage{url}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{authblk}
+
+% Editorial todo notes; suppress at submission with \usepackage[disable]{todonotes}
+\usepackage[textsize=small, color=yellow!40, bordercolor=yellow!70!black]{todonotes}
+
+% --- metadata -----------------------------------------------------------------
+\title{Frozen-backbone JEPA-style probes on HAM10000:\\
+       preliminary results from a nine-experiment ablation,\\
+       with an unpartitioned contamination caveat}
+\author{Abdelhamid Bakhta}
+\affil{\href{https://github.com/AbdelStark/derma-jepa}{github.com/AbdelStark/derma-jepa}}
+\date{Preliminary report --- 2026}
+
+% --- macros -------------------------------------------------------------------
+\newcommand{\auroc}{\mathrm{AUROC}}
+\newcommand{\strongfam}{\texttt{strong}}
+\newcommand{\strongholdone}{\texttt{strong\_held\_out}}
+\newcommand{\strongholdtwo}{\texttt{strong\_held\_out\_2}}
+\newcommand{\runarchive}{\href{https://huggingface.co/datasets/abdelstark/derma-jepa-runs}{\texttt{abdelstark/derma-jepa-runs}}}
+
+% --- document -----------------------------------------------------------------
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-method}
+\input{sections/04-experimental-setup}
+\input{sections/05-experimental-sequence}
+\input{sections/06-results}
+\input{sections/07-analysis}
+\input{sections/08-followup-exp009}
+\input{sections/09-limitations}
+\input{sections/10-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\appendix
+\input{sections/A-per-run}
+\input{sections/B-hyperparameters}
+\input{sections/C-nuisance-operations}
+\input{sections/D-bootstrap-protocol}
+\input{sections/E-representation-health}
+\input{sections/F-compute-budget}
+\input{sections/G-reproducibility-checklist}
+\input{sections/H-contamination-analysis}
+\input{sections/I-exp009-design}
+
+\end{document}

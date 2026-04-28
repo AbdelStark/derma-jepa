@@ -1,0 +1,35 @@
+\section{Limitations}
+\label{sec:limitations}
+
+\begin{enumerate}[leftmargin=2em]
+\item \textbf{Pretraining contamination is unpartitioned.} The DermLIP
+      positive cannot be attributed to dermoscopy-domain transfer with the
+      experiments reported here. EXP-009 (\S\ref{sec:followup}) is the
+      partition experiment that addresses this; until it runs, the headline
+      should be read as ``frozen DermLIP plus a linear scaffold reaches
+      $\auroc = 0.944$ under the conditions of \S\ref{sec:method}, with
+      HAM10000 contamination unpartitioned'' rather than as a transfer
+      claim.
+\item \textbf{Synthetic nuisance.} The three families are deterministic
+      operations on PIL images. Real-world dermoscopic acquisition
+      variability is more complex; the proxy is methodological and is
+      identified as such.
+\item \textbf{Single-architecture comparison.} All four backbones in the
+      cross-backbone gradient are ViT-B/16-class (CLIP-architecture for the
+      three CLIP-based ones, ViT-B/14 for DINOv2). Other architectures ---
+      DINOv2 self-distillation on different capacity tiers, SigLIP,
+      transformer-only image backbones --- are unprobed. Future work should
+      vary architecture-class as a separate axis.
+\item \textbf{Single dataset.} HAM10000 is the only evaluation corpus.
+      ISIC archive components and PAD-UFES-20 are unprobed in this work
+      and are candidates for v2 experiments and for the EXP-009 corpus.
+\item \textbf{HAM10000 is cross-sectional.} The dataset has no real
+      same-lesion-over-time pairs; the longitudinal proxy is synthetic
+      throughout. Validating the methodology on a real longitudinal
+      dataset (e.g.\ ISIC 2020's serial-imaging metadata) is an explicit
+      next-stage follow-up.
+\item \textbf{Single scaffold class on the dermoscopy backbone.} The MLP
+      ablation (EXP-005, EXP-006a) was run only on DINOv2; an MLP-on-DermLIP
+      run was not performed. Predicted to land at or above EXP-007's $0.944$
+      since the linear scaffold already saturates training, but unverified.
+\end{enumerate}

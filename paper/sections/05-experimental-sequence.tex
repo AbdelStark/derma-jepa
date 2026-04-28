@@ -1,0 +1,66 @@
+\section{Experimental sequence}
+\label{sec:experimental-sequence}
+
+We report the nine experiments as a falsification ladder, each isolating one
+axis the previous experiment left ambiguous. Subsection headings give the
+run identifier; the corresponding self-contained report under
+\texttt{docs/experiments/EXP-NNN-...md} carries the full breakdown. Numbers
+in this section trace to those reports' \S4.1.
+
+\paragraph{EXP-001 --- sanity.} A trivial proxy with mild nuisance produces
+ceiling $\auroc \approx 1.000$ across every dense baseline (pixel L2, SSIM,
+DINOv2 cosine). The proxy needs hardening.
+
+\paragraph{EXP-002 --- hardened proxy, matched eval.} With \strongfam\
+nuisance applied to both training and evaluation pairs, a linear JEPA-style
+predictor over frozen DINOv2 ViT-B/14 reaches test $\auroc = 0.920$, $+0.269$
+above the strongest baseline (DINOv2 ViT-S/14 cosine $= 0.652$).
+
+\paragraph{EXP-003 --- one-family-held-out evaluation.} Training stable
+pairs use \strongfam, evaluation pairs use \strongholdone. Test
+$\auroc$ falls to $0.680$, $-0.281$ below the strongest baseline (SSIM
+distance $= 0.961$). The matched-eval delta does not transfer to a single
+disjoint nuisance family.
+
+\paragraph{EXP-004 --- mixed-family training, third-family evaluation.}
+Training stable pairs rotate between \strongfam\ and \strongholdone;
+evaluation uses the third disjoint family \strongholdtwo. Test $\auroc$
+inverts to $0.249$, $-0.331$ below the strongest baseline (pixel L2
+$= 0.580$). The proxy is now decisively harder than EXP-001 and the
+predictor's extrapolation to the unseen family produces a systematically
+inverted ranking, not noise.
+
+\paragraph{EXP-005, EXP-006a --- predictor-class ablation.} Replacing the
+linear predictor with a 2-layer identity-residual MLP under SGD (EXP-005)
+underfits training (train $\auroc = 0.572$, test $\auroc = 0.270$).
+Switching to Adam at LR $10^{-3}$ (EXP-006a) lets the MLP fit (train
+$\auroc = 0.893$) but produces test $\auroc = 0.248$, within a single
+bootstrap CI of EXP-004 linear's $0.249$. The scaffold-capacity hypothesis
+is not supported by these data.
+
+\paragraph{EXP-006b --- backbone ablation, natural-image.} Replacing
+DINOv2 ViT-B/14 with OpenAI CLIP ViT-B/16, holding everything else
+identical, produces test $\auroc = 0.286$. The inversion is not
+DINOv2-specific.
+
+\paragraph{EXP-007 --- pretraining-domain ablation.} Replacing OpenAI CLIP
+with DermLIP --- the same ViT-B/16 architecture CLIP-trained on Derm1M
+dermatology image-text pairs instead of OpenAI WIT web image-text pairs ---
+produces test $\auroc = 0.945$ (single seed). The train$\to$test drop
+collapses from $-0.70$ (EXP-006b) to $-0.05$. \emph{This is the only
+above-random result on \strongholdtwo\ across the nine runs.} We
+introduce the contamination caveat here and pursue it in EXP-008.
+
+\paragraph{EXP-008 --- pretraining-domain partition.} Replacing DermLIP
+with BiomedCLIP --- ViT-B/16 CLIP-trained on PMC-15M biomedical figure-caption
+pairs, which do \emph{not} include HAM10000 --- produces test
+$\auroc = 0.325$ (single seed). The web $\to$ general-medical step adds
+$+0.04$ $\auroc$; the general-medical $\to$ dermoscopy step adds $+0.62$.
+EXP-008 rules out ``any medical-image pretraining'' as sufficient but does
+not separate dermoscopy-domain transfer from HAM10000 image-level overlap.
+
+\paragraph{Seed sweep on EXP-007 and EXP-008.} Five seeds per
+configuration. DermLIP test $\auroc = 0.944 \pm 0.003$ (range $0.939$--$0.947$,
+$95\%$ CI[mean] $[0.941, 0.946]$); BiomedCLIP test $\auroc = 0.329 \pm 0.012$
+(range $0.312$--$0.344$, $95\%$ CI[mean] $[0.318, 0.339]$). Both headlines
+are seed-stable; the partition gradient survives seed variance.

@@ -1,0 +1,62 @@
+\section{Analysis and discussion}
+\label{sec:analysis}
+
+\subsection{Why the inversion is below random rather than at chance}
+\label{sec:analysis:inversion}
+
+The below-random orientation of test $\auroc$ under frozen natural-image
+backbones is not noise but a structured failure: the linear predictor learns
+a direction $w \in \mathbb{R}^{d}$ that encodes ``stable under
+$\{\strongfam, \strongholdone\}$'' as small $\langle w, z_{t} - z_{c} \rangle$,
+and this direction extrapolates with the \emph{opposite} sign when the unseen
+family \strongholdtwo\ rotates the latent geometry the other way. Because the
+third family's nuisance is operation-disjoint from the training families, the
+rotation does not partially align --- it anti-aligns. Pair-score histograms
+on the test split show this directly: stable pairs receive higher
+predicted-target cosine distance than changing pairs, and the gap is large
+enough ($\approx 0.10$) that $\auroc$ sits in the $0.25$--$0.29$ band rather
+than at chance.
+
+\subsection{Why DermLIP transfers under this scaffold and BiomedCLIP doesn't}
+\label{sec:analysis:dermlip-vs-biomedclip}
+
+The $+0.66$ $\auroc$ swing from EXP-006b (OpenAI CLIP) to EXP-007 (DermLIP)
+cannot be explained by architecture, scaffold, or optimiser: all three are
+held byte-identical. The plausible mechanistic accounts are
+\begin{enumerate}[label=(\roman*)]
+\item DermLIP's CLIP loss over $\sim$1\,M dermatology image-text pairs has
+      organised the embedding space such that a single linear direction
+      captures stable-pair similarity across all three nuisance families
+      uniformly, including \strongholdtwo; or
+\item DermLIP saw the HAM10000 raw images during pretraining and its
+      embedding space is well-fit to HAM10000 lesion identity in a way that
+      survives the synthetic post-hoc nuisance.
+\end{enumerate}
+EXP-008 rules out a third candidate --- ``any medical-image pretraining'' ---
+by showing that BiomedCLIP, trained on $\sim$15\,M PMC-15M figure-caption
+pairs without HAM10000, lifts test $\auroc$ by only $+0.04$ over web CLIP.
+EXP-008 cannot, however, choose between (i) and (ii). EXP-009 (a
+non-HAM10000 dermoscopy SSL pretrain, \S\ref{sec:followup}) is the
+experiment that would.
+
+\subsection{Loss versus AUROC}
+\label{sec:analysis:loss-vs-auroc}
+
+MSE loss delta does not predict train $\auroc$ across optimisers. EXP-006a
+(Adam, MLP) reduces train MSE by $3.3\%$ and reaches train $\auroc = 0.893$;
+EXP-004 (SGD, linear) reduces train MSE by $13\%$ and reaches train
+$\auroc = 0.900$. The optimisers move the predictor's function very
+differently per unit of L2-loss reduction in $768$-d normalised space.
+Reporting both is essential.
+
+\subsection{What is not yet claimed}
+\label{sec:analysis:non-claim}
+
+We do not claim that frozen DermLIP ``solves'' the proxy in a transfer
+sense. We claim that frozen DermLIP plus a linear scaffold reaches
+$\auroc = 0.944 \pm 0.003$ on \strongholdtwo\ under the specific evaluation
+protocol of \S\ref{sec:method}, with HAM10000 contamination unpartitioned.
+The result is consistent with two hypotheses --- dermoscopy-domain transfer
+and HAM10000 image-level overlap during DermLIP pretraining --- and EXP-009
+is required to choose between them. The BiomedCLIP partition rules out only
+the broader ``any medical-image pretraining is sufficient'' alternative.

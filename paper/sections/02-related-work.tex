@@ -1,0 +1,40 @@
+\section{Related work}
+\label{sec:related-work}
+
+\paragraph{JEPA-style and self-supervised image representations.}
+The Joint-Embedding Predictive Architecture family
+\citep{lecun2022path, assran2023ijepa} predicts in representation space rather
+than pixel space, motivated by the conjecture that nuisance-invariant
+representations emerge from learning to predict the latents of related views.
+DINO \citep{caron2021dino} and DINOv2 \citep{oquab2024dinov2} build
+nuisance-invariant transformers via self-distillation; CLIP
+\citep{radford2021clip} and OpenCLIP \citep{cherti2023openclip} build them via
+contrastive image--text alignment; MAE \citep{he2022mae} and VICReg
+\citep{bardes2022vicreg} take other paths to similar ends. Our probe is
+narrow: the frozen-backbone, single-step, stable-pair subset of the JEPA family
+applied as an evaluation probe, not a pretraining objective.
+
+\paragraph{Domain-specific medical foundation models.}
+BiomedCLIP \citep{zhang2023biomedclip} is a CLIP-style model trained on
+PMC-15M, $\sim$15 million figure--caption pairs from biomedical research
+articles. DermLIP \citep{yan2025derm1m} is a CLIP-style model trained on
+Derm1M, a $\sim$1 million dermatology image--text corpus that aggregates
+publicly available dermoscopy datasets and dermatology-website content. We use
+both as third-party frozen weights, not as artefacts to evaluate in their own
+right. The paper makes no claim about either model beyond the test $\auroc$
+each produces under our specific probe.
+
+\paragraph{Distribution-shift evaluation.}
+WILDS \citep{koh2021wilds} and the in-search-of-lost-DG framing
+\citep{gulrajani2021dg} establish the modern protocol for distribution-shift
+evaluation. Our contribution is complementary: a deterministic, leakage-
+controlled, three-family-disjoint nuisance design that lets the experimenter
+precisely control the operation-level overlap between train and test nuisance.
+Where WILDS varies natural distributions (hospital, scanner, country), we vary
+synthetic nuisance families partitioned along the augmentation axis. The two
+designs answer different questions; the methodology proposed here is most
+useful when the natural axis of variation is hard to disentangle from the
+target signal, as in dermoscopic re-photography. ISIC challenge artefacts
+\citep{codella2018isic, combalia2019bcn20000} provide additional dermoscopy
+corpora that remain unprobed in this work and are candidates for the EXP-009
+partition pretraining set (\S\ref{sec:followup}).

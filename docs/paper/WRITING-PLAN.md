@@ -8,9 +8,9 @@ This document is the operational checklist for taking the outline to a submitted
 
 ---
 
-## Phase 0 — repository setup (target: half a day)
+## Phase 0 — repository setup (mostly complete)
 
-- [ ] Create a `paper/` directory at the top of the repo (sibling to `src/`, `docs/`, etc.) for LaTeX sources and figure assets, separate from `docs/paper/` which is project-management content. Final structure:
+- [x] Create a `paper/` directory at the top of the repo (sibling to `src/`, `docs/`, etc.) for LaTeX sources and figure assets, separate from `docs/paper/` which is project-management content. Final structure:
   ```
   paper/
     main.tex
@@ -43,10 +43,11 @@ This document is the operational checklist for taking the outline to a submitted
       tab4-rep-health.tex
     Makefile
   ```
-- [ ] Pick a LaTeX template. For arXiv: a clean `article`-class template. For TMLR: the official TMLR class. For MIDL / MICCAI / ML4H: their respective templates. Recommendation: start with `article` for v0.1 arXiv submission, keep section files venue-agnostic so the wrapper can be swapped.
-- [ ] Add a `Makefile` with `make pdf`, `make figures`, `make tables`, `make clean` targets.
-- [ ] Wire BibTeX entries for every reference in `refs.bib` (see [§5 of this plan](#phase-5--references-and-bibliography)).
-- [ ] First commit: empty section files with the correct section headings and `\todo{}` placeholders. Use the `todonotes` package so `\listoftodos` shows progress.
+- [x] Pick a LaTeX template. Started with `article` for v0.1 arXiv submission; section files are venue-agnostic so the wrapper can be swapped without touching prose.
+- [x] Add a `Makefile` with `make pdf`, `make figures`, `make verify`, `make arxiv`, `make clean` targets. Path: [`paper/Makefile`](../../paper/Makefile).
+- [x] Wire BibTeX entries for every reference in `refs.bib`. 16 entries committed at [`paper/refs.bib`](../../paper/refs.bib).
+- [x] First commit: section files with section headings, `\label{}` anchors, and either drafted prose (§1, §2, §3, §4, §5, §6, §7, §8, §9, §10) or `\todo[inline]{...}` stubs (Appendices A–I). Use the `todonotes` package so `\listoftodos` shows progress.
+- [x] Lock numerical claims: [`paper/figures/locked-numbers.json`](../../paper/figures/locked-numbers.json) is the single source of truth; [`paper/verify_claims.py`](../../paper/verify_claims.py) cross-checks every entry against the per-run `metrics.json` under `outputs/hf-runs/`. Current state: 18 / 18 claims verified at delta 0.0000.
 
 ---
 

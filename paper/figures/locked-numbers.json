@@ -1,0 +1,110 @@
+{
+  "_doc": "Single source of truth for every quantitative claim in the paper. Cross-checked against per-run metrics.json by paper/verify_claims.py. Updates here propagate to figures, tables, and prose. Numbers traced to docs/paper/OUTLINE.md sec 5 and the per-run reports under docs/experiments/.",
+  "version": "v0.1",
+  "updated_utc": "2026-04-28",
+  "baseline_strongest": {
+    "name": "pixel_l2",
+    "auroc": 0.5802,
+    "ci_low": 0.5560,
+    "ci_high": 0.6058,
+    "deterministic_across_runs": true
+  },
+  "baseline_ssim": {
+    "auroc": 0.4364,
+    "ci_low": 0.4105,
+    "ci_high": 0.4594
+  },
+  "runs": {
+    "exp004_dinov2_linear": {
+      "run_id": "ham10000-hf-dinov2-exp004-v1",
+      "backbone": "DINOv2 ViT-B/14",
+      "predictor": "linear",
+      "optimizer": "SGD",
+      "test_auroc": 0.2491,
+      "test_ci_low": 0.2296,
+      "test_ci_high": 0.2698,
+      "n_seeds": 1,
+      "delta_vs_strongest": -0.3311
+    },
+    "exp005_dinov2_mlp_sgd": {
+      "run_id": "ham10000-hf-dinov2-exp005-v1",
+      "backbone": "DINOv2 ViT-B/14",
+      "predictor": "MLP (underfit)",
+      "optimizer": "SGD",
+      "test_auroc": 0.2702,
+      "test_ci_low": 0.2491,
+      "test_ci_high": 0.2926,
+      "n_seeds": 1,
+      "delta_vs_strongest": -0.3101
+    },
+    "exp006a_dinov2_mlp_adam": {
+      "run_id": "ham10000-hf-dinov2-exp006a-v1",
+      "backbone": "DINOv2 ViT-B/14",
+      "predictor": "MLP (fit)",
+      "optimizer": "Adam",
+      "test_auroc": 0.2480,
+      "test_ci_low": 0.2279,
+      "test_ci_high": 0.2691,
+      "n_seeds": 1,
+      "delta_vs_strongest": -0.3322
+    },
+    "exp006b_clip_linear": {
+      "run_id": "ham10000-hf-clip-exp006b-v1",
+      "backbone": "OpenAI CLIP ViT-B/16",
+      "predictor": "linear",
+      "optimizer": "SGD",
+      "pretraining": "OpenAI WIT (web)",
+      "test_auroc": 0.2864,
+      "test_ci_low": 0.2654,
+      "test_ci_high": 0.3097,
+      "raw_cosine_auroc": 0.0361,
+      "n_seeds": 1,
+      "delta_vs_strongest": -0.2939
+    },
+    "exp007_dermlip_linear": {
+      "run_id": "ham10000-hf-dermlip-exp007-v1",
+      "backbone": "DermLIP ViT-B/16",
+      "predictor": "linear",
+      "optimizer": "SGD",
+      "pretraining": "Derm1M (dermatology)",
+      "ham10000_in_pretrain": true,
+      "test_auroc_seed_mean": 0.9435,
+      "test_auroc_seed_std": 0.0029,
+      "test_auroc_min": 0.9392,
+      "test_auroc_max": 0.9470,
+      "test_ci_mean_low": 0.9409,
+      "test_ci_mean_high": 0.9461,
+      "single_seed_test_auroc": 0.9447,
+      "raw_cosine_auroc": 0.1090,
+      "n_seeds": 5,
+      "delta_vs_strongest": 0.3645
+    },
+    "exp008_biomedclip_linear": {
+      "run_id": "ham10000-hf-biomedclip-exp008-v1",
+      "backbone": "BiomedCLIP ViT-B/16",
+      "predictor": "linear",
+      "optimizer": "SGD",
+      "pretraining": "PMC-15M (general medical)",
+      "ham10000_in_pretrain": false,
+      "test_auroc_seed_mean": 0.3286,
+      "test_auroc_seed_std": 0.0120,
+      "test_auroc_min": 0.3119,
+      "test_auroc_max": 0.3436,
+      "test_ci_mean_low": 0.3181,
+      "test_ci_mean_high": 0.3391,
+      "single_seed_test_auroc": 0.3247,
+      "raw_cosine_auroc": 0.0472,
+      "n_seeds": 5,
+      "delta_vs_strongest": -0.2556
+    }
+  },
+  "gradient": {
+    "web_to_general_medical_step": 0.04,
+    "general_medical_to_dermoscopy_step": 0.62,
+    "_doc": "Computed from seed-mean values where available. (BiomedCLIP 0.329 - OpenAI CLIP 0.286) and (DermLIP 0.944 - BiomedCLIP 0.329)."
+  },
+  "tolerance": {
+    "auroc": 0.001,
+    "ci": 0.001
+  }
+}

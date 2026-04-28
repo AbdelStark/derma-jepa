@@ -1,0 +1,108 @@
+\section{Method}
+\label{sec:method}
+
+\subsection{Notation and probe}
+\label{sec:method:notation}
+
+Let $f : \mathcal{X} \to \mathbb{R}^{d}$ be a frozen vision encoder with
+output dimension $d$, and define the L2-normalised representation
+\begin{equation}
+  z(x) \;=\; \frac{f(x)}{\lVert f(x) \rVert_{2}} \;\in\; \mathbb{S}^{d-1}.
+\end{equation}
+A \emph{stable} pair $(x_{c}, x_{t})$ shares a single underlying lesion image
+$u$ subjected to two independent draws of a synthetic nuisance augmentation
+$\nu \sim \mathcal{N}_{F}$ from family $F$:
+\begin{equation}
+  x_{c} = \nu_{c}(u), \qquad x_{t} = \nu_{t}(u), \qquad \nu_{c}, \nu_{t} \sim \mathcal{N}_{F}.
+\end{equation}
+A \emph{changing} pair pairs two distinct lesions $u_{1}, u_{2}$ matched on
+diagnosis $\mathrm{dx}(u_{1}) = \mathrm{dx}(u_{2})$ and anatomical site
+$\mathrm{site}(u_{1}) = \mathrm{site}(u_{2})$; each side receives an
+independent nuisance draw. The predictor $g_{\theta} : \mathbb{R}^{d} \to
+\mathbb{R}^{d}$ minimises the L2-MSE objective on stable training pairs, with
+a soft \texttt{weight $-$ I} regulariser holding the function near the
+identity at initialisation:
+\begin{equation}
+  \mathcal{L}(\theta) \;=\; \frac{1}{|\mathcal{D}_{\mathrm{train}}^{\mathrm{stable}}|}\!\!
+  \sum_{(x_{c}, x_{t}) \in \mathcal{D}_{\mathrm{train}}^{\mathrm{stable}}}
+  \lVert g_{\theta}(z(x_{c})) - z(x_{t}) \rVert_{2}^{2}
+  \;+\; \lambda \, \lVert W - I \rVert_{F}^{2},
+  \label{eq:loss}
+\end{equation}
+where $\lambda$ is the configured weight decay and $W$ is the linear weight
+(or, for the MLP, the residual weight). At evaluation time, the score for a
+pair is the cosine \emph{distance} between the L2-normalised prediction and
+the L2-normalised target:
+\begin{equation}
+  s(x_{c}, x_{t}) \;=\; 1 \;-\; \langle \tilde{g}_{\theta}(z(x_{c})), z(x_{t}) \rangle, \qquad
+  \tilde{g}_{\theta}(\cdot) := \frac{g_{\theta}(\cdot)}{\lVert g_{\theta}(\cdot) \rVert_{2}}.
+  \label{eq:score}
+\end{equation}
+A correctly oriented predictor produces $s(x_{c}, x_{t}) < s(x_{c}', x_{t}')$
+whenever $(x_{c}, x_{t})$ is stable and $(x_{c}', x_{t}')$ is changing;
+$\auroc$ quantifies this ranking.
+
+\subsection{Predictor variants}
+\label{sec:method:predictor}
+
+\paragraph{Linear with identity warm-start.}
+$g_{\theta}(z) = W z + b$ with $W$ initialised to $I + \epsilon$,
+$\epsilon_{ij} \overset{\text{iid}}{\sim} \mathcal{N}(0, 0.005^{2})$, and
+$b = 0$. Under SGD with the soft \texttt{weight $-$ I} penalty above, the
+predictor at step zero is identity-equivalent.
+
+\paragraph{2-layer identity-residual MLP.}
+$g_{\theta}(z) = z + W_{2} \,\mathrm{ReLU}(W_{1} z + b_{1}) + b_{2}$, with
+$W_{2}$ zero-initialised so the residual term vanishes at step zero and
+$g_{\theta} = \mathrm{identity}$. Hidden dimension $512$.
+
+\subsection{Three nuisance families}
+\label{sec:method:nuisance}
+
+The augmentation suite specifies three deterministic synthetic nuisance
+families, summarised in Table~\ref{tab:nuisance-families}. The disjointness
+rule is operation-level: no transform type is shared between any two
+families. The exact operation parameters are listed in
+Appendix~\ref{app:nuisance-operations}.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lp{0.65\linewidth}@{}}
+\toprule
+Family & Operation set \\
+\midrule
+\strongfam            & brightness $\times$ contrast $\times$ saturation, rotation $\pm 15^{\circ}$, scale $0.82$--$1.00$, translate $\pm 5\%$, horizontal flip, Gaussian blur, Gaussian noise, JPEG quality $45$--$70$ \\
+\strongholdone        & hue shift $\pm 12^{\circ}$ (HSV rotation), posterise $4$--$6$ bits, unsharp-mask sharpen, motion blur (linear kernel $5$--$15$\,px), random rectangular erasing $6$--$18\%$ area, JPEG quality $20$--$40$ \\
+\strongholdtwo        & gamma $0.6$--$1.6$, colour temperature $0.85$--$1.15$, radial vignette $25$--$55\%$ falloff, salt-and-pepper noise $0.5$--$2.5\%$, JPEG quality $80$--$95$ \\
+\bottomrule
+\end{tabular}
+\caption{Three deterministic nuisance families, partitioned along the
+operation axis. Train stable pairs draw from $\{\strongfam, \strongholdone\}$;
+val and test stable pairs use $\strongholdtwo$.}
+\label{tab:nuisance-families}
+\end{table}
+
+\subsection{Splits and pair construction}
+\label{sec:method:splits}
+
+We use lesion-ID-aware splits at fractions $0.70 / 0.15 / 0.15$, deterministic
+from a fixed seed, with group counts $5{,}229 / 1{,}120 / 1{,}121$ across
+HAM10000's $10{,}015$ images and $7{,}470$ unique lesions. Each split
+contains $1{,}000$ stable plus $1{,}000$ changing pairs (total $6{,}000$
+pairs per run). The strict same-diagnosis-site changing-pair policy requires
+that a context lesion's changing partner be a distinct lesion with identical
+diagnosis and identical anatomical site. Train stable pairs rotate
+deterministically between \strongfam\ and \strongholdone\ by pair index; val
+and test stable pairs use \strongholdtwo\ exclusively.
+
+\subsection{Evaluation protocol}
+\label{sec:method:eval}
+
+We report $\auroc$ as the primary metric, with $1{,}000$-sample bootstrap
+$95\%$ confidence intervals computed by per-pair resampling. AUPRC, equal-
+error-rate threshold, and FPR at fixed TPR $= 0.8$ accompany every run, as do
+three representation-health checks: prediction-norm mean and minimum,
+dimension-variance mean and minimum, and a binary \texttt{collapsed} flag
+triggered when either falls below $10^{-8}$. None of the nine reported runs
+is flagged as collapsed.

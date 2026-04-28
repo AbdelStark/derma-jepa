@@ -1,0 +1,38 @@
+\section{Experimental setup}
+\label{sec:experimental-setup}
+
+\paragraph{Backbones.} Five frozen vision backbones cover the
+architectural and pretraining-data axes the paper varies. Hugging Face Hub
+paths and primary citations: DINOv2 ViT-S/14
+(\href{https://huggingface.co/facebook/dinov2-small}{\texttt{facebook/dinov2-small}})
+and DINOv2 ViT-B/14
+(\href{https://huggingface.co/facebook/dinov2-base}{\texttt{facebook/dinov2-base}})
+\citep{oquab2024dinov2}, OpenAI CLIP ViT-B/16
+(\href{https://huggingface.co/openai/clip-vit-base-patch16}{\texttt{openai/clip-vit-base-patch16}})
+\citep{radford2021clip}, DermLIP ViT-B/16
+(\href{https://huggingface.co/redlessone/DermLIP_ViT-B-16}{\texttt{redlessone/DermLIP\_ViT-B-16}})
+\citep{yan2025derm1m}, and BiomedCLIP ViT-B/16
+(\href{https://huggingface.co/microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224}{\texttt{microsoft/BiomedCLIP-PubMedBERT\_256-vit\_base\_patch16\_224}})
+\citep{zhang2023biomedclip}.
+
+\paragraph{Training.}
+$200$ epochs at batch size $128$ on $1{,}000$ training pairs. The linear
+predictor uses SGD at LR $3\!\times\!10^{-2}$ with weight decay $10^{-3}$
+applied to \texttt{(weight $-$ I)}. The MLP predictor uses Adam at LR
+$10^{-3}$ with decoupled weight decay $10^{-4}$. Identity warm-start in both
+cases.
+
+\paragraph{Compute.}
+Each primary-tier run executes on a single NVIDIA A10G 24~GB via Hugging Face
+Jobs in approximately $85$ minutes wall-clock end-to-end (manifest build,
+embedding export, baseline evaluation, predictor training, and run-archive
+upload). Hosted dependency versions are pinned in
+\texttt{scripts/hf\_jobs\_constraints.txt}.
+
+\paragraph{Code, configurations, and run archive.}
+Source code is at
+\href{https://github.com/AbdelStark/derma-jepa}{\texttt{github.com/AbdelStark/derma-jepa}}.
+Per-experiment configurations and launchers live under
+\texttt{configs/data/} and \texttt{scripts/}, one pair per experiment. The
+run archive containing every primary-tier run's manifests, embeddings,
+metrics, model card, and logs is at \runarchive.

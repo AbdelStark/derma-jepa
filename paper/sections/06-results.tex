@@ -1,0 +1,31 @@
+\section{Results}
+\label{sec:results}
+
+Table~\ref{tab:cross-run} consolidates the nine-run sequence under the
+EXP-004 proxy. Figure~\ref{fig:cross-backbone-gradient} visualises the
+pretraining-data gradient. Per-run plots --- pair-score histograms,
+training-loss trajectories, and representation-health values --- live in the
+run archive at \runarchive\ under each run's \texttt{<run\_id>/} folder; the
+appendix reproduces the most relevant cross-run summary tables.
+
+\input{tables/tab1-cross-run}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/fig1-cross-backbone-gradient.pdf}
+\caption{Test $\auroc$ on \strongholdtwo\ (the unseen third nuisance family)
+under the EXP-004 recipe, across four backbones. Error bars are bootstrap
+$95\%$ CIs (single seed) or seed-mean $\pm$ standard deviation across five
+seeds where available. Pixel L2 (the strongest cheap baseline at $0.580$) is
+shown as a dashed reference line. The DermLIP bar carries the contamination
+caveat: Derm1M almost certainly contains HAM10000, and the experiments
+reported here cannot separate dermoscopy-domain transfer from HAM10000
+image-level overlap (\S\ref{sec:followup}).}
+\label{fig:cross-backbone-gradient}
+\end{figure}
+
+\todo[inline]{Figure 2 (train-vs-test scatter) and Figure 3 (3-panel pair-
+score histograms): build scripts in \texttt{paper/figures/}.}
+
+\todo[inline]{Table 2 (predictor $\times$ optimiser ablation) and Table 3
+(seed sweep): hand-write \texttt{paper/tables/tab2-*.tex} and \texttt{tab3-*.tex}.}

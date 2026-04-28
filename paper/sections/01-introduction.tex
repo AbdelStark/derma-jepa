@@ -1,0 +1,77 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Lesion monitoring is fundamentally a change-detection problem under heavy
+nuisance variation. Repeated photographs of the same skin lesion vary because
+of illumination, framing, hair occlusion, camera optics, and compression;
+clinically meaningful change is small relative to that nuisance envelope.
+Self-supervised representations are pitched as nuisance-invariant
+\citep{caron2021dino, oquab2024dinov2, radford2021clip}, with the JEPA family
+\citep{lecun2022path, assran2023ijepa} explicitly framing prediction in
+representation space as the path to invariance. Our question is narrow:
+\emph{when a JEPA-style latent predictor over a frozen vision backbone is
+trained on stable-pair invariance with respect to one set of synthetic nuisance
+operations, does that invariance generalise to a disjoint nuisance family the
+predictor never saw at training time?}
+
+We probe this on HAM10000 \citep{tschandl2018ham10000}. HAM10000 is
+cross-sectional, so we construct a leakage-controlled longitudinal proxy:
+lesion-ID-aware splits, synthetic stable-pair augmentations applied
+post-split, and changing-pair construction matched on diagnosis and anatomical
+site. Three deterministic synthetic nuisance families --- \strongfam,
+\strongholdone, and \strongholdtwo\ --- are designed to share no operation
+type with each other. We train on stable pairs drawn from $\{\strongfam,
+\strongholdone\}$ and evaluate on a third unseen family $\strongholdtwo$. The
+predictor is a small function $g_\theta : \mathbb{R}^d \to \mathbb{R}^d$ over
+the L2-normalised output of a frozen backbone --- linear with identity
+warm-start, or a 2-layer identity-residual MLP --- trained to minimise L2-MSE
+between predicted and observed target latents on stable pairs. Across nine
+experiments we vary predictor class, optimiser, and backbone independently
+while holding every other knob constant.
+
+\textbf{This paper is a preliminary report.} The single positive result we
+observe (frozen DermLIP at $0.944 \pm 0.003$ test $\auroc$ across $5$ seeds)
+\emph{cannot be attributed to dermoscopy-domain transfer with the experiments
+reported here.} DermLIP's pretraining corpus, Derm1M
+\citep{yan2025derm1m}, almost certainly contains HAM10000 raw images, and the
+BiomedCLIP partition we report rules out only the broader ``any medical-image
+pretraining is sufficient'' alternative. EXP-009 (a self-pretrained DINOv2 on a
+non-HAM10000 dermoscopy corpus, see \S\ref{sec:followup}) is the experiment
+that would close the partition. Building that corpus is multi-week work; we
+share the methodology and the nine-run arc at this stage to validate the proxy
+design and to invite feedback on the partition before committing to it.
+
+Figure~\ref{fig:cross-backbone-gradient} previews the headline. Test $\auroc$
+on $\strongholdtwo$ is below random for every frozen natural-image backbone
+across two architectures and three predictor scaffolds; barely lifts under a
+frozen general-medical backbone (BiomedCLIP, $0.329 \pm 0.012$); and reaches
+$0.944 \pm 0.003$ under a frozen dermoscopy-specific backbone (DermLIP), with
+the contamination caveat marked on the right.
+
+\paragraph{Contributions.}
+\begin{itemize}
+\item \textbf{Methodological.} A leakage-controlled HAM10000 longitudinal-proxy
+      task with three disjoint synthetic nuisance families and a
+      \texttt{train-on-two/evaluate-on-third} protocol, released as code,
+      configurations, and reproduction launchers.
+\item \textbf{Empirical (negative).} Across two architectures, three
+      predictor scaffolds, and two optimisers, frozen natural-image backbones
+      produce below-random inverted test $\auroc$ on the held-out third
+      family.
+\item \textbf{Empirical (positive but unpartitioned).} Frozen DermLIP reaches
+      test $\auroc = 0.944 \pm 0.003$ across $5$ seeds, $+0.364$ above the
+      strongest baseline. The win cannot yet be attributed to dermoscopy-
+      domain transfer rather than HAM10000 image-level overlap; EXP-009
+      (\S\ref{sec:followup}) is the open partition.
+\item \textbf{Empirical (negative-as-partition).} Frozen BiomedCLIP --- the
+      cleanest publicly available ``general medical pretraining without
+      HAM10000'' backbone --- lifts only $+0.04$ over web CLIP, ruling out
+      ``any medical-image pretraining'' as sufficient.
+\item \textbf{Reproducibility.} Every primary-tier run is archived publicly at
+      \runarchive\ with manifests, embeddings, metrics, model card, and logs.
+      A single launcher script reproduces each run end-to-end on a free A10G
+      via Hugging Face Jobs.
+\item \textbf{A clearly-scoped open question.} The EXP-009 design and decision
+      table are stated up front (\S\ref{sec:followup}) rather than treated as
+      future work in passing.
+\end{itemize}

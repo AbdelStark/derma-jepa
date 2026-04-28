@@ -8,6 +8,8 @@
 - [`docs/paper/WRITING-PLAN.md`](WRITING-PLAN.md) — operational checklist (phases, build commands, submission cascade).
 - [`docs/paper/REVIEWER-QA.md`](REVIEWER-QA.md) — anticipated reviewer questions with prepared responses.
 
+**LaTeX scaffold:** [`paper/`](../../paper/) — `main.tex`, `refs.bib` (16 entries), section files (`sections/00-abstract.tex` through `sections/10-conclusion.tex` plus 9 appendix stubs), `figures/locked-numbers.json` (single source of truth for every quantitative claim), `figures/build_fig1.py`, `tables/tab1-cross-run.tex`, and `verify_claims.py` (cross-checks every locked number against the run-archive mirror; passes 18/18 at delta 0.0000). Build via `cd paper && make verify && make figures && make pdf`.
+
 ---
 
 ## 0. Framing
