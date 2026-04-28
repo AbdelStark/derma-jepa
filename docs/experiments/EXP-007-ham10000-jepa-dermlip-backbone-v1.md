@@ -14,7 +14,7 @@
 
 The seven prior runs (EXP-001 through EXP-006a/b) characterised the failure surface of frozen natural-image vision backbones on this leakage-controlled HAM10000 longitudinal-proxy task with a third held-out nuisance family (`strong_held_out_2`). Across two backbones (DINOv2 ViT-B/14, OpenAI CLIP ViT-B/16) and three scaffolds (linear, underfit MLP, fit MLP under Adam), test AUROC sat at 0.25–0.29 — below random and below cheap baselines. EXP-006a §7 scoped the next experiment as a domain-pretrained backbone swap.
 
-EXP-007 swaps in DermLIP (`redlessone/DermLIP_ViT-B-16`) — the same OpenAI CLIP ViT-B/16 architecture used in EXP-006b, CLIP-trained on Derm1M (~1M dermatology image-text pairs spanning dermoscopy, clinical, total-body photography, and dermatopathology) instead of LAION/web captions. The training scaffold, optimiser, hyperparameters, dataset splits, nuisance-family layout, and every other knob are byte-identical to EXP-006b. The only changed bit is the source of the frozen weights.
+EXP-007 swaps in DermLIP (`redlessone/DermLIP_ViT-B-16`) — the same OpenAI CLIP ViT-B/16 architecture used in EXP-006b, CLIP-trained on Derm1M (~1M dermatology image-text pairs spanning dermoscopy, clinical, total-body photography, and dermatopathology) instead of OpenAI WIT (≈400M web image-text pairs). The training scaffold, optimiser, hyperparameters, dataset splits, nuisance-family layout, and every other knob are byte-identical to EXP-006b. The only changed bit is the source of the frozen weights.
 
 Headline numbers:
 
@@ -166,7 +166,7 @@ All three splits show the correct direction, which is new for the EXP-004 proxy.
 
 ### 5.1 What EXP-007 actually proved
 
-**Proved (with caveats):** Replacing the frozen vision backbone in the EXP-004 recipe with DermLIP — a backbone of identical architecture, differing only in CLIP-pretraining data (Derm1M dermatology pairs vs LAION web-caption pairs) — moves test AUROC on `strong_held_out_2` from 0.286 to 0.945. The +0.66 AUROC swing is localised to the pretraining-data axis, holding architecture, scaffold, optimiser, and every dataset-split / nuisance-family choice fixed.
+**Proved (with caveats):** Replacing the frozen vision backbone in the EXP-004 recipe with DermLIP — a backbone of identical architecture, differing only in CLIP-pretraining data (Derm1M dermatology pairs vs OpenAI WIT web image-text pairs) — moves test AUROC on `strong_held_out_2` from 0.286 to 0.945. The +0.66 AUROC swing is localised to the pretraining-data axis, holding architecture, scaffold, optimiser, and every dataset-split / nuisance-family choice fixed.
 
 **Proved (cleanly):** The seven-run claim that "frozen-backbone family is the binding constraint on this proxy under nuisance-held-out evaluation" was a falsifiable claim. EXP-007 falsifies it in the direction of "frozen domain-aligned backbones can succeed." The claim should be re-stated as "frozen natural-image backbones fail; frozen domain-aligned backbones succeed" until further evidence changes the picture.
 
@@ -196,7 +196,7 @@ Test AUROC across runs 4–7 (EXP-004 proxy, varying scaffold/backbone) ranges f
 > - Beats baselines by +0.27 AUROC when the backbone is DINOv2 ViT-B/14 and evaluation matches training nuisance (EXP-002).
 > - Loses on one held-out family (−0.28) under DINOv2 (EXP-003).
 > - Inverts below random on a third held-out family (−0.33) under DINOv2 with mixed-family training (EXP-004), and that inversion is preserved under MLP scaffolds under SGD and Adam (EXP-005, EXP-006a) and under a backbone swap to natural-image-pretrained OpenAI CLIP ViT-B/16 (EXP-006b).
-> - Reaches +0.36 AUROC over baselines on the same third held-out family when the backbone is DermLIP ViT-B/16 — identical CLIP architecture, CLIP-trained on Derm1M dermatology images instead of LAION web captions (EXP-007).
+> - Reaches +0.36 AUROC over baselines on the same third held-out family when the backbone is DermLIP ViT-B/16 — identical CLIP architecture, CLIP-trained on Derm1M dermatology images instead of OpenAI WIT web image-text pairs (EXP-007).
 >
 > The eight-run sequence is consistent with pretraining-data domain being the load-bearing axis on this proxy under nuisance-held-out evaluation. EXP-008 will test whether the win generalises across medical-domain backbones beyond DermLIP, addressing the open question of dataset-specific vs domain-general pretraining contribution.
 
@@ -292,7 +292,7 @@ Expected top line: `auroc: 0.9447`, `strongest_baseline: pixel_l2 = 0.5802`, `de
 
 ### 9.1 Quotable headline
 
-> Replacing the frozen OpenAI CLIP ViT-B/16 backbone with DermLIP — identical architecture, CLIP-trained on Derm1M dermatology image-text pairs instead of LAION web captions — lifts test AUROC on the EXP-004 `strong_held_out_2` proxy from 0.286 to **0.945** [0.935, 0.954]. Train→test drop collapses from −0.70 (EXP-006b) to −0.05. Raw DermLIP cosine on the same pairs is still inverted at AUROC 0.109; the linear JEPA predictor lifts +0.84 AUROC on top of the frozen embedding — substantial recovery work that the same scaffold could not do over OpenAI CLIP. Pretraining-data domain is the load-bearing axis on this proxy under nuisance-held-out evaluation. Pretraining-contamination caveat: Derm1M almost certainly includes HAM10000.
+> Replacing the frozen OpenAI CLIP ViT-B/16 backbone with DermLIP — identical architecture, CLIP-trained on Derm1M dermatology image-text pairs instead of OpenAI WIT web image-text pairs — lifts test AUROC on the EXP-004 `strong_held_out_2` proxy from 0.286 to **0.945** [0.935, 0.954]. Train→test drop collapses from −0.70 (EXP-006b) to −0.05. Raw DermLIP cosine on the same pairs is still inverted at AUROC 0.109; the linear JEPA predictor lifts +0.84 AUROC on top of the frozen embedding — substantial recovery work that the same scaffold could not do over OpenAI CLIP. Pretraining-data domain is the load-bearing axis on this proxy under nuisance-held-out evaluation. Pretraining-contamination caveat: Derm1M almost certainly includes HAM10000.
 
 ### 9.2 Numbers safe to quote
 

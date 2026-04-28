@@ -62,7 +62,7 @@ Replacing the single-seed point estimates from EXP-006b / EXP-007 / EXP-008 with
 
 | Run | Backbone | Pretraining | Test AUROC (seed mean) | Test AUROC std | n seeds | Δ vs strongest baseline |
 |---|---|---|---:|---:|---:|---:|
-| EXP-006b | OpenAI CLIP B/16 | LAION (web) | 0.286 | — | 1 | −0.294 |
+| EXP-006b | OpenAI CLIP B/16 | WIT (OpenAI web) | 0.286 | — | 1 | −0.294 |
 | **EXP-008** | **BiomedCLIP B/16** | **PMC-15M (general medical)** | **0.329** | **0.012** | **5** | **−0.252** |
 | **EXP-007** | **DermLIP B/16** | **Derm1M (dermatology)** | **0.944** | **0.003** | **5** | **+0.363** |
 

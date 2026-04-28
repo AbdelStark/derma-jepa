@@ -31,7 +31,7 @@ Three-backbone comparison:
 
 | Backbone | Pretraining | HAM10000 in pretrain? | Test AUROC | Δ vs preceding |
 |---|---|---|---:|---:|
-| OpenAI CLIP ViT-B/16 (EXP-006b) | LAION web captions | No | 0.286 | — |
+| OpenAI CLIP ViT-B/16 (EXP-006b) | OpenAI WIT (web image-text) | No | 0.286 | — |
 | **BiomedCLIP ViT-B/16 (EXP-008)** | **PMC-15M biomedical figures** | **No** | **0.325** | **+0.04** |
 | DermLIP ViT-B/16 (EXP-007) | Derm1M dermatology | Likely yes | 0.945 | +0.62 |
 
@@ -121,7 +121,7 @@ Train-to-test drop is −0.60 AUROC. Compare to EXP-007's −0.05 (clean general
 
 | Run | Backbone | Pretraining corpus | Train AUROC | Val AUROC | Test AUROC | Δ vs strongest |
 |---|---|---|---:|---:|---:|---:|
-| EXP-006b | OpenAI CLIP B/16 | LAION-400M (web captions) | 0.986 | 0.300 | 0.286 | −0.294 |
+| EXP-006b | OpenAI CLIP B/16 | OpenAI WIT (≈400M web image-text pairs) | 0.986 | 0.300 | 0.286 | −0.294 |
 | **EXP-008** | **BiomedCLIP B/16** | **PMC-15M (biomedical figures)** | **0.923** | **0.351** | **0.325** | **−0.256** |
 | EXP-007 | DermLIP B/16 | Derm1M (dermatology) | 0.9999 | 0.944 | 0.945 | +0.364 |
 
@@ -306,7 +306,7 @@ No code changes vs EXP-007. The `open_clip` kind added in `ba3afce` covers Biome
 | EXP-004 | DINOv2 B/14 | LVD-142M (web) | linear | SGD | 0.900 / 0.265 / 0.249 | Pixel L2 = 0.580 | −0.331 |
 | EXP-005 | DINOv2 B/14 | LVD-142M (web) | MLP (underfit) | SGD | 0.572 / 0.293 / 0.270 | Pixel L2 = 0.580 | −0.310 |
 | EXP-006a | DINOv2 B/14 | LVD-142M (web) | MLP (fit) | Adam | 0.893 / 0.266 / 0.248 | Pixel L2 = 0.580 | −0.332 |
-| EXP-006b | OpenAI CLIP B/16 | LAION (web) | linear | SGD | 0.986 / 0.300 / 0.286 | Pixel L2 = 0.580 | −0.294 |
+| EXP-006b | OpenAI CLIP B/16 | WIT (OpenAI web) | linear | SGD | 0.986 / 0.300 / 0.286 | Pixel L2 = 0.580 | −0.294 |
 | EXP-007 | DermLIP B/16 | Derm1M (dermatology) | linear | SGD | 0.9999 / 0.944 / 0.945 | Pixel L2 = 0.580 | **+0.364** |
 | **EXP-008** | **BiomedCLIP B/16** | **PMC-15M (biomedical)** | **linear** | **SGD** | **0.923 / 0.351 / 0.325** | Pixel L2 = 0.580 | **−0.256** |
 
