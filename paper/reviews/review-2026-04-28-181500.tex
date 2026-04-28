@@ -1,0 +1,154 @@
+% DermaJEPA preprint — pass-3 strict pre-publication review
+% Three-agent parallel deep audit:
+%   A  citation-context (does each \cite actually support the surrounding claim?)
+%   B  reproducibility / artifact integrity (configs, README, run-archive paths,
+%      compute-budget anchors)
+%   C  figure-caption integrity + end-to-end reading flow + LaTeX hygiene
+% Date: 2026-04-28 18:15 UTC. Reviewer: paper-review skill, pass 3.
+
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{enumitem}
+\setlist{noitemsep, topsep=2pt}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\title{Pre-publication review (pass 3) of \emph{Frozen-backbone JEPA-style
+       probes on HAM10000} (commit \texttt{f97dc56})}
+\author{Three-agent deep audit}
+\date{2026-04-28}
+
+\begin{document}
+\maketitle
+
+\section*{Headline}
+
+Pass 1 cleared editorial / metadata / numerics. Pass 2 cleared zero-context
+re-derivation, the AUROC sign-convention defence, and notational rigor. Pass
+3 targets the remaining axes: \emph{citation context} (does each cite
+support the sentence?), \emph{artifact integrity} (do configs, run-IDs,
+compute claims match reality?), and \emph{end-to-end flow + figure caption
+integrity}. Result: zero blockers, four major reviewer-anticipation issues,
+twelve minor refinements. Recommendation: \textbf{publication-ready after
+this minor revision is applied.}
+
+\section{Major findings}
+
+\subsection*{A1 (citation framing) --- ``nuisance-invariant'' is OUR gloss}
+
+\textbf{Location.} \texttt{01-introduction.tex:9}; \texttt{02-related-work.tex:9--13}.\\
+\textbf{Problem.} The paper says ``SSL representations are pitched as
+nuisance-invariant \citep{caron2021dino, oquab2024dinov2, radford2021clip}''
+and that DINO/DINOv2 ``build nuisance-invariant transformers via
+self-distillation''. Verified: none of those abstracts uses the phrase
+``nuisance-invariant'' or an exact equivalent. DINO emphasises explicit
+semantic-segmentation information; DINOv2 markets ``robust visual features''
+that ``work across image distributions and tasks''; CLIP markets transferable
+visual models via natural-language supervision.\\
+\textbf{Fix.} Reword to ``broadly transferable across image distributions
+and tasks --- a property we read, perhaps charitably, as approximate
+invariance to many of the photometric and framing nuisances we care about
+here'' so the gloss is explicitly ours.
+
+\subsection*{A2 (citation overstatement) --- RETFound's ``evaluation
+            protocol'' did not motivate our ablations}
+
+\textbf{Location.} \texttt{02-related-work.tex:24--26}.\\
+\textbf{Problem.} ``RETFound \citep{zhou2023retfound} is a comparable retinal
+foundation model whose evaluation protocol motivated some of our ablation
+choices.'' RETFound's evaluation is linear probing + fine-tuning for disease
+classification; our probe is JEPA-style stable-pair scoring with a held-out
+nuisance family. The protocols are not adjacent.\\
+\textbf{Fix.} Downgrade to ``a comparable medical-domain foundation-model
+precedent in retinal imaging, cited here for the domain-specific FM design
+pattern rather than as a methodological template for our probe.''
+
+\subsection*{B1 (artifact integrity) --- compute claim under-anchored}
+
+\textbf{Location.} \texttt{04-experimental-setup.tex:39}; \texttt{F-compute-budget.tex:6, 28--30}.\\
+\textbf{Problem.} The paper's ``$\sim$$85$~min'' anchor for the canonical
+EXP-004 wall-clock is approximately $13$~min low: the run's
+\texttt{progress.jsonl} timestamps span $97.6$~min end-to-end. The paper
+elsewhere hedges to $\sim$$85$--$105$~min, but the headline anchor remains
+the lower number; the total $\sim$$25$~A10G-hours derives from it.\\
+\textbf{Fix.} Update the canonical anchor to $\sim$$95$--$100$~min,
+recompute the total to $\sim$$28$--$31$~A10G-hours, and update the
+\S~Experimental setup paragraph likewise.
+
+\subsection*{B2 (artifact integrity) --- HF download path mis-pointed}
+
+\textbf{Location.} \texttt{G-reproducibility-checklist.tex:13--15}.\\
+\textbf{Problem.} ``HAM10000 via the \texttt{abdelstark/ham10000} HF dataset
+mirror; the source manifest and download path live at
+\texttt{src/derma\_jepa/public\_data.py}.'' The literal HF coordinate
+\texttt{abdelstark/ham10000} is set in \texttt{scripts/hf\_jobs\_ham10000\_exp*.sh}
+as the \texttt{DERMA\_JEPA\_HAM10000\_REPO} environment variable, not in
+\texttt{public\_data.py}. \texttt{public\_data.py} only builds local
+manifests.\\
+\textbf{Fix.} Reword: ``The HF coordinate is exported as
+\texttt{DERMA\_JEPA\_HAM10000\_REPO} in the launcher scripts under
+\texttt{scripts/}; local manifest construction (lesion-ID-aware splits, pair
+generation, audit) is implemented in \texttt{src/derma\_jepa/public\_data.py}.''
+
+\section{Minor findings}
+
+\begin{enumerate}[leftmargin=2em]
+\item \textbf{A3} PMC-15M ``figure--caption pairs'' is not the paper's literal
+      framing; ``image--text pairs from $\sim$$4.4$\,M scientific articles''
+      is closer to BiomedCLIP's abstract.
+\item \textbf{A4} ``MAE and VICReg take other paths to similar ends'' is
+      vague; replace with a one-line mechanism descriptor (pixel
+      reconstruction; variance-invariance-covariance regularisation).
+\item \textbf{C1} \S5 vs Appendix~A overlap on headline numbers. We chose to
+      keep both: \S5 carries the falsification-ladder narrative, Appendix~A
+      anchors numbers to run-IDs for navigation. Clarified intent in the
+      Appendix~A preamble.
+\item \textbf{C2} \S10 conclusion ``two backbones, two scaffolds, two
+      optimisers'' reads as a complete $2{\times}2{\times}2$ grid; only four
+      of eight cells were run. Add an explicit non-factorial qualifier.
+\item \textbf{C3} \S9 limitations did not include the unstratified-bootstrap
+      caveat; add it.
+\item \textbf{C4} \S5 EXP-007 reports $0.945$ (single seed) without
+      reconciling against the $0.944 \pm 0.003$ five-seed mean reported
+      below. Add a one-line bridge.
+\item \textbf{C5} ``$\sim$$15$\,M'', ``$\sim$15 million'', and ``$\sim$15M''
+      are all in use; settle on $\sim$$15$\,M.
+\item \textbf{C6} \S3.5 $\to$ \S4 transition lacks a bridge sentence.
+\item \textbf{C7} \S6 closing ``rather than at chance'' immediately
+      precedes \S7.1 ``below random rather than at chance'' --- mild
+      stutter; rephrase \S7.1 opening.
+\item \textbf{C8} Fig~1: ``pixel L2 = 0.580'' label collides visually with
+      the contamination caveat annotation in the bottom-right corner.
+      Reposition.
+\item \textbf{C9} Fig~2: EXP-004 / EXP-006a / EXP-006b labels overlap in the
+      bottom-right cluster. Add leader lines or separate label coordinates.
+\item \textbf{C-misc} EXP-001 maps to
+      \texttt{configs/data/ham10000\_hf\_mounted.yaml} (no \texttt{exp001}
+      suffix). Symmetry-break in the config naming convention; not visible
+      to readers.
+\end{enumerate}
+
+\section{Findings the audit could not break}
+
+\begin{itemize}[leftmargin=2em]
+\item All headline numbers (12 of them) re-derive correctly from the raw
+      run mirrors at zero context (Pass 2 Agent A; re-confirmed here).
+\item All hyperparameters in Appendix B (LR, weight decay, batch, epochs,
+      seed, init scale) match the per-run \texttt{config.yaml} files
+      verbatim.
+\item Run-ID naming is consistent across \S A, \texttt{locked-numbers.json},
+      \texttt{outputs/hf-runs/}, and \texttt{verify\_claims.py}.
+\item \texttt{verify\_claims.py} 31/31 PASS at delta $0.0000$.
+\item Figure captions match figure content (one nit each on Fig~1 / Fig~2
+      cosmetics, fixed).
+\item The abstract promises six things; the body delivers all six.
+\end{itemize}
+
+\section{Recommendation}
+
+\textbf{Minor revision $\to$ accept.} The paper is publication-ready after
+the four major findings above are addressed. With the minor cleanups
+applied alongside, the manuscript is stronger than at any prior revision
+and the reviewer-attack surface is markedly reduced.
+
+\end{document}

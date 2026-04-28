@@ -1,0 +1,68 @@
+{
+  "pass": 3,
+  "scope": "full_draft",
+  "scopes_touched": [
+    "01-introduction.tex", "02-related-work.tex",
+    "03-method.tex", "04-experimental-setup.tex",
+    "05-experimental-sequence.tex", "07-analysis.tex",
+    "09-limitations.tex", "10-conclusion.tex",
+    "F-compute-budget.tex", "G-reproducibility-checklist.tex",
+    "A-per-run.tex", "figures/build_fig1.py", "figures/build_fig2.py"
+  ],
+  "scores_before": {
+    "coverage": 70, "relevance": 80, "critical_analysis": 80,
+    "positioning": 74, "organization": 80, "citation_rigor": 74,
+    "overall": 78
+  },
+  "scores_after": {
+    "coverage": 72, "relevance": 82, "critical_analysis": 80,
+    "positioning": 76, "organization": 82, "citation_rigor": 80,
+    "overall": 81
+  },
+  "addressed_weaknesses": [
+    "A1: 'nuisance-invariant' framing of DINO/DINOv2/CLIP rephrased as our gloss across §1 and §2.",
+    "A2: RETFound 'evaluation protocol motivated us' overclaim downgraded to 'medical-domain FM precedent'.",
+    "A3: PMC-15M 'figure-caption' replaced with the abstract's 'image-text pairs from ~4.4M scientific articles'.",
+    "A4: MAE/VICReg 'similar ends' replaced with explicit mechanism descriptors.",
+    "B1: §F compute claim updated from ~85 min to ~95-100 min anchor; total to ~28 (now matches reproducibility-cost ~28-31 A10G-h). §4 setup updated likewise.",
+    "B2: §G download path attribution corrected (HF coordinate in scripts/, manifest builder in src/derma_jepa/public_data.py).",
+    "C1: Appendix A preamble clarifies its role as per-run-ID navigation anchor, with intentional headline-number overlap with §5.",
+    "C2: §10 conclusion now explicit that we did not run the full 2x2x2 factorial (4 of 8 cells).",
+    "C3: §9 added bootstrap-stratification limitation pointing to Appendix D.",
+    "C4: §5 EXP-007 paragraph now bridges single-seed 0.945 and 5-seed mean 0.944 ± 0.003.",
+    "C5: '~15M / ~15 million / ~15\\,M' all unified to '~$15$\\,M'.",
+    "C6: §3.5 ends with a bridge sentence forwarding to §4 (Experimental setup).",
+    "C7: §7.1 opening reworded to reference §6 explicitly, removing the 'rather than at chance' stutter.",
+    "C8: Fig 1 — pixel-L2 label moved below x-axis; contamination caveat annotation repositioned to lower-left of the DermLIP bar.",
+    "C9: Fig 2 — EXP-004 / EXP-006a / EXP-006b labels now use leader-line annotations to clearly-separated text positions; placements dictionary records each."
+  ],
+  "deferred": [
+    "C-misc: EXP-001 config naming asymmetry (ham10000_hf_mounted.yaml vs *_expNNN.yaml). Cosmetic; not user-visible from paper."
+  ],
+  "actions_taken": [
+    "§1: 'pitched as nuisance-invariant' → 'pitched as broadly transferable ... we read as approximate invariance'.",
+    "§2: DINO/DINOv2/CLIP/MAE/VICReg sentence rewritten with mechanism descriptors and explicit gloss attribution.",
+    "§2: BiomedCLIP description anchored to the abstract's '~$15$\\,M biomedical image–text pairs from ~$4.4$\\,M scientific articles'.",
+    "§2: RETFound clause downgraded.",
+    "§4 setup: 85 min → 95–100 min.",
+    "§F compute budget: anchor updated; total updated.",
+    "§G reproducibility: HF-coordinate / manifest-builder split.",
+    "§5 EXP-007 paragraph: single-seed-vs-mean bridge added.",
+    "§5 + §7: '15\\,M PMC-15M' styling unified.",
+    "§7.1 opening: stutter removed.",
+    "§3 evaluation paragraph: closed with bridge to §4.",
+    "§9 limitations: appended unstratified-bootstrap item.",
+    "§10 conclusion: '4 of 8 cells, no full 2×2×2 factorial' clarified.",
+    "Appendix A preamble: navigation-aid framing.",
+    "build_fig1.py: pixel-L2 label below x-axis; caveat repositioned.",
+    "build_fig2.py: cluster labels use leader-line annotations.",
+    "Re-ran verify_claims.py: 31/31 PASS at delta 0.0000.",
+    "Rebuilt PDF: 23 pages, 584 KB, 0 overfull, 0 errors, 0 undefined references.",
+    "Refreshed arxiv.tar.gz (67 KB).",
+    "Re-ran fig1 / fig2 build scripts; PDFs updated."
+  ],
+  "axis_drop_check": "No axis dropped. Citation rigor +6 (A1/A2/A3/A4); coverage +2 (B1/B2 anchoring); relevance +2 (scope tightening); positioning +2; organization +2 (§10/§3.5/§7.1/Appendix-A preamble + figure cosmetics). Critical analysis unchanged at 80 (already strong from pass 2). Overall 78 → 81.",
+  "accepted": true,
+  "post_revision_pdf": "paper/main.pdf (23 pp, 584 KB)",
+  "post_revision_bundle": "paper/arxiv.tar.gz (67 KB)"
+}

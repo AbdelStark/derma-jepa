@@ -3,7 +3,9 @@
 
 Every primary-tier run executes on a single NVIDIA A10G 24~GB via
 Hugging Face Jobs (\texttt{a10g-large}). The wall-clock breakdown for
-the canonical EXP-004 recipe ($\sim$85~min end-to-end) is approximately:
+the canonical EXP-004 recipe ($\sim$95--100~min end-to-end, measured at
+$\sim$$98$~min from the EXP-004 \texttt{progress.jsonl} timestamps) is
+approximately:
 
 \begin{itemize}
 \item Manifest build, deterministic-augmentation pair generation, and
@@ -21,13 +23,14 @@ the canonical EXP-004 recipe ($\sim$85~min end-to-end) is approximately:
 The MLP-on-DINOv2 runs (EXP-005 and EXP-006a) take $\sim$105~min
 because the MLP forward/backward is approximately twice the linear
 predictor's. The DermLIP and BiomedCLIP runs sit in the same
-$\sim$85-minute envelope as the linear DINOv2 and CLIP runs: backbone
+$\sim$$95$-minute envelope as the linear DINOv2 and CLIP runs: backbone
 forward dominates only the embedding-export phase, and once
 embeddings are cached, predictor training is backbone-independent.
 
-\paragraph{Total for the paper.} Nine primary-tier runs at $\sim$85--105
-min each plus eight additional seed-sweep runs at $\sim$85~min each
-totals approximately $25$ A10G-hours of compute, plus an additional
+\paragraph{Total for the paper.} Nine primary-tier runs at
+$\sim$$95$--$105$~min each plus eight additional seed-sweep runs at
+$\sim$$95$~min each
+totals approximately $28$ A10G-hours of compute, plus an additional
 $\sim$3~A10G-hours absorbed by two infrastructure-flake re-launches
 during the seed-sweep cohort. All accumulated at Hugging Face Jobs
 free-tier rates; the launchers are committed under \path{scripts/}
@@ -35,6 +38,6 @@ and the pinned dependency versions for the hosted environment are at
 \path{scripts/hf_jobs_constraints.txt}.
 
 \paragraph{Reproducibility cost.} Reproducing the entire nine-run arc
-plus the seed sweep from a clean checkout requires the same $\sim$28
-A10G-hours, plus a one-time HAM10000 download (the source manifest
+plus the seed sweep from a clean checkout requires the same
+$\sim$$28$--$31$ A10G-hours, plus a one-time HAM10000 download (the source manifest
 caches it once). No private data, no local GPU.

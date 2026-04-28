@@ -6,27 +6,34 @@ The Joint-Embedding Predictive Architecture family
 \citep{lecun2022path, assran2023ijepa} predicts in representation space rather
 than pixel space, motivated by the conjecture that nuisance-invariant
 representations emerge from learning to predict the latents of related views.
-DINO \citep{caron2021dino} and DINOv2 \citep{oquab2024dinov2} build
-nuisance-invariant transformers via self-distillation; CLIP
-\citep{radford2021clip} and OpenCLIP \citep{cherti2023openclip} build them via
-contrastive image--text alignment; MAE \citep{he2022mae} and VICReg
-\citep{bardes2022vicreg} take other paths to similar ends. Our probe is
+DINO \citep{caron2021dino} and DINOv2 \citep{oquab2024dinov2} train
+transformers via self-distillation to produce features that transfer
+across image distributions and downstream tasks; CLIP
+\citep{radford2021clip} and OpenCLIP \citep{cherti2023openclip} build
+transferable representations via contrastive image--text alignment;
+MAE \citep{he2022mae} reconstructs masked pixels and VICReg
+\citep{bardes2022vicreg} regularises variance, invariance, and
+covariance of the embedding. We read all of these as different routes
+toward representations that are approximately invariant to many
+photometric and framing nuisances; our probe asks whether that
+invariance generalises to nuisance families absent at pretraining time. Our probe is
 narrow: the frozen-backbone, single-step, stable-pair subset of the JEPA family
 applied as an evaluation probe, not a pretraining objective.
 
 \paragraph{Domain-specific medical foundation models.}
 BiomedCLIP \citep{zhang2023biomedclip} is a CLIP-style model trained on
-PMC-15M, $\sim$15 million figure--caption pairs from biomedical research
-articles. DermLIP \citep{yan2025derm1m} is a CLIP-style model trained on
+PMC-15M, $\sim$$15$\,M biomedical image--text pairs from $\sim$$4.4$\,M
+scientific articles. DermLIP \citep{yan2025derm1m} is a CLIP-style model trained on
 Derm1M, a $\sim$1 million dermatology image--text corpus that aggregates
 publicly available dermoscopy datasets and dermatology-website content.
 A broader dermatology foundation-model line includes MONET
 \citep{kim2024monet} (image--text alignment over dermatology textbook
 figures and PubMed) and PanDerm \citep{yan2024panderm} (a multi-modal
 self-supervised model trained on $\sim$$2$M dermatology images);
-RETFound \citep{zhou2023retfound} is a comparable retinal foundation
-model whose evaluation protocol motivated some of our ablation
-choices. We use BiomedCLIP and DermLIP as third-party frozen weights,
+RETFound \citep{zhou2023retfound} is a comparable medical-domain
+foundation-model precedent in retinal imaging, cited here for the
+domain-specific FM design pattern rather than as a methodological
+template for our probe. We use BiomedCLIP and DermLIP as third-party frozen weights,
 not as artefacts to evaluate in their own right; the paper makes no
 claim about either model beyond the test $\auroc$ each produces under
 our specific probe.

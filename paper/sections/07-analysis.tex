@@ -4,10 +4,10 @@
 \subsection{Why the inversion is below random rather than at chance}
 \label{sec:analysis:inversion}
 
-The below-random orientation of test $\auroc$ under frozen natural-image
-backbones is not noise but a structured failure: the linear predictor learns
-a direction $w \in \mathbb{R}^{d}$ that encodes ``stable under
-$\{\strongfam, \strongholdone\}$'' as small $\langle w, z_{t} - z_{c} \rangle$,
+The structured-inversion finding from \S\ref{sec:results} is not noise:
+the linear predictor learns a direction $w \in \mathbb{R}^{d}$ that
+encodes ``stable under $\{\strongfam, \strongholdone\}$'' as small
+$\langle w, z_{t} - z_{c} \rangle$,
 and this direction extrapolates with the \emph{opposite} sign when the unseen
 family \strongholdtwo\ rotates the latent geometry the other way. Because the
 third family's nuisance is operation-disjoint from the training families, the
@@ -38,7 +38,7 @@ held byte-identical. The plausible mechanistic accounts are
 \end{enumerate}
 EXP-008 rules out a third candidate --- ``PMC-15M-style biomedical-
 figure pretraining is sufficient'' --- by showing that BiomedCLIP,
-trained on $\sim$15\,M PMC-15M figure--caption pairs without HAM10000,
+trained on $\sim$$15$\,M PMC-15M biomedical image--text pairs without HAM10000,
 lifts test $\auroc$ by only $+0.04$ over web CLIP. PMC-15M's
 dermatology fraction is undocumented, so the negative does not
 generalise to all ``general medical'' pretraining; a corpus with

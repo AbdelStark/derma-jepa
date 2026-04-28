@@ -33,4 +33,10 @@
       ablation (EXP-005, EXP-006a) was run only on DINOv2; an MLP-on-DermLIP
       run was not performed. Predicted to land at or above EXP-007's $0.944$
       since the linear scaffold already saturates training, but unverified.
+\item \textbf{Unstratified bootstrap.} The pair-level bootstrap
+      (Appendix~\ref{app:bootstrap-protocol}) is not stratified by
+      label, diagnosis, or anatomical site, so the reported $95\%$ CIs
+      are marginal over the empirical class balance. Stratified
+      resampling would tighten CIs slightly but is not expected to move
+      headline numbers.
 \end{enumerate}

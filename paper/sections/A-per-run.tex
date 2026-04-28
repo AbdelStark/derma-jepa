@@ -1,12 +1,16 @@
 \section{Per-run details}
 \label{app:per-run}
 
-This appendix summarises the nine primary-tier runs and the subsequent
-ten-run seed sweep. Every run has a self-contained report at
-\texttt{docs/experiments/EXP-NNN-...md} in the source repository, and
-every run's \texttt{manifest.json}, \texttt{embeddings/}, \texttt{metrics.json},
-\texttt{baseline\_metrics.json}, \texttt{config.yaml}, \texttt{model\_card.md},
-and \texttt{logs/} subtree are mirrored under \runarchive\ at
+This appendix re-states the nine-run sequence and the ten-run seed
+sweep one entry at a time, anchored on the run identifier so that
+readers can navigate from a quoted number to the run-archive folder and
+back. Headline numbers therefore overlap with \S\ref{sec:experimental-sequence};
+the unique content here is the run-ID, the train$\to$test gap, and any
+run-specific anomaly. Each run has a self-contained report at
+\path{docs/experiments/EXP-NNN-...md} in the source repository, and
+each run's \path{manifest.json}, \path{embeddings/}, \path{metrics.json},
+\path{baseline_metrics.json}, \path{config.yaml}, \path{model_card.md},
+and \path{logs/} subtree are mirrored under \runarchive\ at
 \texttt{<run\_id>/}.
 
 \subsection{EXP-001 --- ceiling sanity}

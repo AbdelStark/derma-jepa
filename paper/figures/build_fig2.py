@@ -47,23 +47,35 @@ def main() -> int:
     ax.axhline(0.5, linestyle=":", linewidth=0.7, color="#aaa")
     ax.text(0.02, 0.51, "random = 0.5", fontsize=7.5, color="#888")
 
+    # Per-point label placement (text x, text y); connector arrows used
+    # for the bottom-right cluster (EXP-004 / EXP-006a / EXP-006b) to
+    # avoid mutual occlusion.
+    placements = {
+        "EXP-005":  ((0.30,  0.18), False),
+        "EXP-004":  ((0.55,  0.05), True),
+        "EXP-006a": ((0.55,  0.13), True),
+        "EXP-006b": ((0.85,  0.08), True),
+        "EXP-008":  ((0.62,  0.40), True),
+        "EXP-007":  ((0.50,  0.85), True),
+    }
+
     for label, descr, train, test, colour in points:
         ax.scatter(train, test, s=70, color=colour, edgecolors="#222",
                    linewidth=0.6, zorder=3)
-        # Adjust label offsets to avoid overlap.
-        dx, dy = 0.012, -0.01
-        if label == "EXP-005":
-            dx, dy = -0.20, 0.005
-        elif label == "EXP-006a":
-            dx, dy = 0.012, 0.025
-        elif label == "EXP-008":
-            dx, dy = -0.18, -0.04
-        elif label == "EXP-007":
-            dx, dy = -0.21, 0.012
-        elif label == "EXP-004":
-            dx, dy = 0.012, -0.04
-        ax.text(train + dx, test + dy, f"{label}\n{descr}", fontsize=7.5,
-                color="#222")
+        (tx, ty), use_arrow = placements[label]
+        if use_arrow:
+            ax.annotate(
+                f"{label}: {descr}",
+                xy=(train, test),
+                xytext=(tx, ty),
+                fontsize=7.5,
+                color="#222",
+                arrowprops={"arrowstyle": "-", "color": "#888", "lw": 0.4,
+                            "shrinkA": 1, "shrinkB": 4},
+                ha="left",
+            )
+        else:
+            ax.text(tx, ty, f"{label}: {descr}", fontsize=7.5, color="#222")
 
     ax.set_xlim(0.0, 1.05)
     ax.set_ylim(0.0, 1.05)

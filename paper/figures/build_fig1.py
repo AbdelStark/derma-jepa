@@ -82,11 +82,11 @@ def main() -> int:
     )
     ax.text(
         baseline["auroc"] + 0.005,
-        len(rows) - 0.3,
+        -0.45,
         f"pixel L2 = {baseline['auroc']:.3f}",
         fontsize=8,
         color="#666",
-        va="bottom",
+        va="top",
     )
 
     # Random-baseline reference at 0.5.
@@ -107,7 +107,7 @@ def main() -> int:
     ax.annotate(
         "[contamination caveat:\nDerm1M ⊇ HAM10000]",
         xy=(rows[dermlip_idx][1]["test_auroc_seed_mean"], dermlip_idx),
-        xytext=(0.62, dermlip_idx + 0.55),
+        xytext=(0.40, dermlip_idx - 0.55),
         fontsize=7.5,
         color="#922",
         arrowprops={"arrowstyle": "-", "color": "#922", "lw": 0.5},

@@ -10,9 +10,12 @@ mapped to specific repository assets.
       Pinned dependency manifests at \path{pyproject.toml} and
       \path{uv.lock}; hosted-environment pins at
       \path{scripts/hf_jobs_constraints.txt}.
-\item \textbf{Data.} HAM10000 \citep{tschandl2018ham10000} via the
-      \path{abdelstark/ham10000} HF dataset mirror; the source manifest
-      and download path live at \path{src/derma_jepa/public_data.py}.
+\item \textbf{Data.} HAM10000 \citep{tschandl2018ham10000}, accessed
+      from the \path{abdelstark/ham10000} HF dataset mirror. The HF
+      coordinate is exported as \texttt{DERMA\_JEPA\_HAM10000\_REPO} in
+      the launcher scripts under \path{scripts/}; local manifest
+      construction (lesion-ID-aware splits, pair generation, audit) is
+      implemented in \path{src/derma_jepa/public_data.py}.
 \item \textbf{Configurations.} One YAML per primary-tier run under
       \path{configs/data/}; every run mirrors its exact
       \path{config.yaml} alongside \path{metrics.json} and
