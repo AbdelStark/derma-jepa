@@ -299,8 +299,6 @@ configs/train/          # JEPA predictor training configs
 scripts/                # HF Jobs launchers (one per experiment), seed-sweep launcher, aggregator
 tests/                  # contract, metric, end-to-end fixture pipeline, training, observability
 docs/experiments/       # one self-contained Markdown report per primary-tier run
-docs/spec/              # PRD, system spec, MVP spec, status, schedule, implementation plan, research notes
-docs/rfcs/              # accepted decision records (RFC-0001 through RFC-0007)
 docs/runbooks/          # operational playbooks (HF Jobs, HAM10000 JEPA loop)
 data/README.md          # data layout, leakage rules, citations
 ```
