@@ -21,9 +21,13 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 RUNS_ROOT = REPO_ROOT / "outputs" / "hf-runs"
 
 PANELS = [
-    ("CLIP (web)",                "ham10000-hf-clip-exp006b-v1",      "#9aa3b2"),
-    ("BiomedCLIP (gen. medical)", "ham10000-hf-biomedclip-exp008-v1", "#6c95cc"),
-    ("DermLIP (dermatology)",     "ham10000-hf-dermlip-exp007-v1",    "#3d8c5c"),
+    ("CLIP (web)", "ham10000-hf-clip-exp006b-v1", "#9aa3b2"),
+    (
+        "BiomedCLIP (gen. medical)",
+        "ham10000-hf-biomedclip-exp008-v1",
+        "#6c95cc",
+    ),
+    ("DermLIP (dermatology)", "ham10000-hf-dermlip-exp007-v1", "#3d8c5c"),
 ]
 
 
@@ -46,16 +50,38 @@ def main() -> int:
         stable = score[label == "stable"]
         changing = score[label == "changing"]
 
-        ax.hist(stable, bins=bins, alpha=0.55, color="#3d6c8c",
-                label=f"stable (μ={stable.mean():.3f})", edgecolor="white",
-                linewidth=0.4)
-        ax.hist(changing, bins=bins, alpha=0.55, color="#c76b3d",
-                label=f"changing (μ={changing.mean():.3f})", edgecolor="white",
-                linewidth=0.4)
+        ax.hist(
+            stable,
+            bins=bins,
+            alpha=0.55,
+            color="#3d6c8c",
+            label=f"stable (μ={stable.mean():.3f})",
+            edgecolor="white",
+            linewidth=0.4,
+        )
+        ax.hist(
+            changing,
+            bins=bins,
+            alpha=0.55,
+            color="#c76b3d",
+            label=f"changing (μ={changing.mean():.3f})",
+            edgecolor="white",
+            linewidth=0.4,
+        )
 
         # Mean lines.
-        ax.axvline(stable.mean(), color="#3d6c8c", linestyle="--", linewidth=0.7)
-        ax.axvline(changing.mean(), color="#c76b3d", linestyle="--", linewidth=0.7)
+        ax.axvline(
+            stable.mean(),
+            color="#3d6c8c",
+            linestyle="--",
+            linewidth=0.7,
+        )
+        ax.axvline(
+            changing.mean(),
+            color="#c76b3d",
+            linestyle="--",
+            linewidth=0.7,
+        )
 
         # Inversion annotation: arrow from stable mean to changing mean.
         oriented = stable.mean() < changing.mean()
@@ -69,8 +95,10 @@ def main() -> int:
     axes[0].set_ylabel("Pair count (test split, $n=2{,}000$)")
 
     fig.suptitle(
-        "Test-split pair-score histograms: stable vs changing under three pretraining domains",
-        fontsize=10, y=1.04,
+        "Test-split pair-score histograms: stable vs changing "
+        "under three pretraining domains",
+        fontsize=10,
+        y=1.04,
     )
     fig.tight_layout()
 

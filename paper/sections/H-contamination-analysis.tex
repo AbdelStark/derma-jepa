@@ -50,11 +50,12 @@ on the basis of EXP-007 alone.
 EXP-008 introduces a third pretraining-data point: BiomedCLIP's PMC-15M,
 which is approximately $15\times$ larger than Derm1M but is composed of
 biomedical figure--caption pairs with a very low fraction of
-dermoscopy and zero documented HAM10000 overlap. The result --- test
+dermoscopy and no documented raw HAM10000/ISIC archive ingestion. The result --- test
 $\auroc = 0.329 \pm 0.012$ --- contributes three readings:
 \begin{itemize}
 \item \textbf{Scale alone is not the explanation.} Fifteen million
-      biomedical pairs (no HAM10000) do not unlock the proxy, so the
+      biomedical pairs without documented raw HAM10000/ISIC archive
+      ingestion do not unlock the proxy, so the
       EXP-007 win is not attributable to ``more pretraining data,''
       ``more medical pretraining data,'' or any monotonic function of
       pretraining-corpus size.

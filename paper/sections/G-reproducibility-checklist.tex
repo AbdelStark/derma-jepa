@@ -36,9 +36,9 @@ mapped to specific repository assets.
       \path{src/derma_jepa/metrics.py}; tests:
       \path{tests/test_metrics.py}.
 \item \textbf{Numbers.} Every quantitative claim in the paper traces
-      to \path{paper/figures/locked-numbers.json} and is verified at
-      build time by \path{paper/verify_claims.py} against the
-      run-archive mirror.
+      to \path{paper/figures/locked-numbers.json}. The paper Makefile
+      runs \path{paper/verify_claims.py} before PDF and arXiv-package
+      builds, checking the locked values against the run-archive mirror.
 \item \textbf{Negative results and ablations.} The full nine-run
       sequence is reported, including the seven runs whose test $\auroc$
       lands in the $0.25$--$0.33$ band across natural-image and

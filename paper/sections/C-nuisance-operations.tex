@@ -29,9 +29,10 @@ ordinary acquisition variability.
 \end{itemize}
 
 \subsection*{\strongholdone}
-Disjoint operation set: HSV colour rotation, posterisation, sharpening,
-motion blur, occlusion, and aggressive JPEG compression. No transform
-type overlaps with \strongfam.
+Disjoint operation--parameter-band set: HSV colour rotation,
+posterisation, sharpening, motion blur, occlusion, and aggressive JPEG
+compression. JPEG recurs from \strongfam, but with a non-overlapping
+quality band.
 \begin{itemize}
 \item HSV hue rotation by $\Delta h \sim \mathrm{Uniform}(-12^{\circ}, 12^{\circ})$.
 \item Posterise to $b \sim \mathrm{Uniform}\{4, 5, 6\}$ bits per channel.
@@ -46,9 +47,9 @@ type overlaps with \strongfam.
 \end{itemize}
 
 \subsection*{\strongholdtwo}
-Disjoint operation set: gamma, colour-temperature, vignette,
-salt-and-pepper noise, and high-quality JPEG. No transform type overlaps
-with \strongfam\ or \strongholdone.
+Disjoint operation--parameter-band set: gamma, colour-temperature,
+vignette, salt-and-pepper noise, and high-quality JPEG. JPEG recurs from
+\strongfam\ and \strongholdone, but with a non-overlapping quality band.
 \begin{itemize}
 \item Gamma correction with $\gamma \sim \mathrm{Uniform}(0.6, 1.6)$
       (non-linear, distinct from contrast).
@@ -63,10 +64,11 @@ with \strongfam\ or \strongholdone.
       (distinct from \strongfam's $45$--$70$ and \strongholdone's $20$--$40$).
 \end{itemize}
 
-\paragraph{Disjointness.} The three operation sets share no transform
-type --- a property enforced by inspection of the function bodies and
-re-checked in the code review for every new family proposed. JPEG
-quality ranges are chosen non-overlapping so that the post-pipeline
+\paragraph{Disjointness.} The three families share no
+operation--parameter-band combination --- a property enforced by
+inspection of the function bodies and re-checked in the code review for
+every new family proposed. JPEG is the sole recurring transform type;
+its quality ranges are chosen non-overlapping so that the post-pipeline
 compression artefact is family-distinguishable. The composite
 augmentation pipeline is deterministic in the per-pair seed: the same
 seed reproduces byte-identical perturbed images, which is exploited by

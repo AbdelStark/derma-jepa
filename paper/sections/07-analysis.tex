@@ -38,8 +38,9 @@ held byte-identical. The plausible mechanistic accounts are
 \end{enumerate}
 EXP-008 rules out a third candidate --- ``PMC-15M-style biomedical-
 figure pretraining is sufficient'' --- by showing that BiomedCLIP,
-trained on $\sim$$15$\,M PMC-15M biomedical image--text pairs without HAM10000,
-lifts test $\auroc$ by only $+0.04$ over web CLIP. PMC-15M's
+trained on $\sim$$15$\,M PMC-15M biomedical image--text pairs with no
+documented raw HAM10000/ISIC archive ingestion, lifts test $\auroc$ by
+only $+0.04$ over web CLIP. PMC-15M's
 dermatology fraction is undocumented, so the negative does not
 generalise to all ``general medical'' pretraining; a corpus with
 substantial dermoscopy content but no HAM10000 (which EXP-009 below

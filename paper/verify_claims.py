@@ -44,6 +44,10 @@ def check_close(name: str, observed: float, expected: float, tol: float) -> bool
     return delta <= tol
 
 
+def compact_float(value: float) -> str:
+    return f"{value:.6f}".rstrip("0").rstrip(".")
+
+
 def check_run(name: str, entry: dict[str, Any], tol: float) -> int:
     fails = 0
     metrics = load_metrics(entry["run_id"])
@@ -58,7 +62,9 @@ def check_run(name: str, entry: dict[str, Any], tol: float) -> int:
         observed_auroc,
         float(entry["test_auroc"]),
         tol,
-    ) or "single_seed_test_auroc" in entry and not check_close(
+    ):
+        fails += 1
+    if "single_seed_test_auroc" in entry and not check_close(
         f"{name} test AUROC (original-seed run)",
         observed_auroc,
         float(entry["single_seed_test_auroc"]),
@@ -99,7 +105,7 @@ def check_run(name: str, entry: dict[str, Any], tol: float) -> int:
 
 
 def check_training_loss_dynamics(locked: dict[str, Any], tol: float) -> int:
-    """Verify §7.3 MSE loss-reduction numbers against the source experiment reports."""
+    """Verify §7.3 MSE loss-reduction numbers against experiment reports."""
     fails = 0
     block = locked.get("training_loss_dynamics", {})
     for run_key, entry in block.items():
@@ -112,19 +118,31 @@ def check_training_loss_dynamics(locked: dict[str, Any], tol: float) -> int:
         text = report.read_text()
         e1 = float(entry["train_loss_epoch_1"])
         e200 = float(entry["train_loss_epoch_200"])
-        e1_str = f"{e1:.6f}".rstrip("0").rstrip(".") if "." in f"{e1:.6f}" else f"{e1:.6f}"
-        e200_str = f"{e200:.6f}".rstrip("0").rstrip(".") if "." in f"{e200:.6f}" else f"{e200:.6f}"
+        e1_str = compact_float(e1)
+        e200_str = compact_float(e200)
+        report_path = entry["report_path"]
         # Check the literal anchors appear in the report markdown.
         if e1_str not in text:
-            print(f"  FAIL  {run_key} loss anchor epoch-1 ({e1_str}) not in {entry['report_path']}")
+            print(
+                f"  FAIL  {run_key} loss anchor epoch-1 ({e1_str}) not in {report_path}"
+            )
             fails += 1
         else:
-            print(f"  PASS  {run_key} loss anchor epoch-1                  obs={e1_str}  in report")
+            print(
+                f"  PASS  {run_key} loss anchor epoch-1"
+                f"                  obs={e1_str}  in report"
+            )
         if e200_str not in text:
-            print(f"  FAIL  {run_key} loss anchor epoch-200 ({e200_str}) not in {entry['report_path']}")
+            print(
+                f"  FAIL  {run_key} loss anchor epoch-200 "
+                f"({e200_str}) not in {report_path}"
+            )
             fails += 1
         else:
-            print(f"  PASS  {run_key} loss anchor epoch-200                obs={e200_str}  in report")
+            print(
+                f"  PASS  {run_key} loss anchor epoch-200"
+                f"                obs={e200_str}  in report"
+            )
         # Recompute reduction and check against quoted %.
         reduction = 100.0 * (e1 - e200) / e1
         quoted = float(entry["reduction_pct_quoted"])
@@ -132,12 +150,15 @@ def check_training_loss_dynamics(locked: dict[str, Any], tol: float) -> int:
         # Tolerance for rounding to whole % or 1 dp.
         if delta > 0.5:
             print(
-                f"  FAIL  {run_key} reduction%  obs={reduction:.2f}  quoted={quoted}  delta={delta:.2f}"
+                f"  FAIL  {run_key} reduction%  obs={reduction:.2f}  "
+                f"quoted={quoted}  delta={delta:.2f}"
             )
             fails += 1
         else:
             print(
-                f"  PASS  {run_key} reduction%                              obs={reduction:.2f}  quoted={quoted}"
+                f"  PASS  {run_key} reduction%"
+                f"                              obs={reduction:.2f}  "
+                f"quoted={quoted}"
             )
     return fails
 
@@ -160,8 +181,11 @@ def check_test_score_structure(locked: dict[str, Any], tol: float) -> int:
         if run_key not in block:
             continue
         npz_path = (
-            MIRROR_ROOT / run_id
-            / "artifacts" / "embeddings" / "jepa_predictor_latents.npz"
+            MIRROR_ROOT
+            / run_id
+            / "artifacts"
+            / "embeddings"
+            / "jepa_predictor_latents.npz"
         )
         if not npz_path.is_file():
             print(f"  SKIP  {run_key} test_score_structure: latents missing")
@@ -175,11 +199,17 @@ def check_test_score_structure(locked: dict[str, Any], tol: float) -> int:
         gap = changing_mean - stable_mean
         exp = block[run_key]
         if not check_close(
-            f"{run_key} test stable mean", stable_mean, float(exp["stable_mean"]), tol
+            f"{run_key} test stable mean",
+            stable_mean,
+            float(exp["stable_mean"]),
+            tol,
         ):
             fails += 1
         if not check_close(
-            f"{run_key} test changing mean", changing_mean, float(exp["changing_mean"]), tol
+            f"{run_key} test changing mean",
+            changing_mean,
+            float(exp["changing_mean"]),
+            tol,
         ):
             fails += 1
         if not check_close(

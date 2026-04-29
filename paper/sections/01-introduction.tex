@@ -75,10 +75,11 @@ with the contamination caveat marked on the right.
       EXP-009 (\S\ref{sec:followup}) would be one way to close the
       partition.
 \item \textbf{Empirical (negative-as-partition).} Frozen BiomedCLIP ---
-      a ``biomedical-figure pretraining without HAM10000'' backbone
-      whose dermatology fraction is undocumented but plausibly small
-      --- lifts only $+0.04$ over web CLIP, narrowing the open question
-      to dermoscopy-rich pretraining.
+      a biomedical-figure-pretrained backbone with no documented raw
+      HAM10000/ISIC archive ingestion, and with an undocumented but
+      plausibly small dermatology fraction --- lifts only $+0.04$ over
+      web CLIP, narrowing the open question to dermoscopy-rich
+      pretraining.
 \item \textbf{Reproducibility.} Every primary-tier run is archived publicly at
       \runarchive\ with manifests, embeddings, metrics, model card, and logs.
       A single launcher script reproduces each run end-to-end on a free A10G

@@ -16,7 +16,8 @@ MAE \citep{he2022mae} reconstructs masked pixels and VICReg
 covariance of the embedding. We read all of these as different routes
 toward representations that are approximately invariant to many
 photometric and framing nuisances; our probe asks whether that
-invariance generalises to nuisance families absent at pretraining time. Our probe is
+invariance generalises to nuisance families held out from the probe's
+training distribution. Our probe is
 narrow: the frozen-backbone, single-step, stable-pair subset of the JEPA family
 applied as an evaluation probe, not a pretraining objective.
 
