@@ -15,8 +15,24 @@ DermaJEPA tests whether a JEPA-style latent predictor over a *frozen* vision bac
 
 ---
 
+## Pretraining contamination caveat
+
+> [!IMPORTANT]
+> **Read this before interpreting any number in this repo.**
+>
+> The single positive result reported here (frozen DermLIP at test AUROC 0.944 ± 0.003 on the held-out third nuisance family, EXP-007) **cannot be attributed to dermoscopy-domain transfer** with the experiments in this nine-run sequence. DermLIP's pretraining corpus, [Derm1M](https://arxiv.org/abs/2503.14911), almost certainly contains HAM10000 raw images: the data card describes the corpus as aggregating publicly available dermoscopy datasets and dermatology-website content, and HAM10000 is the largest public dermoscopy dataset. The BiomedCLIP partition (EXP-008, +0.04 over web CLIP) only rules out the broader "any general-medical pretraining is sufficient" alternative; it does **not** separate dermoscopy-domain transfer from HAM10000 image-level overlap.
+>
+> The DermLIP headline should therefore be read as: *frozen DermLIP plus a linear scaffold reaches AUROC 0.944 on `strong_held_out_2` under our specific protocol, with HAM10000 contamination unpartitioned* — not as a transfer claim. A partition experiment (**EXP-009**: self-pretrain a DINOv2 ViT-B/14 on a non-HAM10000 dermoscopy corpus, then re-run the EXP-004 recipe on top) is the natural next step that would close the partition. **It has not been run yet.** This release is a preliminary report intended to gather community feedback on the proxy-task design and on whether EXP-009 (or a different partition) is the right follow-up before the corpus-assembly and pretrain compute is committed.
+>
+> Where this is discussed in detail:
+> - Repo: [Open follow-up](#open-follow-up) — EXP-009 sketch and decision framework.
+> - Companion preprint ([`paper/main.pdf`](paper/main.pdf)): introduction §1, analysis §7.4 ("What is not yet claimed"), §8 ("Candidate follow-up: EXP-009"), Limitations §9 item 1, Appendix H ("Pretraining contamination analysis"), and Appendix I ("EXP-009 design").
+
+---
+
 ## Contents
 
+- [Pretraining contamination caveat](#pretraining-contamination-caveat)
 - [Headline result](#headline-result)
 - [Method](#method)
 - [Experimental design](#experimental-design)
