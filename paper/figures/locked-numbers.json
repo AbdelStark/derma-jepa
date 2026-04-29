@@ -111,7 +111,7 @@
       "report_path": "docs/experiments/EXP-004-ham10000-jepa-mixed-train-held-out-2-v1.md",
       "train_loss_epoch_1": 0.000787,
       "train_loss_epoch_200": 0.000688,
-      "reduction_pct_quoted": 13
+      "reduction_pct_quoted": 12.6
     },
     "exp006a_dinov2_mlp_adam": {
       "report_path": "docs/experiments/EXP-006a-ham10000-jepa-adam-mlp-v1.md",

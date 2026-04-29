@@ -25,8 +25,11 @@ provenance audit on every component to confirm HAM10000 exclusion:
 \item ISIC archive components other than HAM10000 (BCN20000
       \citep{combalia2019bcn20000}, MSK-1 through MSK-5, UDA, Mednode,
       and similar legacy archives).
-\item DermNet NZ and DermQuest-derived public images (clinical, not
-      dermoscopic; included to broaden the visual distribution).
+\item DermNet NZ public images and DermQuest-derived archival mirrors,
+      where surviving (the original DermQuest portal was retired in
+      $2019$ and surviving derivative releases would be the actual
+      source); clinical, not dermoscopic, included to broaden the
+      visual distribution.
 \item PAD-UFES-20 and 7-point checklist datasets (each cross-checked
       for HAM10000 overlap by lesion-ID and SHA-256 hash).
 \end{itemize}
@@ -56,18 +59,33 @@ that pretraining data.
 
 \subsection{Decision table}
 Identical to Table~\ref{tab:exp009-decision} in \S\ref{sec:followup}.
-Outcome bands and claim revisions:
+Outcome bands partition $[0, 1]$ exhaustively so that no observed
+outcome falls into an unmapped region:
 \begin{itemize}
 \item Test $\auroc \geq 0.85$: dermoscopy-domain transfer is sufficient
       under this scaffold. Headline survives; contamination caveat
       downgrades from ``unpartitioned'' to ``ruled out.''
-\item Test $\auroc$ in $[0.50, 0.80]$: partial transfer; both factors
+\item Test $\auroc$ in $[0.80, 0.85)$: borderline transfer / near miss.
+      Headline survives weakened, with the borderline explicitly
+      acknowledged: ``dermoscopy-domain pretraining is a substantial but
+      not full driver, and the contamination caveat is downgraded but
+      not eliminated.''
+\item Test $\auroc$ in $[0.50, 0.80)$: partial transfer; both factors
       contribute. Claim becomes ``dermoscopy-domain pretraining helps,
       HAM10000 image overlap helps more.''
-\item Test $\auroc$ in $[0.30, 0.50]$: HAM10000 overlap drove EXP-007.
+\item Test $\auroc$ in $[0.30, 0.50)$: HAM10000 overlap drove EXP-007.
       Claim narrows to ``frozen-backbone JEPA unlocks when the backbone
       has seen the eval dataset, not when it has seen the eval
       domain.''
+\item Test $\auroc < 0.30$: below-random inversion in the same regime
+      as EXP-004 / EXP-006a / EXP-006b. Claim narrows further:
+      ``dermoscopy-domain pretraining without the eval dataset behaves
+      like natural-image pretraining under this scaffold,'' and the
+      EXP-007 swing is then attributable specifically to HAM10000
+      image-level overlap rather than to dermoscopy-domain pretraining
+      in general. A pretrain-quality check (\S\ref{app:exp009-design}
+      below) is required to rule out a weak self-pretrain as the
+      cause before this band is acted on.
 \end{itemize}
 
 \subsection{Why we share the design before running it}

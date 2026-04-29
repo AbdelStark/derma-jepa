@@ -20,9 +20,11 @@ distinction remains open.
 
 \subsection{EXP-009 design}
 Self-pretrain a DINOv2 ViT-B/14 encoder on a non-HAM10000 dermoscopy
-corpus assembled from ISIC archives minus the HAM10000 split, DermNet,
-DermQuest, BCN20000 \citep{combalia2019bcn20000} non-HAM10000 components, and
-similar publicly available dermoscopy and clinical-skin sources. Run a short
+corpus assembled from ISIC archives minus the HAM10000 split, DermNet
+NZ, BCN20000 \citep{combalia2019bcn20000} non-HAM10000 components, and
+similar publicly available dermoscopy and clinical-skin sources
+(any DermQuest content would have to be sourced from a surviving
+archival mirror; the original portal has been retired since $2019$). Run a short
 JEPA-style or masked-image-modelling objective (target: $\sim$20 epochs,
 $\sim$200\,k steps), then re-run the EXP-004 recipe on top with the linear
 predictor.
@@ -40,13 +42,16 @@ revision of the paper's claim.
 EXP-009 test $\auroc$ & Interpretation & Effect on the paper claim \\
 \midrule
 $\geq 0.85$    & Dermoscopy-domain transfer is sufficient. & Headline survives; caveat downgrades to ``verified.'' \\
-$0.50$--$0.80$ & Partial transfer; mixed contribution. & Claim becomes ``domain helps, dataset overlap helps more.'' \\
-$0.30$--$0.50$ & HAM10000 overlap drove EXP-007. & Claim narrows to ``frozen-backbone JEPA unlocks when the backbone has seen the eval dataset.'' \\
+$[0.80, 0.85)$ & Borderline transfer; near miss. & Headline survives weakened: ``dermoscopy-domain pretraining is a substantial but not full driver,'' with explicit acknowledgement of the borderline. \\
+$[0.50, 0.80)$ & Partial transfer; mixed contribution. & Claim becomes ``domain helps, dataset overlap helps more.'' \\
+$[0.30, 0.50)$ & HAM10000 overlap drove EXP-007. & Claim narrows to ``frozen-backbone JEPA unlocks when the backbone has seen the eval dataset.'' \\
+$< 0.30$       & Below-random inversion (same regime as EXP-004 / EXP-006a / EXP-006b). & Claim narrows further: ``dermoscopy-domain pretraining without the eval dataset behaves like natural-image pretraining,'' and EXP-007 is then attributable specifically to HAM10000 image-level overlap rather than to dermoscopy pretraining of any kind. \\
 \bottomrule
 \end{tabular}
-\caption{Three EXP-009 outcome bands on \strongholdtwo\ and the
-corresponding revision of the paper's claim. Committing this mapping up
-front would prevent post-hoc re-interpretation of the experiment.}
+\caption{EXP-009 outcome bands on \strongholdtwo\ partitioning $[0,1]$
+exhaustively and the corresponding revision of the paper's claim.
+Committing this mapping up front prevents post-hoc re-interpretation of
+the experiment, including in the borderline and below-random regions.}
 \label{tab:exp009-decision}
 \end{table}
 
