@@ -202,6 +202,8 @@ def _dinov2_matrix(
     ) as load_stage:
         device = _resolve_device(torch, model_config.device)
         load_stage.set(device=device)
+        # model_name is guaranteed non-None for dinov2 by config validation.
+        assert model_config.model_name is not None
         processor = AutoImageProcessor.from_pretrained(model_config.model_name)
         model = AutoModel.from_pretrained(model_config.model_name)
         model.to(device)
@@ -222,8 +224,8 @@ def _dinov2_matrix(
         ):
             batch_paths = paths[start : start + model_config.batch_size]
             images = [_load_pil_rgb(path) for path in batch_paths]
-            inputs = processor(images=images, return_tensors="pt")
-            inputs = {key: value.to(device) for key, value in inputs.items()}
+            features = processor(images=images, return_tensors="pt")
+            inputs = {key: value.to(device) for key, value in features.items()}
             outputs = model(**inputs)
             vectors = _output_vectors(outputs)
             all_vectors.append(vectors.detach().cpu().numpy().astype(np.float32))
@@ -254,6 +256,8 @@ def _clip_matrix(
     ) as load_stage:
         device = _resolve_device(torch, model_config.device)
         load_stage.set(device=device)
+        # model_name is guaranteed non-None for clip by config validation.
+        assert model_config.model_name is not None
         processor = CLIPImageProcessor.from_pretrained(model_config.model_name)
         model = CLIPModel.from_pretrained(model_config.model_name)
         model.to(device)
@@ -274,8 +278,8 @@ def _clip_matrix(
         ):
             batch_paths = paths[start : start + batch_size]
             images = [_load_pil_rgb(path) for path in batch_paths]
-            inputs = processor(images=images, return_tensors="pt")
-            inputs = {key: value.to(device) for key, value in inputs.items()}
+            features = processor(images=images, return_tensors="pt")
+            inputs = {key: value.to(device) for key, value in features.items()}
             outputs = model.get_image_features(**inputs)
             vectors = getattr(outputs, "pooler_output", outputs)
             all_vectors.append(vectors.detach().cpu().numpy().astype(np.float32))

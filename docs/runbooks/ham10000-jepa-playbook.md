@@ -7,8 +7,7 @@ content, and results packaging.
 
 ## 0. What we are actually measuring
 
-DermaJEPA's primary MVP claim is bounded and spec-locked
-(`docs/spec/MVP-SPEC.md`):
+DermaJEPA's primary MVP claim is bounded and spec-locked:
 
 > On a leakage-controlled longitudinal-proxy task, does a JEPA-style latent
 > predictor beat the strongest cheap baseline (pixel L2, SSIM, DINOv2 cosine)
@@ -202,7 +201,7 @@ Key fields to read:
 | `runtime_seconds` | linear predictor fit time, not end-to-end Job time |
 
 Run output lands in `outputs/hf-runs/<run-id>/` with the full artifact
-contract from `docs/spec/MVP-SPEC.md` §14 (config, manifests, metrics,
+contract (config, manifests, metrics,
 baseline_metrics, model_card, embeddings, plots, demo cases, logs).
 
 ## 6. Interpreting the delta
@@ -217,7 +216,7 @@ baseline_metrics, model_card, embeddings, plots, demo cases, logs).
 
 **Do not** tune thresholds, retry with different seeds until positive,
 remove baselines, or cherry-pick splits. The MVP failure policy
-(`docs/spec/MVP-SPEC.md` §20) explicitly forbids these.
+explicitly forbids these.
 
 ## 7. Archiving for writeups
 

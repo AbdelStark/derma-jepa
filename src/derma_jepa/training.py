@@ -314,6 +314,7 @@ def _fit_mlp_predictor(
     val_x = torch.from_numpy(val_x_np).to(device)
     val_y = torch.from_numpy(val_y_np).to(device)
 
+    optimizer: torch.optim.Optimizer
     if config.training.optimizer == "adam":
         optimizer = torch.optim.Adam(
             [w1, b1, w2, b2],

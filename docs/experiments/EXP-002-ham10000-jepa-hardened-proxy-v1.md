@@ -391,7 +391,7 @@ lesion monitoring. Four caveats keep the claim honest:
 
 ### 5.5 What this means for the thesis
 
-The MVP claim is evaluated narrowly (see `docs/spec/MVP-SPEC.md` §1).
+The MVP claim is evaluated narrowly (see the project MVP specification).
 EXP-002 supports it on the locked longitudinal proxy, at the scale and
 with the caveats listed in §5.4. The positive-result wording allowed by
 the spec applies:

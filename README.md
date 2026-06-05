@@ -9,6 +9,7 @@
   <a href="https://github.com/astral-sh/uv"><img alt="uv" src="https://img.shields.io/badge/build-uv-DE5FE9?style=for-the-badge"></a>
   <a href="https://pytorch.org"><img alt="PyTorch 2.11" src="https://img.shields.io/badge/PyTorch-2.11-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white"></a>
   <a href="https://huggingface.co/datasets/abdelstark/derma-jepa-runs"><img alt="HF Hub: run archive" src="https://img.shields.io/badge/%F0%9F%A4%97%20HF%20Hub-derma--jepa--runs-FFD21E?style=for-the-badge"></a>
+  <a href="paper/main.pdf"><img alt="Companion paper (PDF)" src="https://img.shields.io/badge/paper-PDF-B31B1B?style=for-the-badge&logo=adobeacrobatreader&logoColor=white"></a>
 </p>
 
 DermaJEPA tests whether a JEPA-style latent predictor over a *frozen* vision backbone can separate stable lesions under nuisance variation from genuinely changing lesions on a leakage-controlled longitudinal proxy. The repository contains the experiment harness, the configurations, and per-run reports for nine primary-tier experiments on public HAM10000 data.
@@ -61,7 +62,7 @@ On a leakage-controlled HAM10000 proxy with three disjoint synthetic nuisance fa
 | DINOv2 ViT-B/14 — [`facebook/dinov2-base`](https://huggingface.co/facebook/dinov2-base) | LVD-142M (curated web) | No | 0.249 [0.230, 0.270] | 1 | −0.331 |
 | OpenAI CLIP ViT-B/16 — [`openai/clip-vit-base-patch16`](https://huggingface.co/openai/clip-vit-base-patch16) | OpenAI WIT (≈400M web image-text) | No | 0.286 [0.265, 0.310] | 1 | −0.294 |
 | BiomedCLIP ViT-B/16 — [`microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224`](https://huggingface.co/microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224) | PMC-15M (general biomedical) | No | **0.329 ± 0.012** | 5 | −0.252 |
-| **DermLIP ViT-B/16** — [`redlessone/DermLIP_ViT-B-16`](https://huggingface.co/redlessone/DermLIP_ViT-B-16) | **Derm1M (dermatology)** | **Likely yes** | **0.944 ± 0.003** | **5** | **+0.364** |
+| **DermLIP ViT-B/16** — [`redlessone/DermLIP_ViT-B-16`](https://huggingface.co/redlessone/DermLIP_ViT-B-16) | **Derm1M (dermatology)** | **Likely yes** | **0.944 ± 0.003** | **5** | **+0.363** |
 
 Frozen natural-image and frozen general-medical backbones produce below-random test AUROC across two architectures (DINOv2, OpenAI CLIP), three predictor scaffolds (linear, underfit MLP, fit MLP under Adam), and two optimisers (SGD, Adam). A frozen dermoscopy-specific backbone (DermLIP, CLIP-trained on Derm1M) lifts test AUROC to 0.944 ± 0.003 across 5 seeds. DermLIP's pretraining corpus almost certainly includes HAM10000, so the contribution of dermoscopy-domain transfer versus HAM10000 image-level overlap is unpartitioned in this nine-run sequence; EXP-009 (a DINOv2 self-pretrained on a non-HAM10000 dermoscopy corpus) is the open follow-up that addresses this.
 
@@ -167,7 +168,7 @@ flowchart LR
     HAM --> Audit --> Manifest --> Embed --> Baseline --> Train --> Metrics --> Run --> Hub
 ```
 
-The CLI surfaces each step independently; hosted runs on Hugging Face Jobs chain them inside a single launcher script. Source: [`src/derma_jepa/`](src/derma_jepa/), [`scripts/`](scripts/). Run output contract: [`docs/spec/MVP-SPEC.md` §14](docs/spec/MVP-SPEC.md).
+The CLI surfaces each step independently; hosted runs on Hugging Face Jobs chain them inside a single launcher script. Source: [`src/derma_jepa/`](src/derma_jepa/), [`scripts/`](scripts/). Each run directory ships a fixed output contract — config, manifests, embeddings, baseline and JEPA metrics, plots, logs, and a model card; see any report under [`docs/experiments/`](docs/experiments/README.md).
 
 ---
 

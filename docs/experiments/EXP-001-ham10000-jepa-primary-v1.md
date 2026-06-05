@@ -36,7 +36,7 @@ This is a legitimate result, not a training bug.
 
 ### 2.1 Thesis under test
 
-From `docs/spec/MVP-SPEC.md`:
+The thesis under test, from the project MVP specification:
 
 > DermaJEPA evaluates whether a JEPA-style latent trajectory model can
 > separate nuisance-induced visual drift from meaningful lesion-change
@@ -304,7 +304,7 @@ room to *differentiate* itself from frozen DINOv2. The measured delta
 means "on this proxy, any competent encoder ties with any other competent
 encoder, and the linear predictor can neither lose nor win meaningfully."
 
-This is explicitly anticipated in `docs/spec/MVP-SPEC.md` §21 as a research
+This is explicitly anticipated in the project MVP specification as a research
 risk:
 
 > **Risk:** proxy task is too synthetic.
@@ -534,7 +534,7 @@ content:
 ### 9.5 Paper-section mapping
 
 If this run feeds into a methodology paper, the following mapping is
-faithful to `docs/spec/MVP-SPEC.md`:
+faithful to the project MVP specification:
 
 | Paper section | Drawn from |
 |---|---|
