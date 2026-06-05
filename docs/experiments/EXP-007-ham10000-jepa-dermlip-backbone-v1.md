@@ -9,18 +9,19 @@
 **Launcher commit:** `ba3afce`
 
 > **Correction (2026-06-05).** This report repeatedly states that Derm1M
-> "almost certainly contains" HAM10000. A later check of the Derm1M paper
-> (arXiv:2503.14911) found that Derm1M names exactly two public datasets as
-> image sources — SCIN and MSKCC (an ISIC-archive subset) — and HAM10000 is
-> **not** among them; in that paper HAM10000 appears only as an evaluation
-> benchmark, a comparison row, and a source of disease label names. The
-> accurate statement is therefore: HAM10000 is not a named Derm1M source, but
-> Derm1M documents no decontamination against it and bulk-scrapes
-> literature/web/social sources where HAM10000 circulates, so image-level
-> overlap **cannot be excluded** (and a direct audit is gated behind Derm1M
-> access). Wherever this dated report says "almost certainly contains/includes
-> HAM10000," read "overlap cannot be excluded." See the paper's Appendix H for
-> the corrected analysis.
+> "almost certainly contains" HAM10000, justified by "no per-source breakdown."
+> That justification was wrong: the Derm1M paper (arXiv:2503.14911) names its
+> public image sources (SCIN and MSKCC, an ISIC-archive subset) and HAM10000 is
+> **not** among them, nor in Derm1M's ISIC-labeled partition (0 of 10,015 HAM
+> IDs). However, a perceptual-hash overlap audit (2026-06-05,
+> [`docs/audits/derm1m-ham10000-overlap-audit.md`](../audits/derm1m-ham10000-overlap-audit.md))
+> **confirmed** that HAM10000 images did leak into Derm1M via reproduced figures
+> in its scraped PubMed/literature partition — at least 13 distinct HAM10000
+> images from ≥4 journal articles, verified across four perceptual hashes and by
+> eye. So the conclusion stands but with the correct mechanism and scope: read
+> "almost certainly contains HAM10000" as "confirmed to contain HAM10000 images
+> via literature scraping, at small (lower-bounded) scale; not a named source."
+> See the paper's Appendix H.
 
 ---
 

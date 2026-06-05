@@ -9,15 +9,15 @@
 **Launcher commit:** `c741632`
 
 > **Correction (2026-06-05).** Where this report says Derm1M "almost certainly
-> contains" HAM10000, read "HAM10000 image-level overlap cannot be excluded."
-> A later check of the Derm1M paper (arXiv:2503.14911) found HAM10000 is **not**
-> a named Derm1M image source (its named public datasets are SCIN and MSKCC);
-> however Derm1M documents no decontamination against HAM10000 and scrapes
-> literature/web sources where it circulates, so overlap is unverified rather
-> than excluded. The EXP-008 partition logic is unaffected: BiomedCLIP (PMC-15M)
-> still rules out "any general-medical pretraining suffices" without resolving
-> dermoscopy-domain transfer versus HAM10000 overlap. See the paper's
-> Appendix H.
+> contains" HAM10000, read "confirmed to contain HAM10000 images via literature
+> scraping, at small (lower-bounded) scale; not a named source." HAM10000 is
+> **not** a named Derm1M image source (its named public datasets are SCIN and
+> MSKCC) nor in Derm1M's ISIC-labeled partition, but a perceptual-hash audit
+> (2026-06-05, [`docs/audits/derm1m-ham10000-overlap-audit.md`](../audits/derm1m-ham10000-overlap-audit.md))
+> confirmed ≥13 distinct HAM10000 images present via reproduced PubMed figures.
+> The EXP-008 partition logic is unaffected: BiomedCLIP (PMC-15M) still rules out
+> "any general-medical pretraining suffices" without resolving dermoscopy-domain
+> transfer versus HAM10000 overlap. See the paper's Appendix H.
 
 ---
 

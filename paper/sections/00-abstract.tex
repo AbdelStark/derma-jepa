@@ -24,9 +24,10 @@ produces a $+0.66$ end-to-end $\auroc$ swing (web $\to$ dermoscopy)
 that is concentrated in the dermoscopy-specific step ($+0.62$ of $+0.66$,
 with the residual $+0.04$ at the web $\to$ general-medical step).
 \textbf{We explicitly do not claim that this swing is dermoscopy-domain
-transfer}: DermLIP's Derm1M corpus does not list HAM10000 as a source yet
-documents no decontamination against it, so HAM10000 image-level overlap cannot
-be ruled out, and the experiments reported here cannot separate
+transfer}: DermLIP's Derm1M corpus does not list HAM10000 as a source, but a
+perceptual-hash audit confirms HAM10000 images leaked into it via reproduced
+figures in its scraped literature, so image-level overlap is established (at
+small, lower-bounded scale), and the experiments reported here cannot separate
 dermoscopy-domain transfer from such overlap. We release the methodology, the configurations,
 and the run archive, and sketch a candidate partition experiment (a
 non-HAM10000 dermoscopy SSL pretrain) as a natural next step we may

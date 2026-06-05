@@ -114,82 +114,126 @@ def stage_id() -> None:
         )
 
 
-def _phash_dir(images: list[Path]) -> dict[str, str]:
+_IMG_EXT = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
+_POPCOUNT = None
+
+
+def _hash_to_u64(ih: object) -> int:
+    """Pack an 8x8 pHash (imagehash.ImageHash) into a uint64."""
+    v = 0
+    for bit in ih.hash.flatten():  # type: ignore[attr-defined]
+        v = (v << 1) | int(bit)
+    return v
+
+
+def _popcounts(xs):
+    """Vectorised popcount of a uint64 numpy array via an 8-bit lookup table."""
+    import numpy as np
+
+    global _POPCOUNT
+    if _POPCOUNT is None:
+        _POPCOUNT = np.array([bin(i).count("1") for i in range(256)], dtype=np.uint8)
+    return _POPCOUNT[xs.view(np.uint8).reshape(-1, 8)].sum(axis=1)
+
+
+def _ham_phashes() -> tuple[list[str], object]:
+    """pHash every HAM10000 image once; return (ids, uint64 array)."""
     import imagehash
+    import numpy as np
+    from huggingface_hub import snapshot_download
     from PIL import Image
     from tqdm import tqdm
 
-    out: dict[str, str] = {}
-    for p in tqdm(images, desc="phash"):
+    ham_dir = Path(
+        snapshot_download(HAM_REPO, repo_type="dataset", allow_patterns="*.jpg")
+    )
+    ids, vals = [], []
+    for p in tqdm(sorted(ham_dir.rglob("*.jpg")), desc="phash:HAM10000"):
         try:
             with Image.open(p) as im:
-                out[p.name] = str(imagehash.phash(im.convert("RGB")))
-        except Exception:  # noqa: BLE001 - skip unreadable images, keep auditing
+                vals.append(_hash_to_u64(imagehash.phash(im.convert("RGB"))))
+                ids.append(p.stem)
+        except Exception:  # noqa: BLE001 - skip unreadable, keep auditing
             continue
-    return out
+    return ids, np.array(vals, dtype=np.uint64)
 
 
-def stage_phash(derm1m_zip: str, threshold: int) -> None:
-    """Near-duplicate overlap via perceptual hashing (re-encoding robust)."""
+def stage_phash(zips: list[str], threshold: int) -> None:
+    """Near-duplicate overlap via perceptual hashing (re-encoding robust).
+
+    Streams each Derm1M source zip member-by-member (no full disk extract) and
+    compares every image's pHash against the HAM10000 set. Reports pairs within
+    `threshold` Hamming distance, per source zip and in total.
+    """
     import imagehash
-    from huggingface_hub import hf_hub_download, snapshot_download
+    import numpy as np
+    from huggingface_hub import hf_hub_download
     from huggingface_hub.errors import GatedRepoError
+    from PIL import Image
+    from tqdm import tqdm
 
     OUT.mkdir(parents=True, exist_ok=True)
-    try:
-        ham_dir = Path(
-            snapshot_download(HAM_REPO, repo_type="dataset", allow_patterns="*.jpg")
-        )
-        zpath = hf_hub_download(
-            DERM1M_REPO, f"{derm1m_zip}.zip", repo_type="dataset"
-        )
-    except GatedRepoError:
-        sys.exit(
-            "BLOCKED: Derm1M is gated. Request access first, then re-run."
-        )
+    ham_ids, ham_arr = _ham_phashes()
+    print(f"HAM10000 images hashed: {len(ham_ids)}")
 
-    derm_dir = OUT / f"derm1m_{derm1m_zip}"
-    derm_dir.mkdir(exist_ok=True)
-    with zipfile.ZipFile(zpath) as zf:
-        zf.extractall(derm_dir)
+    all_pairs: list[tuple[str, str, str, int]] = []
+    coverage: list[tuple[str, int]] = []
+    for z in zips:
+        try:
+            zpath = hf_hub_download(DERM1M_REPO, f"{z}.zip", repo_type="dataset")
+        except GatedRepoError:
+            sys.exit("BLOCKED: Derm1M is gated. Request access first, then re-run.")
+        n_hashed, pairs = 0, []
+        with zipfile.ZipFile(zpath) as zf:
+            members = [m for m in zf.namelist() if Path(m).suffix.lower() in _IMG_EXT]
+            for name in tqdm(members, desc=f"phash:{z}"):
+                try:
+                    with zf.open(name) as fh, Image.open(fh) as im:
+                        dh = _hash_to_u64(imagehash.phash(im.convert("RGB")))
+                except Exception:  # noqa: BLE001 - skip unreadable, keep auditing
+                    continue
+                n_hashed += 1
+                dists = _popcounts(ham_arr ^ np.uint64(dh))
+                for i in np.where(dists <= threshold)[0]:
+                    d = int(dists[i])
+                    pairs.append((ham_ids[i], f"{z}/{name}", str(d), d))
+        coverage.append((z, n_hashed))
+        all_pairs.extend(pairs)
+        print(f"  {z}: hashed {n_hashed}  near-dups (<= {threshold}): {len(pairs)}")
+        Path(zpath).unlink(missing_ok=True)  # free disk between zips
 
-    ham = _phash_dir(sorted(ham_dir.rglob("*.jpg")))
-    derm = _phash_dir(
-        sorted(p for p in derm_dir.rglob("*") if p.suffix.lower() in {".jpg", ".png"})
-    )
-    print(f"HAM images hashed: {len(ham)}  Derm1M[{derm1m_zip}] hashed: {len(derm)}")
-
-    derm_hashes = {k: imagehash.hex_to_hash(v) for k, v in derm.items()}
-    near = []
-    for hname, hhex in ham.items():
-        hh = imagehash.hex_to_hash(hhex)
-        for dname, dh in derm_hashes.items():
-            if (hh - dh) <= threshold:
-                near.append((hname, dname, hh - dh))
-    near.sort(key=lambda t: t[2])
-
-    report = OUT / f"phash_overlap_{derm1m_zip}.csv"
+    all_pairs.sort(key=lambda t: t[3])
+    report = OUT / "phash_overlap.csv"
     with open(report, "w", newline="") as fh:
         w = csv.writer(fh)
         w.writerow(["ham_image", "derm1m_image", "hamming_distance"])
-        w.writerows(near)
-    print(f"near-duplicate pairs (<= {threshold}): {len(near)}  -> {report}")
+        w.writerows((a, b, c) for a, b, c, _ in all_pairs)
+    cov = OUT / "phash_coverage.txt"
+    cov.write_text(
+        f"threshold={threshold}\nHAM10000 hashed={len(ham_ids)}\n"
+        + "\n".join(f"{z}: {n} images hashed" for z, n in coverage)
+        + f"\nTOTAL near-duplicate pairs: {len(all_pairs)}\n"
+    )
+    bands = {b: sum(1 for *_, d in all_pairs if d <= b) for b in (0, 2, 4, 6, 8, 10)}
+    print(f"\nTOTAL near-dups by distance band: {bands}")
+    print(f"coverage -> {cov}\npairs -> {report}")
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--stage", choices=("id", "phash"), default="id")
     ap.add_argument(
-        "--derm1m-zip",
-        default="public",
-        help="which Derm1M source zip to hash (public/pubmed/youtube/...)",
+        "--zips",
+        default="public,pubmed,IIYI,reddit,twitter,note,edu",
+        help="comma-separated Derm1M source zips to hash (omit 'youtube' for speed)",
     )
-    ap.add_argument("--threshold", type=int, default=6, help="max pHash Hamming dist")
+    ap.add_argument("--threshold", type=int, default=10, help="max pHash Hamming dist")
     args = ap.parse_args()
     if args.stage == "id":
         stage_id()
     else:
-        stage_phash(args.derm1m_zip, args.threshold)
+        zips = [z.strip() for z in args.zips.split(",") if z.strip()]
+        stage_phash(zips, args.threshold)
 
 
 if __name__ == "__main__":

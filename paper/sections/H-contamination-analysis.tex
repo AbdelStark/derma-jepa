@@ -37,22 +37,29 @@ named MSKCC source is a Memorial-Sloan-Kettering ISIC subset contributed by
 a different institution than HAM10000's Vienna/Rosendahl images, so it is
 unlikely to introduce HAM10000 images directly.
 
-Three facts nonetheless leave image-level overlap \emph{unexcluded} rather
-than \emph{excluded}. First, Derm1M documents no deduplication or
-decontamination against HAM10000 or any downstream benchmark. Second,
-beyond its two named public datasets Derm1M bulk-aggregates PubMed figures,
-educational video, and social-media dermatology content, in which HAM10000
---- the most widely reproduced public dermoscopy dataset --- circulates
-freely; the released corpus is access-gated, so a third party cannot
-enumerate its images, and proving the \emph{absence} of a handful of
-HAM10000 images inside a million-pair web scrape is close to impossible.
-Third, DermLIP is evaluated on HAM10000 by its own authors (who include the
-HAM10000 creators) with no overlap caveat. We therefore treat HAM10000
-image-level overlap as plausible and unverified, not as established. Two
-checks would settle it: a direct perceptual-hash overlap audit of HAM10000
-against the Derm1M image manifest (gated behind Derm1M access at the time of
-writing), and the EXP-009 partition (\S\ref{sec:followup}), which sidesteps
-the question by holding ``HAM10000 absent'' constant by construction.
+Overlap is nonetheless present through Derm1M's \emph{uncontrolled} sources.
+Derm1M documents no deduplication or decontamination against HAM10000 or any
+downstream benchmark, and beyond its two named public datasets it
+bulk-aggregates PubMed figures, educational video, and social-media
+dermatology content, in which HAM10000 --- the most widely reproduced public
+dermoscopy dataset --- circulates freely. A perceptual-hash audit of HAM10000
+against the (access-gated) Derm1M corpus confirms this: at least
+\textbf{13 distinct HAM10000 images}, drawn from at least four PubMed Central
+articles, are present in Derm1M's PubMed/literature partition, verified by
+agreement across four independent perceptual hashes (pHash, dHash, aHash,
+wHash) and by visual inspection (one journal figure alone, PMC9777332, is a
+multi-panel montage reproducing roughly five HAM10000 dermoscopy images). The
+13 is a lower bound: dermoscopy images collide heavily under any single
+perceptual hash, so only multi-hash-plus-visual matches were counted; the
+forum and textbook candidates were not all individually verified; and the
+$16.6$\,GB YouTube-frame partition was not audited. DermLIP's pretraining was
+therefore \emph{not} HAM10000-free. The confirmed scale is small relative to
+HAM10000's $10{,}015$ images, which makes wholesale memorisation an unlikely
+\emph{sole} explanation of the EXP-007 win, but it does not clear the
+confound; the EXP-009 partition (\S\ref{sec:followup}), which holds
+``HAM10000 absent'' constant by construction, remains the way to separate
+dermoscopy-domain transfer from overlap. Full method and per-article findings
+are in the repository's overlap-audit report.
 
 \subsection{What EXP-007 alone can conclude}
 EXP-007 demonstrates a $+0.66$ test $\auroc$ swing relative to
@@ -81,8 +88,8 @@ $\auroc = 0.329 \pm 0.012$ --- contributes three readings:
 \item \textbf{Dermoscopy-vs-HAM10000 remains unresolved.} EXP-008's
       pretraining corpus differs from EXP-007's in two ways
       simultaneously --- domain narrowness and (likely) HAM10000
-      overlap (possible, unexcluded) --- so EXP-008 cannot separate the
-      two factors. EXP-009
+      overlap (confirmed, small-scale) --- so
+      EXP-008 cannot separate the two factors. EXP-009
       (\S\ref{sec:followup}) is designed precisely to break this
       confound by holding ``HAM10000 absent'' constant while varying
       the pretraining-domain narrowness from PMC-15M to dermoscopy.
