@@ -375,12 +375,15 @@ If you use this code or the run archive, please cite:
 
 ```bibtex
 @misc{bakhta2026dermajepa,
-  author = {Bakhta, Abdelhamid},
-  title  = {DermaJEPA: Frozen-backbone JEPA-style probes for dermoscopic
-            longitudinal-proxy generalisation on HAM10000},
-  year   = {2026},
-  url    = {https://github.com/AbdelStark/derma-jepa},
-  note   = {Run archive: \url{https://huggingface.co/datasets/abdelstark/derma-jepa-runs}}
+  author    = {Bakhta, Abdelhamid},
+  title     = {DermaJEPA: Frozen-backbone JEPA-style probes for dermoscopic
+               longitudinal-proxy generalisation on HAM10000},
+  year      = {2026},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.20556968},
+  url       = {https://doi.org/10.5281/zenodo.20556968},
+  note      = {Code: \url{https://github.com/AbdelStark/derma-jepa};
+               run archive: \url{https://huggingface.co/datasets/abdelstark/derma-jepa-runs}}
 }
 ```
 
