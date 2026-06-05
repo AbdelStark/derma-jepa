@@ -10,6 +10,7 @@
   <a href="https://pytorch.org"><img alt="PyTorch 2.11" src="https://img.shields.io/badge/PyTorch-2.11-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white"></a>
   <a href="https://huggingface.co/datasets/abdelstark/derma-jepa-runs"><img alt="HF Hub: run archive" src="https://img.shields.io/badge/%F0%9F%A4%97%20HF%20Hub-derma--jepa--runs-FFD21E?style=for-the-badge"></a>
   <a href="paper/main.pdf"><img alt="Companion paper (PDF)" src="https://img.shields.io/badge/paper-PDF-B31B1B?style=for-the-badge&logo=adobeacrobatreader&logoColor=white"></a>
+  <a href="https://doi.org/10.5281/zenodo.20556968"><img alt="DOI: 10.5281/zenodo.20556968" src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.20556968-1682D4?style=for-the-badge&logo=zenodo&logoColor=white"></a>
 </p>
 
 DermaJEPA tests whether a JEPA-style latent predictor over a *frozen* vision backbone can separate stable lesions under nuisance variation from genuinely changing lesions on a leakage-controlled longitudinal proxy. The repository contains the experiment harness, the configurations, and per-run reports for nine primary-tier experiments on public HAM10000 data.
