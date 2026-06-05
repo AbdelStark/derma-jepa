@@ -9,6 +9,7 @@
   <a href="https://github.com/astral-sh/uv"><img alt="uv" src="https://img.shields.io/badge/build-uv-DE5FE9?style=for-the-badge"></a>
   <a href="https://pytorch.org"><img alt="PyTorch 2.11" src="https://img.shields.io/badge/PyTorch-2.11-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white"></a>
   <a href="https://huggingface.co/datasets/abdelstark/derma-jepa-runs"><img alt="HF Hub: run archive" src="https://img.shields.io/badge/%F0%9F%A4%97%20HF%20Hub-derma--jepa--runs-FFD21E?style=for-the-badge"></a>
+  <a href="https://huggingface.co/abdelstark/derma-jepa-predictors"><img alt="HF Hub: predictor checkpoints" src="https://img.shields.io/badge/%F0%9F%A4%97%20Models-derma--jepa--predictors-FFD21E?style=for-the-badge"></a>
   <a href="paper/main.pdf"><img alt="Companion paper (PDF)" src="https://img.shields.io/badge/paper-PDF-B31B1B?style=for-the-badge&logo=adobeacrobatreader&logoColor=white"></a>
   <a href="https://doi.org/10.5281/zenodo.20556968"><img alt="DOI: 10.5281/zenodo.20556968" src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.20556968-1682D4?style=for-the-badge&logo=zenodo&logoColor=white"></a>
 </p>
@@ -181,7 +182,7 @@ The CLI surfaces each step independently; hosted runs on Hugging Face Jobs chain
 | Derm1M | Pretraining corpus for the DermLIP backbone (third-party, used as frozen weights) | [DermLIP HF org](https://huggingface.co/redlessone) | Yan et al., *arXiv* 2025 — [arXiv:2503.14911](https://arxiv.org/abs/2503.14911) |
 | PMC-15M | Pretraining corpus for the BiomedCLIP backbone (third-party, used as frozen weights) | [BiomedCLIP HF model](https://huggingface.co/microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224) | Zhang et al., *arXiv* 2023 — [arXiv:2303.00915](https://arxiv.org/abs/2303.00915) |
 
-Run artifacts (manifests, embeddings, metrics, model cards, plots, logs) for every primary-tier run are uploaded to [`abdelstark/derma-jepa-runs`](https://huggingface.co/datasets/abdelstark/derma-jepa-runs) under the run ID listed in the corresponding experiment report. The repository does not vendor HAM10000 images. Hosted runs mount a private Hub mirror at `/data`; see [`data/README.md`](data/README.md) for the layout.
+Run artifacts (manifests, embeddings, metrics, model cards, plots, logs) for every primary-tier run are uploaded to [`abdelstark/derma-jepa-runs`](https://huggingface.co/datasets/abdelstark/derma-jepa-runs) under the run ID listed in the corresponding experiment report. The trained predictor heads behind the two contamination-relevant headlines (DermLIP EXP-007 and BiomedCLIP EXP-008, five seeds each) are also published as a standalone model repo at [`abdelstark/derma-jepa-predictors`](https://huggingface.co/abdelstark/derma-jepa-predictors), with a load snippet and the contamination caveat in its model card; each is a linear probe head that is only meaningful paired with its frozen backbone, not a standalone image model. The repository does not vendor HAM10000 images. Hosted runs mount a private Hub mirror at `/data`; see [`data/README.md`](data/README.md) for the layout.
 
 ---
 
