@@ -37,7 +37,9 @@ while holding every other knob constant.
 observe (frozen DermLIP at $0.944 \pm 0.003$ test $\auroc$ across $5$ seeds)
 \emph{cannot be attributed to dermoscopy-domain transfer with the experiments
 reported here.} DermLIP's pretraining corpus, Derm1M
-\citep{yan2025derm1m}, almost certainly contains HAM10000 raw images, and the
+\citep{yan2025derm1m}, does not name HAM10000 among its sources but documents
+no decontamination against it (Appendix~\ref{app:contamination}), so HAM10000
+image-level overlap cannot be excluded; and the
 BiomedCLIP partition we report rules out only the narrower
 ``PMC-15M-style biomedical-figure pretraining (with PMC-15M's
 undocumented dermatology fraction) is sufficient'' alternative; it

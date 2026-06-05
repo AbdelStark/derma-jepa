@@ -12,9 +12,10 @@ The DermLIP positive in EXP-007 ($\auroc = 0.944 \pm 0.003$) is consistent
 with two distinct hypotheses. Either DermLIP's dermoscopy-domain pretraining
 on Derm1M's non-HAM10000 fraction has aligned nuisance directions across the
 three families and that alignment generalises to \strongholdtwo, or DermLIP
-saw HAM10000 raw images during pretraining and the embedding space is
-well-fit to HAM10000 lesion identity in a way that survives our synthetic
-nuisance. EXP-008's BiomedCLIP partition rules out only the broader ``any
+saw HAM10000 (or near-duplicate) images during pretraining --- via Derm1M's
+uncontrolled literature/web sources, since HAM10000 is not a named Derm1M
+source --- and the embedding space is well-fit to HAM10000 lesion identity in
+a way that survives our synthetic nuisance. EXP-008's BiomedCLIP partition rules out only the broader ``any
 medical-image pretraining'' alternative. The dermoscopy-vs-HAM10000
 distinction remains open.
 

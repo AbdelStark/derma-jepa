@@ -8,6 +8,20 @@
 **Local mirror:** `outputs/hf-runs/ham10000-hf-dermlip-exp007-v1/`
 **Launcher commit:** `ba3afce`
 
+> **Correction (2026-06-05).** This report repeatedly states that Derm1M
+> "almost certainly contains" HAM10000. A later check of the Derm1M paper
+> (arXiv:2503.14911) found that Derm1M names exactly two public datasets as
+> image sources — SCIN and MSKCC (an ISIC-archive subset) — and HAM10000 is
+> **not** among them; in that paper HAM10000 appears only as an evaluation
+> benchmark, a comparison row, and a source of disease label names. The
+> accurate statement is therefore: HAM10000 is not a named Derm1M source, but
+> Derm1M documents no decontamination against it and bulk-scrapes
+> literature/web/social sources where HAM10000 circulates, so image-level
+> overlap **cannot be excluded** (and a direct audit is gated behind Derm1M
+> access). Wherever this dated report says "almost certainly contains/includes
+> HAM10000," read "overlap cannot be excluded." See the paper's Appendix H for
+> the corrected analysis.
+
 ---
 
 ## 1. Summary
